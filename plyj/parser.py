@@ -2,6 +2,7 @@
 
 import ply.lex as lex
 import ply.yacc as yacc
+from .model import *
 
 class MyLexer(object):
 
@@ -1282,23 +1283,28 @@ class ClassParser(object):
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
-        p[0] = ('class_decl', p[1], p[2])
+        p[0] = ClassDeclaration(p[1]['name'], p[2], modifiers=p[1]['modifiers'],
+                                extends=p[1]['extends'], implements=p[1]['implements'],
+                                type_parameters=p[1]['type_parameters'])
 
     def p_class_header(self, p):
         '''class_header : class_header_name class_header_extends_opt class_header_implements_opt'''
-        p[0] = (p[1], p[2], p[3])
+        p[1]['extends'] = p[2]
+        p[1]['implements'] = p[3]
+        p[0] = p[1]
 
     def p_class_header_name(self, p):
         '''class_header_name : class_header_name1 type_parameters
                              | class_header_name1'''
         if len(p) == 2:
-            p[0] = (p[1], None)
+            p[1]['type_parameters'] = []
         else:
-            p[0] = (p[1], p[2])
+            p[1]['type_parameters'] = p[2]
+        p[0] = p[1]
 
     def p_class_header_name1(self, p):
         '''class_header_name1 : modifiers_opt CLASS NAME'''
-        p[0] = (p[1], p[3])
+        p[0] = {'modifiers': p[1], 'name': p[3]}
 
     def p_class_header_extends_opt(self, p):
         '''class_header_extends_opt : class_header_extends
@@ -1358,7 +1364,7 @@ class ClassParser(object):
 
     def p_class_body_declaration2(self, p):
         '''class_body_declaration : block'''
-        p[0] = ('instance_initializer', p[1])
+        p[0] = ClassInitializer(p[1])
 
     def p_class_member_declaration(self, p):
         '''class_member_declaration : field_declaration
@@ -1375,27 +1381,31 @@ class ClassParser(object):
 
     def p_field_declaration(self, p):
         '''field_declaration : modifiers_opt type variable_declarators ';' '''
-        p[0] = ('field_decl', p[1], p[2], p[3])
+        p[0] = FieldDeclaration(p[2], p[3], modifiers=p[1])
 
     def p_static_initializer(self, p):
         '''static_initializer : STATIC block'''
-        p[0] = ('static_initializer', p[2])
+        p[0] = ClassInitializer(p[2], static=True)
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        p[0] = ('constructor_decl', p[1], p[2])
+        p[0] = ConstructorDeclaration(p[1], p[2], modifiers=p[1]['modifiers'],
+                                      type_parameters=p[1]['type_parameters'],
+                                      parameters=p[1]['parameters'], throws=p[1]['throws'])
 
     def p_constructor_header(self, p):
         '''constructor_header : constructor_header_name formal_parameter_list_opt ')' method_header_throws_clause_opt'''
-        p[0] = (p[1], p[2], p[4])
+        p[1]['parameters'] = p[2]
+        p[1]['throws'] = p[4]
+        p[0] = p[1]
 
     def p_constructor_header_name(self, p):
         '''constructor_header_name : modifiers_opt type_parameters NAME '('
                                    | modifiers_opt NAME '(' '''
         if len(p) == 4:
-            p[0] = (p[1], None, p[2])
+            p[0] = {'modifiers': p[1], 'type_parameters': [], 'name': p[2]}
         else:
-            p[0] = (p[1], p[2], p[3])
+            p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'name': p[3]}
 
     def p_formal_parameter_list_opt(self, p):
         '''formal_parameter_list_opt : formal_parameter_list'''
@@ -1460,15 +1470,18 @@ class ClassParser(object):
 
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
-        p[0] = (p[1], p[2], p[4], p[5])
+        p[1]['parameters'] = p[2]
+        p[1]['extended_dims'] = p[4]
+        p[1]['throws'] = p[5]
+        p[0] = p[1]
 
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
         if len(p) == 5:
-            p[0] = (p[1], None, p[2], p[3])
+            p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
-            p[0] = (p[1], p[2], p[3], p[4])
+            p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
 
     def p_method_header_extended_dims(self, p):
         '''method_header_extended_dims : dims_opt'''
@@ -1786,39 +1799,42 @@ class CompilationUnitParser(object):
 
     def p_compilation_unit(self, p):
         '''compilation_unit : package_declaration'''
-        p[0] = ('compilation_unit', p[1], None, None)
+        p[0] = CompilationUnit(package_declaration=p[1])
 
     def p_compilation_unit2(self, p):
         '''compilation_unit : package_declaration import_declarations'''
-        p[0] = ('compilation_unit', p[1], p[2], None)
+        p[0] = CompilationUnit(package_declaration=p[1], import_declarations=p[2])
 
     def p_compilation_unit3(self, p):
         '''compilation_unit : package_declaration import_declarations type_declarations'''
-        p[0] = ('compilation_unit', p[1], p[2], p[3])
+        p[0] = CompilationUnit(package_declaration=p[1], import_declarations=p[2], type_declarations=p[3])
 
     def p_compilation_unit4(self, p):
         '''compilation_unit : package_declaration type_declarations'''
-        p[0] = ('compilation_unit', p[1], None, p[2])
+        p[0] = CompilationUnit(package_declaration=p[1], type_declarations=p[2])
 
     def p_compilation_unit5(self, p):
         '''compilation_unit : import_declarations'''
-        p[0] = ('compilation_unit', None, p[1], None)
+        p[0] = CompilationUnit(import_declarations=p[1])
 
     def p_compilation_unit6(self, p):
         '''compilation_unit : type_declarations'''
-        p[0] = ('compilation_unit', None, None, p[1])
+        p[0] = CompilationUnit(type_declarations=p[1])
 
     def p_compilation_unit7(self, p):
         '''compilation_unit : import_declarations type_declarations'''
-        p[0] = ('compilation_unit', None, p[1], p[2])
+        p[0] = CompilationUnit(import_declarations=p[1], type_declarations=p[2])
 
     def p_compilation_unit8(self, p):
         '''compilation_unit : empty'''
-        p[0] = ('compilation_unit', None, None, None)
+        p[0] = CompilationUnit()
 
     def p_package_declaration(self, p):
         '''package_declaration : package_declaration_name ';' '''
-        p[0] = ('package_decl', p[1])
+        if p[1][0]:
+            p[0] = PackageDeclaration(p[1][1], modifiers=p[1][0])
+        else:
+            p[0] = PackageDeclaration(p[1][1])
 
     def p_package_declaration_name(self, p):
         '''package_declaration_name : modifiers PACKAGE name
@@ -1845,19 +1861,19 @@ class CompilationUnitParser(object):
 
     def p_single_type_import_declaration(self, p):
         '''single_type_import_declaration : IMPORT name ';' '''
-        p[0] = ('import', p[2])
+        p[0] = ImportDeclaration(p[2])
 
     def p_type_import_on_demand_declaration(self, p):
         '''type_import_on_demand_declaration : IMPORT name '.' '*' ';' '''
-        p[0] = ('import_on_demand', p[2])
+        p[0] = ImportDeclaration(p[2], on_demand=True)
 
     def p_single_static_import_declaration(self, p):
         '''single_static_import_declaration : IMPORT STATIC name ';' '''
-        p[0] = ('static_import', p[3])
+        p[0] = ImportDeclaration(p[3], static=True)
 
     def p_static_import_on_demand_declaration(self, p):
         '''static_import_on_demand_declaration : IMPORT STATIC name '.' '*' ';' '''
-        p[0] = ('static_import_on_demand', p[3])
+        p[0] = ImportDeclaration(p[3], static=True, on_demand=True)
 
     def p_type_declarations(self, p):
         '''type_declarations : type_declaration
