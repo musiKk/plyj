@@ -1785,7 +1785,7 @@ class ClassParser(object):
 class CompilationUnitParser(object):
 
     def p_compilation_unit(self, p):
-        '''compilation_unit : package_declaration''' # TODO and more
+        '''compilation_unit : package_declaration'''
         p[0] = ('compilation_unit', p[1], None, None)
 
     def p_compilation_unit2(self, p):
