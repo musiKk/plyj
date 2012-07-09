@@ -1,7 +1,7 @@
 plyj
 ====
 
-plyj is a Java parser written in Python using PLY. It has the awesome [PLY] as it's sole dependency.
+plyj is a Java parser written in Python using PLY. It has the awesome [PLY] as its sole dependency.
 
 Acknowledgement
 --------------
