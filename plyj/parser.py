@@ -527,7 +527,7 @@ class StatementParser(object):
 
     def p_variable_declarator_id(self, p):
         '''variable_declarator_id : NAME dims_opt'''
-        p[0] = (p[1], p[2])
+        p[0] = Variable(p[1], dimensions=p[2])
 
     def p_variable_initializer(self, p):
         '''variable_initializer : expression
@@ -1427,9 +1427,9 @@ class ClassParser(object):
         '''formal_parameter : modifiers_opt type variable_declarator_id
                             | modifiers_opt type ELLIPSIS variable_declarator_id'''
         if len(p) == 4:
-            p[0] = (p[1], p[2], p[3])
+            p[0] = FormalParameter(p[3], p[2], modifiers=p[1])
         else:
-            p[0] = ('vararg', p[1], p[2], p[4])
+            p[0] = FormalParameter(p[4], p[2], modifiers=p[1], vararg=True)
 
     def p_method_header_throws_clause_opt(self, p):
         '''method_header_throws_clause_opt : method_header_throws_clause
@@ -1460,9 +1460,15 @@ class ClassParser(object):
         '''method_declaration : abstract_method_declaration
                               | method_header method_body'''
         if len(p) == 2:
-            p[0] = ('abstract_method_decl', p[1])
+            p[0] = MethodDeclaration(p[1]['name'], abstract=True, parameters=p[1]['parameters'],
+                                     extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
+                                     return_type=p[1]['type'], modifiers=p[1]['modifiers'],
+                                     throws=p[1]['throws'])
         else:
-            p[0] = ('method_decl', p[1], p[2])
+            p[0] = MethodDeclaration(p[1]['name'], parameters=p[1]['parameters'],
+                                     extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
+                                     return_type=p[1]['type'], modifiers=p[1]['modifiers'],
+                                     throws=p[1]['throws'], body=p[2])
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''

@@ -84,3 +84,41 @@ class FieldDeclaration(SourceElement):
     def __str__(self):
         return 'FieldDeclaration[type={}, modifiers={}, variable_declarators={}]'.format(
                 self._type, self.modifiers, self.variable_declarators)
+
+class MethodDeclaration(SourceElement):
+
+    def __init__(self, name, modifiers=[], type_parameters=[], parameters=[], return_type='void', body=None, abstract=False, extended_dims=0, throws=None):
+        self.name = name
+        self.modifiers = modifiers
+        self.type_parameters = type_parameters
+        self.parameters = parameters
+        self.return_type = return_type
+        self.body = body
+        self.abstract = abstract
+        self.extended_dims = extended_dims
+        self.throws = throws
+
+    def __str__(self):
+        return 'MethodDeclaration[name={}, parameters={}, return_type={}, modifiers={}, type_parameters={}, abstract={}, throws={}, body={}]'.format(
+                self.name, self.parameters, self.return_type, self.modifiers, self.type_parameters, self.abstract, self.throws, self.body)
+
+class FormalParameter(SourceElement):
+
+    def __init__(self, variable, _type, modifiers=[], vararg=False):
+        self.variable = variable
+        self._type = _type
+        self.modifiers = modifiers
+        self.vararg = vararg
+
+    def __str__(self):
+        return 'FormalParameter[variable={}, type={}, modifiers={}, vararg={}]'.format(
+                self.variable, self._type, self.modifiers, self.vararg)
+
+class Variable(SourceElement):
+
+    def __init__(self, name, dimensions=0):
+        self.name = name
+        self.dimensions = dimensions
+
+    def __str__(self):
+        return 'Variable[name={}, dims={}]'.format(self.name, self.dimensions)
