@@ -1669,27 +1669,32 @@ class ClassParser(object):
 
     def p_annotation_type_declaration(self, p):
         '''annotation_type_declaration : annotation_type_declaration_header annotation_type_body'''
-        p[0] = ('annotation_decl', p[1], p[2])
+        p[0] = AnnotationDeclaration(p[1]['name'], modifiers=p[1]['modifiers'],
+                              type_parameters=p[1]['type_parameters'],
+                              extends=p[1]['extends'], implements=p[1]['implements'],
+                              body=p[2])
 
     def p_annotation_type_declaration_header(self, p):
         '''annotation_type_declaration_header : annotation_type_declaration_header_name class_header_extends_opt class_header_implements_opt'''
-        p[0] = (p[1], p[2], p[3])
+        p[1]['extends'] = p[2]
+        p[1]['implements'] = p[3]
+        p[0] = p[1]
 
     def p_annotation_type_declaration_header_name(self, p):
         '''annotation_type_declaration_header_name : modifiers '@' INTERFACE NAME'''
-        p[0] = (p[1], p[4], None)
+        p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': []}
 
     def p_annotation_type_declaration_header_name2(self, p):
         '''annotation_type_declaration_header_name : modifiers '@' INTERFACE NAME type_parameters'''
-        p[0] = (p[1], p[4], p[5])
+        p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': p[5]}
 
     def p_annotation_type_declaration_header_name3(self, p):
         '''annotation_type_declaration_header_name : '@' INTERFACE NAME type_parameters'''
-        p[0] = (None, p[3], p[4])
+        p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': p[4]}
 
     def p_annotation_type_declaration_header_name4(self, p):
         '''annotation_type_declaration_header_name : '@' INTERFACE NAME'''
-        p[0] = (None, p[3], None)
+        p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': []}
 
     def p_annotation_type_body(self, p):
         '''annotation_type_body : '{' annotation_type_member_declarations_opt '}' '''
@@ -1720,15 +1725,18 @@ class ClassParser(object):
 
     def p_annotation_method_header(self, p):
         '''annotation_method_header : annotation_method_header_name formal_parameter_list_opt ')' method_header_extended_dims annotation_method_header_default_value_opt'''
-        p[0] = (p[1], p[2], p[4], p[5])
+        p[0] = AnnotationMethodDeclaration(p[1]['name'], p[1]['type'], parameters=p[2],
+                                           default=p[5], extended_dims=p[4],
+                                           type_parameters=p[1]['type_parameters'],
+                                           modifiers=p[1]['modifiers'])
 
     def p_annotation_method_header_name(self, p):
         '''annotation_method_header_name : modifiers_opt type_parameters type NAME '('
                                          | modifiers_opt type NAME '(' '''
-        if len(p) == 4:
-            p[0] = (p[1], None, p[2], p[3])
+        if len(p) == 5:
+            p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
-            p[0] = (p[1], p[2], p[3], p[4])
+            p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
 
     def p_annotation_method_header_default_value_opt(self, p):
         '''annotation_method_header_default_value_opt : default_value

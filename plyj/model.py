@@ -15,7 +15,7 @@ class CompilationUnit(SourceElement):
 
     def __str__(self):
         return 'CompilationUnit[package_declaration={}, import_declarations={}, type_declarations={}]'.format(
-                self.package_declaration, self.import_declarations, [str(t) for t in self.type_declarations])
+                self.package_declaration, [str(i) for i in self.import_declarations], [str(t) for t in self.type_declarations])
 
 class PackageDeclaration(SourceElement):
 
@@ -168,3 +168,33 @@ class EnumConstant(SourceElement):
     def __str__(self):
         return 'EnumConstant[name={}, arguments={}, modifiers={}, body={}]'.format(
                self.name, self.arguments, self.modifiers, [str(e) for e in self.body])
+
+class AnnotationDeclaration(SourceElement):
+
+    def __init__(self, name, modifiers=[], type_parameters=[], extends=None, implements=[], body=[]):
+        self.name = name
+        self.modifiers = modifiers
+        self.type_parameters = type_parameters
+        self.extends = extends
+        self.implements = implements
+        self.body = body
+
+    def __str__(self):
+        return 'AnnotationDeclaration[name={}, modifiers={}, type_parameters={}, extends={}, implements={}, body={}]'.format(
+               self.name, self.modifiers, self.type_parameters, self.extends, self.implements, [str(e) for e in self.body])
+
+class AnnotationMethodDeclaration(SourceElement):
+
+    def __init__(self, name, _type, parameters=[], default=None, modifiers=[], type_parameters=[], extended_dims=0):
+        self.name = name
+        self._type = _type
+        self.parameters = parameters
+        self.default = default
+        self.modifiers = modifiers
+        self.type_parameters = type_parameters
+        self.extended_dims = extended_dims
+
+    def __str__(self):
+        return 'AnnotationMethodDeclaration[name={}, type={}, parameters={}, default={}, modifiers={}, type_parameters={}]'.format(
+               self.name, self._type, self.parameters, self.default, self.modifiers, self.type_parameters)
+
