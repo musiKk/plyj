@@ -322,3 +322,12 @@ class Additive(BinaryExpression):
 
 class Multiplicative(BinaryExpression):
     pass
+
+class Unary(Expression):
+
+    def __init__(self, sign, expression):
+        self.sign = sign
+        self.expression = expression
+
+    def __str__(self):
+        return '({}, {})'.format(self.sign, self.expression)
