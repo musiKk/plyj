@@ -428,7 +428,7 @@ class ExpressionParser(object):
 
     def p_dims_opt2(self, p):
         '''dims_opt : empty'''
-        p[0] = '0'
+        p[0] = 0
 
     def p_dims(self, p):
         '''dims : dims_loop'''
@@ -438,9 +438,9 @@ class ExpressionParser(object):
         '''dims_loop : one_dim_loop
                      | dims_loop one_dim_loop'''
         if len(p) == 2:
-            p[0] = '1'
+            p[0] = 1
         else:
-            p[0] = str(1 + int(p[1]))
+            p[0] = 1 + p[1]
 
     def p_one_dim_loop(self, p):
         '''one_dim_loop : '[' ']' '''
@@ -1119,17 +1119,18 @@ class TypeParser(object):
         '''class_or_interface : name
                               | generic_type '.' name'''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = Type(p[1])
         else:
-            p[0] = (p[1], p[3])
+            p[0] = Type(p[3], enclosed_in=p[1])
 
     def p_generic_type(self, p):
         '''generic_type : class_or_interface type_arguments'''
-        p[0] = (p[1], p[2])
+        p[1].type_arguments = p[2]
+        p[0] = p[1]
 
     def p_generic_type2(self, p):
         '''generic_type : class_or_interface '<' '>' '''
-        p[0] = (p[1], '<>')
+        p[0] = Type(p[1], type_arguments='diamond')
 
 #    def p_array_type(self, p):
 #        '''array_type : primitive_type dims
@@ -1144,91 +1145,159 @@ class TypeParser(object):
 
     def p_array_type(self, p):
         '''array_type : primitive_type dims
-                      | name dims
-                      | generic_type dims'''
-        p[0] = ('array_type', p[1], p[2])
+                      | name dims'''
+        p[0] = Type(p[1], dimensions=p[2])
 
     def p_array_type2(self, p):
+        '''array_type : generic_type dims'''
+        p[1].dims = p[2]
+        p[0] = p[1]
+
+    def p_array_type3(self, p):
         '''array_type : generic_type '.' name dims'''
-        p[0] = p[1] + '.' + p[3] + '[' + p[4] + ']'
+        p[0] = Type(p[3], enclosed_in=p[1], dimensions=p[4])
 
     def p_type_arguments(self, p):
         '''type_arguments : '<' type_argument_list1'''
+        p[0] = p[2]
 
     def p_type_argument_list1(self, p):
         '''type_argument_list1 : type_argument1
                                | type_argument_list ',' type_argument1'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
     def p_type_argument_list(self, p):
         '''type_argument_list : type_argument
                               | type_argument_list ',' type_argument'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
     def p_type_argument(self, p):
         '''type_argument : reference_type
                          | wildcard'''
+        p[0] = p[1]
 
     def p_type_argument1(self, p):
         '''type_argument1 : reference_type1
                           | wildcard1'''
+        p[0] = p[1]
 
     def p_reference_type1(self, p):
         '''reference_type1 : reference_type '>'
                            | class_or_interface '<' type_argument_list2'''
+        if len(p) == 3:
+            p[0] = p[1]
+        else:
+            p[1].type_arguments = p[3]
+            p[0] = p[1]
 
     def p_type_argument_list2(self, p):
         '''type_argument_list2 : type_argument2
                                | type_argument_list ',' type_argument2'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
     def p_type_argument2(self, p):
         '''type_argument2 : reference_type2
                           | wildcard2'''
+        p[0] = p[1]
 
     def p_reference_type2(self, p):
         '''reference_type2 : reference_type RSHIFT
                            | class_or_interface '<' type_argument_list3'''
+        if len(p) == 3:
+            p[0] = p[1]
+        else:
+            p[1].type_arguments = p[3]
+            p[0] = p[1]
 
     def p_type_argument_list3(self, p):
         '''type_argument_list3 : type_argument3
                                | type_argument_list ',' type_argument3'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
     def p_type_argument3(self, p):
         '''type_argument3 : reference_type3
                           | wildcard3'''
+        p[0] = p[1]
 
     def p_reference_type3(self, p):
         '''reference_type3 : reference_type RRSHIFT'''
+        p[0] = p[1]
 
     def p_wildcard(self, p):
         '''wildcard : '?'
                     | '?' wildcard_bounds'''
+        if len(p) == 2:
+            p[0] = Wildcard()
+        else:
+            p[0] = Wildcard(bounds=p[2])
 
     def p_wildcard_bounds(self, p):
         '''wildcard_bounds : EXTENDS reference_type
                            | SUPER reference_type'''
+        if p[1] == 'extends':
+            p[0] = WildcardBound(p[2], extends=True)
+        else:
+            p[0] = WildcardBound(p[2], _super=True)
 
     def p_wildcard1(self, p):
         '''wildcard1 : '?' '>'
                      | '?' wildcard_bounds1'''
+        if p[2] == '>':
+            p[0] = Wildcard()
+        else:
+            p[0] = Wildcard(bounds=p[2])
 
     def p_wildcard_bounds1(self, p):
         '''wildcard_bounds1 : EXTENDS reference_type1
                             | SUPER reference_type1'''
+        if p[1] == 'extends':
+            p[0] = WildcardBound(p[2], extends=True)
+        else:
+            p[0] = WildcardBound(p[2], _super=True)
 
     def p_wildcard2(self, p):
         '''wildcard2 : '?' RSHIFT
                      | '?' wildcard_bounds2'''
+        if p[2] == '>>':
+            p[0] = Wildcard()
+        else:
+            p[0] = Wildcard(bounds=p[2])
 
     def p_wildcard_bounds2(self, p):
         '''wildcard_bounds2 : EXTENDS reference_type2
                             | SUPER reference_type2'''
+        if p[1] == 'extends':
+            p[0] = WildcardBound(p[2], extends=True)
+        else:
+            p[0] = WildcardBound(p[2], _super=True)
 
     def p_wildcard3(self, p):
         '''wildcard3 : '?' RRSHIFT
                      | '?' wildcard_bounds3'''
+        if p[2] == '>>>':
+            p[0] = Wildcard()
+        else:
+            p[0] = Wildcard(bounds=p[2])
 
     def p_wildcard_bounds3(self, p):
         '''wildcard_bounds3 : EXTENDS reference_type3
                             | SUPER reference_type3'''
+        if p[1] == 'extends':
+            p[0] = WildcardBound(p[2], extends=True)
+        else:
+            p[0] = WildcardBound(p[2], _super=True)
 
     def p_type_parameter_header(self, p):
         '''type_parameter_header : NAME'''

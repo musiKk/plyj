@@ -224,3 +224,33 @@ class ArrayInitializer(SourceElement):
 
     def __str__(self):
         return 'ArrayInitializer[elements={}]'.format(self.elements)
+
+class Type(SourceElement):
+
+    def __init__(self, name, type_arguments=[], enclosed_in=None, dimensions=0):
+        self.name = name
+        self.type_arguments = type_arguments
+        self.enclosed_in = enclosed_in
+        self.dimensions = dimensions
+
+    def __str__(self):
+        return 'Type[name={}, type_arguments={}, enclosed_in={}, dimensions={}]'.format(
+               self.name, [str(t) for t in self.type_arguments], self.enclosed_in, self.dimensions)
+
+class Wildcard(SourceElement):
+
+    def __init__(self, bounds=[]):
+        self.bounds = bounds
+
+    def __str__(self):
+        return 'Wildcard[bounds={}]'.format(self.bounds)
+
+class WildcardBound(SourceElement):
+
+    def __init__(self, _type, extends=False, _super=False):
+        self._type = _type
+        self.extends = extends
+        self._super = _super
+
+    def __str__(self):
+        return 'WildcardBound[type={}, extends={}, super={}]'.format(self._type, self.extends, self._super)
