@@ -254,3 +254,12 @@ class WildcardBound(SourceElement):
 
     def __str__(self):
         return 'WildcardBound[type={}, extends={}, super={}]'.format(self._type, self.extends, self._super)
+
+class TypeParameter(SourceElement):
+
+    def __init__(self, name, extends=[]):
+        self.name = name
+        self.extends = extends
+
+    def __str__(self):
+        return 'TypeParameter[name={}, extends={}]'.format(self.name, self.extends)

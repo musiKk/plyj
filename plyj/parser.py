@@ -1301,41 +1301,73 @@ class TypeParser(object):
 
     def p_type_parameter_header(self, p):
         '''type_parameter_header : NAME'''
+        p[0] = p[1]
 
     def p_type_parameters(self, p):
         '''type_parameters : '<' type_parameter_list1'''
+        p[0] = p[2]
 
     def p_type_parameter_list(self, p):
         '''type_parameter_list : type_parameter
                                | type_parameter_list ',' type_parameter'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
     def p_type_parameter(self, p):
         '''type_parameter : type_parameter_header
                           | type_parameter_header EXTENDS reference_type
                           | type_parameter_header EXTENDS reference_type additional_bound_list'''
+        if len(p) == 2:
+            p[0] = TypeParameter(p[1])
+        elif len(p) == 4:
+            p[0] = TypeParameter(p[1], extends=[p[3]])
+        else:
+            p[0] = TypeParameter(p[1], extends=[p[3]] + p[4])
 
     def p_additional_bound_list(self, p):
         '''additional_bound_list : additional_bound
                                  | additional_bound_list additional_bound'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[2]]
 
     def p_additional_bound(self, p):
         '''additional_bound : '&' reference_type'''
+        p[0] = p[2]
 
     def p_type_parameter_list1(self, p):
         '''type_parameter_list1 : type_parameter1
                                 | type_parameter_list ',' type_parameter1'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[3]]
 
     def p_type_parameter1(self, p):
         '''type_parameter1 : type_parameter_header '>'
                            | type_parameter_header EXTENDS reference_type1
                            | type_parameter_header EXTENDS reference_type additional_bound_list1'''
+        if len(p) == 3:
+            p[0] = TypeParameter(p[1])
+        elif len(p) == 4:
+            p[0] = TypeParameter(p[1], extends=[p[3]])
+        else:
+            p[0] = TypeParameter(p[1], extends=[p[3]] + p[4])
 
     def p_additional_bound_list1(self, p):
         '''additional_bound_list1 : additional_bound1
                                   | additional_bound_list additional_bound1'''
+        if len(p) == 2:
+            p[0] = [p[1]]
+        else:
+            p[0] = p[1] + [p[2]]
 
     def p_additional_bound1(self, p):
         '''additional_bound1 : '&' reference_type1'''
+        p[0] = p[2]
 
 class ClassParser(object):
 
