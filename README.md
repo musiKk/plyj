@@ -1,14 +1,13 @@
 plyj
 ====
 
-plyj is a Java parser written in Python using PLY. It has the awesome [PLY] as its sole dependency.
+plyj is a Java parser written in Python. It has the awesome [PLY] as its sole dependency.
 
 Synopsis
 --------
 
 ```python
 import plyj.parser as plyj
-
 
 parser = plyj.Parser()
 
@@ -36,7 +35,7 @@ The DOM is in a very rough shape and will be the next point on my list. It is ju
 Performance
 -----------
 
-A word of caution: Since plyj is pure Python, it is quite slow. Based on my old laptop (which usually runs with 1 GHz) I can present the following numbers:
+A word of caution: Since plyj is pure Python (and I mean 100% from front to back), it is quite slow. Based on my old laptop (which usually runs with 1 GHz) I can present the following numbers:
 
 * 619 rules
 * 1149 states
