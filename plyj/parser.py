@@ -1757,7 +1757,7 @@ class ClassParser(object):
     def p_member_value_array_initializer(self, p):
         '''member_value_array_initializer : '{' member_values ',' '}'
                                           | '{' member_values '}' '''
-        p[0] = ('array_initializer', p[2])
+        p[0] = ArrayInitializer(p[2])
 
     def p_member_value_array_initializer2(self, p):
         '''member_value_array_initializer : '{' ',' '}'
@@ -1780,7 +1780,7 @@ class ClassParser(object):
 
     def p_normal_annotation(self, p):
         '''normal_annotation : annotation_name '(' member_value_pairs_opt ')' '''
-        p[0] = ('annotation', p[0], p[3])
+        p[0] = Annotation(p[1], members=p[3])
 
     def p_annotation_name(self, p):
         '''annotation_name : '@' name'''
@@ -1804,15 +1804,15 @@ class ClassParser(object):
 
     def p_member_value_pair(self, p):
         '''member_value_pair : simple_name '=' member_value'''
-        p[0] = (p[1], p[3])
+        p[0] = AnnotationMember(p[1], p[2])
 
     def p_marker_annotation(self, p):
         '''marker_annotation : annotation_name'''
-        p[0] = ('marker_annotation', p[1])
+        p[0] = Annotation(p[1])
 
     def p_single_member_annotation(self, p):
         '''single_member_annotation : annotation_name '(' single_member_annotation_member_value ')' '''
-        p[0] = ('single_member_annotation', p[1], p[3])
+        p[0] = Annotation(p[1], single_member=p[3])
 
     def p_single_member_annotation_member_value(self, p):
         '''single_member_annotation_member_value : member_value'''

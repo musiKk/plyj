@@ -181,7 +181,7 @@ class AnnotationDeclaration(SourceElement):
 
     def __str__(self):
         return 'AnnotationDeclaration[name={}, modifiers={}, type_parameters={}, extends={}, implements={}, body={}]'.format(
-               self.name, self.modifiers, self.type_parameters, self.extends, self.implements, [str(e) for e in self.body])
+               self.name, [str(m) for m in self.modifiers], self.type_parameters, self.extends, self.implements, [str(e) for e in self.body])
 
 class AnnotationMethodDeclaration(SourceElement):
 
@@ -198,3 +198,29 @@ class AnnotationMethodDeclaration(SourceElement):
         return 'AnnotationMethodDeclaration[name={}, type={}, parameters={}, default={}, modifiers={}, type_parameters={}]'.format(
                self.name, self._type, self.parameters, self.default, self.modifiers, self.type_parameters)
 
+class Annotation(SourceElement):
+
+    def __init__(self, name, members=[], single_member=None):
+        self.name = name
+        self.members = members
+        self.single_member = single_member
+
+    def __str__(self):
+        return 'Annotation[name={}, members={}, single_member={}]'.format(self.name, [str(m) for m in self.members], self.single_member)
+
+class AnnotationMember(SourceElement):
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = value
+
+    def __str__(self):
+        return 'AnnotationMember[name={}, value={}]'.format(self.name, self.value)
+
+class ArrayInitializer(SourceElement):
+
+    def __init__(self, elements):
+        self.elements = elements
+
+    def __str__(self):
+        return 'ArrayInitializer[elements={}]'.format(self.elements)
