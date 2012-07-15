@@ -6,7 +6,7 @@ plyj is a Java parser written in Python using PLY. It has the awesome [PLY] as i
 Synopsis
 --------
 
-```
+```python
 import plyj.parser as plyj
 
 
