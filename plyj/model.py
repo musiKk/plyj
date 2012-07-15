@@ -122,3 +122,49 @@ class Variable(SourceElement):
 
     def __str__(self):
         return 'Variable[name={}, dims={}]'.format(self.name, self.dimensions)
+
+class Throws(SourceElement):
+
+    def __init__(self, types):
+        self.types = types
+
+    def __str__(self):
+        return 'Throws[types={}]'.format(self.types)
+
+class InterfaceDeclaration(SourceElement):
+
+    def __init__(self, name, modifiers=[], extends=[], type_parameters=[], body=[]):
+        self.name = name
+        self.modifiers = modifiers
+        self.extends = extends
+        self.type_parameters = type_parameters
+        self.body = body
+
+    def __str__(self):
+        return 'InterfaceDeclaration[name={}, modifiers={}, extends={}, type_parameters={}, body={}]'.format(
+               self.name, self.modifiers, self.extends, self.type_parameters, self.body)
+
+class EnumDeclaration(SourceElement):
+
+    def __init__(self, name, implements=[], modifiers=[], type_parameters=[], body=[]):
+        self.name = name
+        self.implements = implements
+        self.modifiers=modifiers
+        self.type_parameters=type_parameters
+        self.body = body
+
+    def __str__(self):
+        return 'EnumDeclaration[name={}, modifiers={}, implements={}, type_parameters={}, body={}]'.format(
+               self.name, self.modifiers, self.implements, self.type_parameters, [str(e) for e in self.body])
+
+class EnumConstant(SourceElement):
+
+    def __init__(self, name, arguments=[], modifiers=[], body=[]):
+        self.name = name
+        self.arguments = arguments
+        self.modifiers = modifiers
+        self.body = body
+
+    def __str__(self):
+        return 'EnumConstant[name={}, arguments={}, modifiers={}, body={}]'.format(
+               self.name, self.arguments, self.modifiers, [str(e) for e in self.body])

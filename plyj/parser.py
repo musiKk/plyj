@@ -1438,7 +1438,7 @@ class ClassParser(object):
 
     def p_method_header_throws_clause(self, p):
         '''method_header_throws_clause : THROWS class_type_list'''
-        p[0] = p[2]
+        p[0] = Throws(p[2])
 
     def p_class_type_list(self, p):
         '''class_type_list : class_type_elt
@@ -1495,23 +1495,28 @@ class ClassParser(object):
 
     def p_interface_declaration(self, p):
         '''interface_declaration : interface_header interface_body'''
-        p[0] = ('interface_decl', p[1], p[2])
+        p[0] = InterfaceDeclaration(p[1], modifiers=p[1]['modifiers'],
+                                    type_parameters=p[1]['type_parameters'],
+                                    extends=p[1]['extends'],
+                                    body=p[2])
 
     def p_interface_header(self, p):
         '''interface_header : interface_header_name interface_header_extends_opt'''
-        p[0] = (p[1], p[2])
+        p[1]['extends'] = p[2]
+        p[0] = p[1]
 
     def p_interface_header_name(self, p):
         '''interface_header_name : interface_header_name1 type_parameters
                                  | interface_header_name1'''
         if len(p) == 2:
-            p[0] = (p[1], None)
+            p[1]['type_parameters'] = []
         else:
-            p[0] = (p[1], p[2])
+            p[1]['type_parameters'] = p[2]
+        p[0] = p[1]
 
     def p_interface_header_name1(self, p):
         '''interface_header_name1 : modifiers_opt INTERFACE NAME'''
-        p[0] = (p[1], p[3])
+        p[0] = {'modifiers': p[1], 'name': p[3]}
 
     def p_interface_header_extends_opt(self, p):
         '''interface_header_extends_opt : interface_header_extends'''
@@ -1564,35 +1569,38 @@ class ClassParser(object):
 
     def p_enum_declaration(self, p):
         '''enum_declaration : enum_header enum_body'''
-        p[0] = ('enum_decl', p[1], p[2])
+        p[0] = EnumDeclaration(p[1]['name'], implements=p[1]['implements'],
+                               modifiers=p[1]['modifiers'],
+                               type_parameters=p[1]['type_parameters'], body=p[2])
 
     def p_enum_header(self, p):
         '''enum_header : enum_header_name class_header_implements_opt'''
-        p[0] = (p[1], p[2])
+        p[1]['implements'] = p[2]
+        p[0] = p[1]
 
     def p_enum_header_name(self, p):
         '''enum_header_name : modifiers_opt ENUM NAME
                             | modifiers_opt ENUM NAME type_parameters'''
         if len(p) == 4:
-            p[0] = (p[1], p[3], None)
+            p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': []}
         else:
-            p[0] = (p[1], p[3], p[4])
+            p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': p[4]}
 
     def p_enum_body(self, p):
         '''enum_body : '{' enum_body_declarations_opt '}' '''
-        p[0] = ([], p[2])
+        p[0] = p[2]
 
     def p_enum_body2(self, p):
         '''enum_body : '{' ',' enum_body_declarations_opt '}' '''
-        p[0] = ([], p[3])
+        p[0] = p[3]
 
     def p_enum_body3(self, p):
         '''enum_body : '{' enum_constants ',' enum_body_declarations_opt '}' '''
-        p[0] = (p[2], p[4])
+        p[0] = p[2] + p[4]
 
     def p_enum_body4(self, p):
         '''enum_body : '{' enum_constants enum_body_declarations_opt '}' '''
-        p[0] = (p[2], p[3])
+        p[0] = p[2] + p[3]
 
     def p_enum_constants(self, p):
         '''enum_constants : enum_constant
@@ -1606,17 +1614,18 @@ class ClassParser(object):
         '''enum_constant : enum_constant_header class_body
                          | enum_constant_header'''
         if len(p) == 2:
-            p[0] = (p[1], None)
+            p[0] = EnumConstant(p[1]['name'], arguments=p[1]['arguments'], modifiers=p[1]['modifiers'])
         else:
-            p[0] = (p[1], p[2])
+            p[0] = EnumConstant(p[1]['name'], arguments=p[1]['arguments'], modifiers=p[1]['modifiers'], body=p[2])
 
     def p_enum_constant_header(self, p):
         '''enum_constant_header : enum_constant_header_name arguments_opt'''
-        p[0] = (p[1], p[2])
+        p[1]['arguments'] = p[2]
+        p[0] = p[1]
 
     def p_enum_constant_header_name(self, p):
         '''enum_constant_header_name : modifiers_opt NAME'''
-        p[0] = (p[1], p[2])
+        p[0] = {'modifiers': p[1], 'name': p[2]}
 
     def p_arguments_opt(self, p):
         '''arguments_opt : arguments'''
