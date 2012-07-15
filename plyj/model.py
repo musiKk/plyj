@@ -331,3 +331,12 @@ class Unary(Expression):
 
     def __str__(self):
         return '({}, {})'.format(self.sign, self.expression)
+
+class Cast(Expression):
+
+    def __init__(self, target, expression):
+        self.target = target
+        self.expression = expression
+
+    def __str__(self):
+        return '(cast, {}, {})'.format(self.target, self.expression)

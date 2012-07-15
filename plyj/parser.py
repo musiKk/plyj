@@ -442,23 +442,27 @@ class ExpressionParser(object):
 
     def p_cast_expression(self, p):
         '''cast_expression : '(' primitive_type dims_opt ')' unary_expression'''
-        p[0] = ('cast', p[2] + '[' + p[3] + ']', p[5])
+        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
 
     def p_cast_expression2(self, p):
         '''cast_expression : '(' name type_arguments dims_opt ')' unary_expression_not_plus_minus'''
-        p[0] = ('cast', p[2], p[3], '[' + p[4] + ']', p[6])
+        p[0] = Cast(Type(p[2], type_arguments=p[3], dimensions=p[4]), p[6])
 
     def p_cast_expression3(self, p):
         '''cast_expression : '(' name type_arguments '.' class_or_interface_type dims_opt ')' unary_expression_not_plus_minus'''
-        p[0] = ('cast', p[2], p[3], p[5], '[' + p[6] + ']', p[8])
+        p[5].dimensions = p[6]
+        p[5].enclosed_in = Type(p[2], type_arguments=p[3])
+        p[0] = Cast(p[5], p[8])
 
     def p_cast_expression4(self, p):
         '''cast_expression : '(' name ')' unary_expression_not_plus_minus'''
-        p[0] = ('cast', p[2], p[4])
+        # technically it's not necessarily a type but could be a type parameter
+        p[0] = Cast(Type(p[2]), p[4])
 
     def p_cast_expression5(self, p):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
-        p[0] = ('cast', p[2] + '[' + p[3] + ']', p[5])
+        # technically it's not necessarily a type but could be a type parameter
+        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
 
 class StatementParser(object):
 
