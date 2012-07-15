@@ -263,3 +263,62 @@ class TypeParameter(SourceElement):
 
     def __str__(self):
         return 'TypeParameter[name={}, extends={}]'.format(self.name, self.extends)
+
+class Expression(SourceElement):
+    pass
+
+class BinaryExpression(Expression):
+
+    def __init__(self, operator, lhs, rhs):
+        self.operator = operator
+        self.lhs = lhs
+        self.rhs = rhs
+
+    def __str__(self):
+        return '({}, {}, {})'.format(self.operator, self.lhs, self.rhs)
+
+class Assignment(BinaryExpression):
+    pass
+
+class Conditional(Expression):
+
+    def __init__(self, predicate, if_true, if_false):
+        self.predicate = predicate
+        self.if_true = if_true
+        self.if_false = if_false
+
+    def __str__(self):
+        return '(?:, {}, {}, {})'.format(self.predicate, self.if_true, self.if_false)
+
+class ConditionalOr(BinaryExpression):
+    pass
+
+class ConditionalAnd(BinaryExpression):
+    pass
+
+class Or(BinaryExpression):
+    pass
+
+class Xor(BinaryExpression):
+    pass
+
+class And(BinaryExpression):
+    pass
+
+class Equality(BinaryExpression):
+    pass
+
+class InstanceOf(BinaryExpression):
+    pass
+
+class Relational(BinaryExpression):
+    pass
+
+class Shift(BinaryExpression):
+    pass
+
+class Additive(BinaryExpression):
+    pass
+
+class Multiplicative(BinaryExpression):
+    pass

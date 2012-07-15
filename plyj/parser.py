@@ -122,7 +122,7 @@ class ExpressionParser(object):
 
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
-        p[0] = (p[2], p[1], p[3])
+        p[0] = Assignment(p[2], p[1], p[3])
 
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
@@ -145,7 +145,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = ('?:', p[1], p[3], p[5])
+            p[0] = Conditional(p[1], p[3], p[5])
 
     def p_conditional_expression_not_name(self, p):
         '''conditional_expression_not_name : conditional_or_expression_not_name
@@ -154,74 +154,74 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = ('?:', p[1], p[3], p[5])
+            p[0] = Conditional(p[1], p[3], p[5])
 
-    def binop(self, p):
+    def binop(self, p, ctor):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = (p[2], p[1], p[3])
+            p[0] = ctor(p[2], p[1], p[3])
 
     def p_conditional_or_expression(self, p):
         '''conditional_or_expression : conditional_and_expression
                                      | conditional_or_expression OR conditional_and_expression'''
-        self.binop(p)
+        self.binop(p, ConditionalOr)
 
     def p_conditional_or_expression_not_name(self, p):
         '''conditional_or_expression_not_name : conditional_and_expression_not_name
                                               | conditional_or_expression_not_name OR conditional_and_expression
                                               | name OR conditional_and_expression'''
-        self.binop(p)
+        self.binop(p, ConditionalOr)
 
     def p_conditional_and_expression(self, p):
         '''conditional_and_expression : inclusive_or_expression
                                       | conditional_and_expression AND inclusive_or_expression'''
-        self.binop(p)
+        self.binop(p, ConditionalAnd)
 
     def p_conditional_and_expression_not_name(self, p):
         '''conditional_and_expression_not_name : inclusive_or_expression_not_name
                                                | conditional_and_expression_not_name AND inclusive_or_expression
                                                | name AND inclusive_or_expression'''
-        self.binop(p)
+        self.binop(p, ConditionalAnd)
 
     def p_inclusive_or_expression(self, p):
         '''inclusive_or_expression : exclusive_or_expression
                                    | inclusive_or_expression '|' exclusive_or_expression'''
-        self.binop(p)
+        self.binop(p, Or)
 
     def p_inclusive_or_expression_not_name(self, p):
         '''inclusive_or_expression_not_name : exclusive_or_expression_not_name
                                             | inclusive_or_expression_not_name '|' exclusive_or_expression
                                             | name '|' exclusive_or_expression'''
-        self.binop(p)
+        self.binop(p, Or)
 
     def p_exclusive_or_expression(self, p):
         '''exclusive_or_expression : and_expression
                                    | exclusive_or_expression '^' and_expression'''
-        self.binop(p)
+        self.binop(p, Xor)
 
     def p_exclusive_or_expression_not_name(self, p):
         '''exclusive_or_expression_not_name : and_expression_not_name
                                             | exclusive_or_expression_not_name '^' and_expression
                                             | name '^' and_expression'''
-        self.binop(p)
+        self.binop(p, Xor)
 
     def p_and_expression(self, p):
         '''and_expression : equality_expression
                           | and_expression '&' equality_expression'''
-        self.binop(p)
+        self.binop(p, And)
 
     def p_and_expression_not_name(self, p):
         '''and_expression_not_name : equality_expression_not_name
                                    | and_expression_not_name '&' equality_expression
                                    | name '&' equality_expression'''
-        self.binop(p)
+        self.binop(p, And)
 
     def p_equality_expression(self, p):
         '''equality_expression : instanceof_expression
                                | equality_expression EQ instanceof_expression
                                | equality_expression NEQ instanceof_expression'''
-        self.binop(p)
+        self.binop(p, Equality)
 
     def p_equality_expression_not_name(self, p):
         '''equality_expression_not_name : instanceof_expression_not_name
@@ -229,24 +229,18 @@ class ExpressionParser(object):
                                         | name EQ instanceof_expression
                                         | equality_expression_not_name NEQ instanceof_expression
                                         | name NEQ instanceof_expression'''
-        self.binop(p)
+        self.binop(p, Equality)
 
     def p_instanceof_expression(self, p):
         '''instanceof_expression : relational_expression
                                  | instanceof_expression INSTANCEOF reference_type'''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[2], p[1], p[3])
+        self.binop(p, InstanceOf)
 
     def p_instanceof_expression_not_name(self, p):
         '''instanceof_expression_not_name : relational_expression_not_name
                                           | name INSTANCEOF reference_type
                                           | instanceof_expression_not_name INSTANCEOF reference_type'''
-        if len(p) == 2:
-            p[0] = p[1]
-        else:
-            p[0] = (p[2], p[1], p[3])
+        self.binop(p, InstanceOf)
 
     def p_relational_expression(self, p):
         '''relational_expression : shift_expression
@@ -254,7 +248,7 @@ class ExpressionParser(object):
                                  | relational_expression '<' shift_expression
                                  | relational_expression GTEQ shift_expression
                                  | relational_expression LTEQ shift_expression'''
-        self.binop(p)
+        self.binop(p, Relational)
 
     def p_relational_expression_not_name(self, p):
         '''relational_expression_not_name : shift_expression_not_name
@@ -266,14 +260,14 @@ class ExpressionParser(object):
                                           | name GTEQ shift_expression
                                           | shift_expression_not_name LTEQ shift_expression
                                           | name LTEQ shift_expression'''
-        self.binop(p)
+        self.binop(p, Relational)
 
     def p_shift_expression(self, p):
         '''shift_expression : additive_expression
                             | shift_expression LSHIFT additive_expression
                             | shift_expression RSHIFT additive_expression
                             | shift_expression RRSHIFT additive_expression'''
-        self.binop(p)
+        self.binop(p, Shift)
 
     def p_shift_expression_not_name(self, p):
         '''shift_expression_not_name : additive_expression_not_name
@@ -283,13 +277,13 @@ class ExpressionParser(object):
                                      | name RSHIFT additive_expression
                                      | shift_expression_not_name RRSHIFT additive_expression
                                      | name RRSHIFT additive_expression'''
-        self.binop(p)
+        self.binop(p, Shift)
 
     def p_additive_expression(self, p):
         '''additive_expression : multiplicative_expression
                                | additive_expression '+' multiplicative_expression
                                | additive_expression '-' multiplicative_expression'''
-        self.binop(p)
+        self.binop(p, Additive)
 
     def p_additive_expression_not_name(self, p):
         '''additive_expression_not_name : multiplicative_expression_not_name
@@ -297,14 +291,14 @@ class ExpressionParser(object):
                                         | name '+' multiplicative_expression
                                         | additive_expression_not_name '-' multiplicative_expression
                                         | name '-' multiplicative_expression'''
-        self.binop(p)
+        self.binop(p, Additive)
 
     def p_multiplicative_expression(self, p):
         '''multiplicative_expression : unary_expression
                                      | multiplicative_expression '*' unary_expression
                                      | multiplicative_expression '/' unary_expression
                                      | multiplicative_expression '%' unary_expression'''
-        self.binop(p)
+        self.binop(p, Multiplicative)
 
     def p_multiplicative_expression_not_name(self, p):
         '''multiplicative_expression_not_name : unary_expression_not_name
@@ -314,7 +308,7 @@ class ExpressionParser(object):
                                               | name '/' unary_expression
                                               | multiplicative_expression_not_name '%' unary_expression
                                               | name '%' unary_expression'''
-        self.binop(p)
+        self.binop(p, Multiplicative)
 
     def p_unary_expression(self, p):
         '''unary_expression : pre_increment_expression
