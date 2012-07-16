@@ -597,35 +597,28 @@ class StatementParser(object):
 
     def p_method_invocation(self, p):
         '''method_invocation : name '(' argument_list_opt ')' '''
-        p[0] = ('method_invoc', p[1], p[3])
+        p[0] = MethodInvocation(p[1], arguments=p[3])
 
     def p_method_invocation2(self, p):
-        '''method_invocation : name '.' type_arguments NAME '(' argument_list_opt ')' '''
-        p[0] = ('method_invoc', p[1], p[3], p[4], p[6])
+        '''method_invocation : name '.' type_arguments NAME '(' argument_list_opt ')'
+                             | primary '.' type_arguments NAME '(' argument_list_opt ')'
+                             | SUPER '.' type_arguments NAME '(' argument_list_opt ')' '''
+        p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
 
     def p_method_invocation3(self, p):
-        '''method_invocation : primary '.' type_arguments NAME '(' argument_list_opt ')' '''
-        p[0] = ('method_invoc', p[1], p[3], p[4], p[6])
-
-    def p_method_invocation4(self, p):
-        '''method_invocation : primary '.' NAME '(' argument_list_opt ')' '''
-        p[0] = ('method_invoc', p[1], p[3], p[5])
-
-    def p_method_invocation5(self, p):
-        '''method_invocation : SUPER '.' type_arguments NAME '(' argument_list_opt ')' '''
-        p[0] = ('method_invoc', p[1], p[3], p[4], p[6])
-
-    def p_method_invocation6(self, p):
-        '''method_invocation : SUPER '.' NAME '(' argument_list_opt ')' '''
-        p[0] = ('method_invoc', p[1], p[3], p[5])
+        '''method_invocation : primary '.' NAME '(' argument_list_opt ')'
+                             | SUPER '.' NAME '(' argument_list_opt ')' '''
+        p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
 
     def p_labeled_statement(self, p):
         '''labeled_statement : label ':' statement'''
-        p[0] = ('labeled_statement', p[1], p[3])
+        p[3].label = p[1]
+        p[0] = p[3]
 
     def p_labeled_statement_no_short_if(self, p):
         '''labeled_statement_no_short_if : label ':' statement_no_short_if'''
-        p[0] = ('labeled_statement', p[1], p[3])
+        p[3].label = p[1]
+        p[0] = p[3]
 
     def p_label(self, p):
         '''label : NAME'''
@@ -633,31 +626,31 @@ class StatementParser(object):
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
-        p[0] = ('if_then', p[3], p[5])
+        p[0] = IfThenElse(p[3], p[5])
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
-        p[0] = ('if_then_else', p[3], p[5], p[7])
+        p[0] = IfThenElse(p[3], p[5], p[7])
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
-        p[0] = ('if_then_else', p[3], p[5], p[7])
+        p[0] = IfThenElse(p[3], p[5], p[7])
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
-        p[0] = ('while', p[3], p[5])
+        p[0] = While(p[3], p[5])
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
-        p[0] = ('while', p[3], p[5])
+        p[0] = While(p[3], p[5])
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
-        p[0] = ('for', p[3], p[5], p[7], p[9])
+        p[0] = For(p[3], p[5], p[7], p[9])
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
-        p[0] = ('for', p[3], p[5], p[7], p[9])
+        p[0] = For(p[3], p[5], p[7], p[9])
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
@@ -693,23 +686,23 @@ class StatementParser(object):
 
     def p_enhanced_for_statement(self, p):
         '''enhanced_for_statement : enhanced_for_statement_header statement'''
-        p[0] = ('foreach', p[1], p[2])
+        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'])
 
     def p_enhanced_for_statement_no_short_if(self, p):
         '''enhanced_for_statement_no_short_if : enhanced_for_statement_header statement_no_short_if'''
-        p[0] = ('foreach', p[1], p[2])
+        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'])
 
     def p_enhanced_for_statement_header(self, p):
         '''enhanced_for_statement_header : enhanced_for_statement_header_init ':' expression ')' '''
-        p[0] = (p[1], p[3])
+        p[1]['iterable'] = p[3]
 
     def p_enhanced_for_statement_header_init(self, p):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
-        p[0] = (None, p[3], p[4] + '[' + p[5] + ']')
+        p[0] = {'modifiers': [], 'type': p[3], 'variable': Variable(p[4], dimensions=p[5])}
 
     def p_enhanced_for_statement_header_init2(self, p):
         '''enhanced_for_statement_header_init : FOR '(' modifiers type NAME dims_opt'''
-        p[0] = (p[3], p[4], p[5] + '[' + p[6] + ']')
+        p[0] = {'modifiers': p[3], 'type': p[4], 'variable': Variable(p[5], dimensions=p[6])}
 
     def p_statement_no_short_if(self, p):
         '''statement_no_short_if : statement_without_trailing_substatement

@@ -358,3 +358,54 @@ class ArrayInitializer(SourceElement):
     def __str__(self):
         # '{' placeholder '}'
         return '{{{}}}'.format([str(e) for e in self.elements])
+
+class MethodInvocation(Expression):
+
+    def __init__(self, name, arguments=[], type_arguments=[], target=None):
+        self.name = name
+        self.arguments = arguments
+        self.type_arguments = type_arguments
+        self.target = target
+
+    def __str__(self):
+        return 'MethodInvocation[name={}, arguments={}, type_arguments={}, target={}]'.format(
+               self.name, self.arguments, self.type_arguments, self.target)
+
+class IfThenElse(Statement):
+
+    def __init__(self, predicate, if_true=None, if_false=None):
+        self.predicate = predicate
+        self.if_true = if_true
+        self.if_false = if_false
+
+    def __str__(self):
+        return 'if {} then {} else {}'.format(self.predicate, self.if_true, self.if_false)
+
+class While(Statement):
+
+    def __init__(self, predicate, body=None):
+        self.predicate = predicate
+        self.body = body
+
+    def __str__(self):
+        return 'while {} {}'.format(self.predicate, self.body)
+
+class For(Statement):
+
+    def __init__(self, init, predicate, update, body):
+        self.init = init
+        self.predicate = predicate
+        self.update = update
+        self.body = body
+
+    def __str__(self):
+        return 'for {} {} {} {}'.format(self.init, self.predicate, self.update, self.body)
+
+class ForEach(Statement):
+
+    def __init__(self, _type, variable, iterable, body, modifiers=[]):
+        self._type = _type
+        self.variable = variable
+        self.iterable = iterable
+        self.body = body
+        self.modifiers = modifiers
