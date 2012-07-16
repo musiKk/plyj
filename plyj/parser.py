@@ -2009,6 +2009,14 @@ class MyParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassPar
 
     tokens = MyLexer.tokens
 
+    def p_goal_compilation_unit(self, p):
+        '''goal : PLUSPLUS compilation_unit'''
+        p[0] = p[2]
+
+    def p_goal_expression(self, p):
+        '''goal : MINUSMINUS expression'''
+        p[0] = p[2]
+
     def p_error(self, p):
         print 'error: {}'.format(p)
 
@@ -2019,7 +2027,7 @@ class Parser(object):
 
     def __init__(self):
         self.lexer = lex.lex(module=MyLexer(), optimize=1)
-        self.parser = yacc.yacc(module=MyParser(), start='compilation_unit', optimize=1)
+        self.parser = yacc.yacc(module=MyParser(), start='goal', optimize=1)
 
     def tokenize_string(self, code):
         self.lexer.input(code)
@@ -2034,9 +2042,12 @@ class Parser(object):
             content += line
         return self.tokenize_string(content)
 
-    def parse_string(self, code, debug=0):
-        self.lexer.lineno = 1
-        return self.parser.parse(code, lexer=self.lexer, debug=debug)
+    def parse_expression(self, code, debug=0, lineno=1):
+        return self.parse_string(code, debug, lineno, prefix='--')
+
+    def parse_string(self, code, debug=0, lineno=1, prefix='++'):
+        self.lexer.lineno = lineno
+        return self.parser.parse(prefix + code, lexer=self.lexer, debug=debug)
 
     def parse_file(self, _file, debug=0):
         if type(_file) == str:
