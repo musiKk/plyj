@@ -11,14 +11,15 @@ import plyj.parser as plyj
 
 parser = plyj.Parser()
 
-# parse a file
+# parse a compilation unit from a file
 tree = parser.parse_file(file('/foo/bar/Baz.java'))
 
-# parse a string
+# parse a compilation unit from a string
 tree = parser.parse_string('class Foo { }')
-```
 
-Currently the parse methods only take whole compilation units. This may change in the future.
+# parse expression from string
+tree = parser.parse_expression('1 / 2 * (float) 3')
+```
 
 Acknowledgement
 ---------------
