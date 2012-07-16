@@ -100,7 +100,7 @@ class MethodDeclaration(SourceElement):
 
     def __str__(self):
         return 'MethodDeclaration[name={}, parameters={}, return_type={}, modifiers={}, type_parameters={}, abstract={}, throws={}, body={}]'.format(
-                self.name, self.parameters, self.return_type, self.modifiers, self.type_parameters, self.abstract, self.throws, self.body)
+                self.name, self.parameters, self.return_type, self.modifiers, self.type_parameters, self.abstract, self.throws, [str(s) for s in self.body])
 
 class FormalParameter(SourceElement):
 
@@ -340,3 +340,21 @@ class Cast(Expression):
 
     def __str__(self):
         return '(cast, {}, {})'.format(self.target, self.expression)
+
+class Statement(SourceElement):
+    pass
+
+class VariableDeclaration(Statement, FieldDeclaration):
+
+    def __str__(self):
+        return 'VariableDeclaration[type={}, modifiers={}, variable_declarators={}]'.format(
+               self._type, [str(m) for m in self.modifiers], [str(d) for d in self.variable_declarators])
+
+class ArrayInitializer(SourceElement):
+
+    def __init__(self, elements=[]):
+        self.elements = elements
+
+    def __str__(self):
+        # '{' placeholder '}'
+        return '{{{}}}'.format([str(e) for e in self.elements])

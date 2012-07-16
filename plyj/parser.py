@@ -501,11 +501,11 @@ class StatementParser(object):
 
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
-        p[0] = ('local_var_decl', [], p[1], p[2])
+        p[0] = VariableDeclaration(p[1], p[2])
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
-        p[0] = ('local_var_decl', p[1], p[2], p[3])
+        p[0] = VariableDeclaration(p[2], p[3], modifiers=p[1])
 
     def p_variable_declarators(self, p):
         '''variable_declarators : variable_declarator
@@ -580,12 +580,12 @@ class StatementParser(object):
 
     def p_array_initializer(self, p):
         '''array_initializer : '{' comma_opt '}' '''
-        p[0] = []
+        p[0] = ArrayInitializer()
 
     def p_array_initializer2(self, p):
         '''array_initializer : '{' variable_initializers '}'
                              | '{' variable_initializers ',' '}' '''
-        p[0] = p[2]
+        p[0] = ArrayInitializer(p[2])
 
     def p_variable_initializers(self, p):
         '''variable_initializers : variable_initializer
