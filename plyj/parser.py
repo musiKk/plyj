@@ -779,43 +779,43 @@ class StatementParser(object):
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        p[0] = ('do', p[2], p[5])
+        p[0] = DoWhile(p[5], body=p[2])
 
     def p_break_statement(self, p):
         '''break_statement : BREAK ';'
                            | BREAK NAME ';' '''
         if len(p) == 3:
-            p[0] = ('break', None)
+            p[0] = Break()
         else:
-            p[0] = ('break', p[2])
+            p[0] = Break(p[2])
 
     def p_continue_statement(self, p):
         '''continue_statement : CONTINUE ';'
                               | CONTINUE NAME ';' '''
         if len(p) == 3:
-            p[0] = ('continue', None)
+            p[0] = Continue()
         else:
-            p[0] = ('continue', p[2])
+            p[0] = Continue(p[2])
 
     def p_return_statement(self, p):
         '''return_statement : RETURN expression_opt ';' '''
-        p[0] = ('return', p[2])
+        p[0] = Return(p[2])
 
     def p_synchronized_statement(self, p):
         '''synchronized_statement : SYNCHRONIZED '(' expression ')' block'''
-        p[0] = ('synchronized', p[3], p[5])
+        p[0] = Synchronized(p[3], p[5])
 
     def p_throw_statement(self, p):
         '''throw_statement : THROW expression ';' '''
-        p[0] = ('throw', p[2])
+        p[0] = Throw(p[2])
 
     def p_try_statement(self, p):
         '''try_statement : TRY try_block catches
                          | TRY try_block catches_opt finally'''
         if len(p) == 4:
-            p[0] = ('try', p[2], p[3], None)
+            p[0] = Try(p[2], catches=p[3])
         else:
-            p[0] = ('try', p[2], p[3], p[4])
+            p[0] = Try(p[2], catches=p[3], _finally=p[4])
 
     def p_try_block(self, p):
         '''try_block : block'''
@@ -839,11 +839,11 @@ class StatementParser(object):
 
     def p_catch_clause(self, p):
         '''catch_clause : CATCH '(' catch_formal_parameter ')' block'''
-        p[0] = (p[3], p[5])
+        p[0] = Catch(p[3]['variable'], types=p[3]['types'], modifiers=p[3]['modifiers'], block=p[5])
 
     def p_catch_formal_parameter(self, p):
         '''catch_formal_parameter : modifiers_opt catch_type variable_declarator_id'''
-        p[0] = (p[1], p[2], p[3])
+        p[0] = {'modifiers': p[1], 'types': p[2], 'variable': p[3]}
 
     def p_catch_type(self, p):
         '''catch_type : union_type'''
@@ -861,9 +861,9 @@ class StatementParser(object):
         '''try_statement_with_resources : TRY resource_specification try_block catches_opt
                                         | TRY resource_specification try_block catches_opt finally'''
         if len(p) == 5:
-            p[0] = ('try_resources', p[2], p[3], p[4], None)
+            p[0] = Try(p[3], resources=p[2], catches=p[4])
         else:
-            p[0] = ('try_resources', p[2], p[3], p[4], p[5])
+            p[0] = Try(p[3], resources=p[2], catches=p[4], _finally=p[5])
 
     def p_resource_specification(self, p):
         '''resource_specification : '(' resources semi_opt ')' '''
@@ -888,11 +888,11 @@ class StatementParser(object):
 
     def p_resource(self, p):
         '''resource : type variable_declarator_id '=' variable_initializer'''
-        p[0] = (None, p[1], p[2], p[4])
+        p[0] = Resource(p[2], _type=p[1], initializer=p[4])
 
     def p_resource2(self, p):
         '''resource : modifiers type variable_declarator_id '=' variable_initializer'''
-        p[0] = (p[1], p[2], p[3], p[5])
+        p[0] = Resource(p[3], _type=p[2], modifiers=p[1], initializer=p[5])
 
     def p_finally(self, p):
         '''finally : FINALLY block'''

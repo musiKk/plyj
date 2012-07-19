@@ -439,3 +439,86 @@ class SwitchCase(SourceElement):
 
     def __str__(self):
         return '{} {}'.format([str(c) for c in self.cases], [str(s) for s in self.body])
+
+class DoWhile(Statement):
+
+    def __init__(self, predicate, body=None):
+        self.predicate = predicate
+        self.body = body
+
+    def __str__(self):
+        return 'do {} while {}'.format(self.predicate, self.body)
+
+class Continue(Statement):
+
+    def __init__(self, label=None):
+        self.label = label
+
+    def __str__(self):
+        return 'continue {}'.format(self.label)
+
+class Break(Statement):
+
+    def __init__(self, label=None):
+        self.label = label
+
+    def __str__(self):
+        return 'break {}'.format(self.label)
+
+class Return(Statement):
+
+    def __init__(self, result=None):
+        self.result = result
+
+    def __str__(self):
+        return 'return {}'.format(self.result)
+
+class Synchronized(Statement):
+
+    def __init__(self, monitor, body):
+        self.monitor = monitor
+        self.body = body
+
+    def __str__(self):
+        return 'synchronized {} {}'.format(self.monitor, self.body)
+
+class Throw(Statement):
+
+    def __init__(self, exception):
+        self.exception = exception
+
+    def __str__(self):
+        return 'throw {}'.format(self.exception)
+
+class Try(Statement):
+
+    def __init__(self, block, catches=[], _finally=[], resources=[]):
+        self.block = block
+        self.catches = catches
+        self._finally = _finally
+        self.resources = resources
+
+    def __str__(self):
+        return 'try {} {} catch {} finally {}'.format([str(r) for r in self.resources], [str(e) for e in self.block], [str(c) for c in self.catches], [str(e) for e in self._finally])
+
+class Catch(SourceElement):
+
+    def __init__(self, variable, modifiers=[], types=[], block=[]):
+        self.variable = variable
+        self.modifiers = modifiers
+        self.types = types
+        self.block = block
+
+    def __str__(self):
+        return 'catch {} {} {} {}'.format(self.modifiers, [str(t) for t in self.types], self.variable, [str(e) for e in self.block])
+
+class Resource(SourceElement):
+
+    def __init__(self, variable, _type=None, modifiers=[], initializer=None):
+        self.variable = variable
+        self._type = _type
+        self.modifiers = modifiers
+        self.initializer = initializer
+
+    def __str__(self):
+        return 'resource {} {} {} {}'.format(self.modifiers, self._type, self.variable, self.initializer)
