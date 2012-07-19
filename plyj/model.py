@@ -522,3 +522,23 @@ class Resource(SourceElement):
 
     def __str__(self):
         return 'resource {} {} {} {}'.format(self.modifiers, self._type, self.variable, self.initializer)
+
+class ConstructorInvocation(Statement):
+    """An explicit invocations of a class's constructor.
+
+    This is a variant of either this() or super(), NOT a "new" expression.
+    """
+
+    def __init__(self, name, target=None, type_arguments=[], arguments=[]):
+        """Arguments:
+
+        name - either "super" or "this"
+        """
+        self.name = name
+        self.target = target
+        self.type_arguments = type_arguments
+        self.arguments = arguments
+
+    def __str__(self):
+        return 'ConstructorInvocation[name={}, target={}, type_arguments={}, arguments={}]'.format(
+               self.name, self.target, self.type_arguments, self.arguments)

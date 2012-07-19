@@ -900,51 +900,27 @@ class StatementParser(object):
 
     def p_explicit_constructor_invocation(self, p):
         '''explicit_constructor_invocation : THIS '(' argument_list_opt ')' ';'
-                                           | type_arguments THIS '(' argument_list_opt ')' ';' '''
-        if len(p) == 6:
-            p[0] = (p[1], None, None, p[3])
-        else:
-            p[0] = (p[2], None, p[1], p[4])
+                                           | SUPER '(' argument_list_opt ')' ';' '''
+        p[0] = ConstructorInvocation(p[1], arguments=p[3])
 
     def p_explicit_constructor_invocation2(self, p):
-        '''explicit_constructor_invocation : SUPER '(' argument_list_opt ')' ';'
-                                           | type_arguments SUPER '(' argument_list_opt ')' ';' '''
-        if len(p) == 6:
-            p[0] = (p[1], None, None, p[3])
-        else:
-            p[0] = (p[2], None, p[1], p[4])
+        '''explicit_constructor_invocation : type_arguments SUPER '(' argument_list_opt ')' ';'
+                                           | type_arguments THIS '(' argument_list_opt ')' ';' '''
+        p[0] = ConstructorInvocation(p[2], type_arguments=p[1], arguments=p[4])
 
     def p_explicit_constructor_invocation3(self, p):
         '''explicit_constructor_invocation : primary '.' SUPER '(' argument_list_opt ')' ';'
-                                           | primary '.' type_arguments SUPER '(' argument_list_opt ')' ';' '''
-        if len(p) == 8:
-            p[0] = (p[3], p[1], None, p[5])
-        else:
-            p[0] = (p[4], p[1], p[3], p[6])
+                                           | name '.' SUPER '(' argument_list_opt ')' ';'
+                                           | primary '.' THIS '(' argument_list_opt ')' ';'
+                                           | name '.' THIS '(' argument_list_opt ')' ';' '''
+        p[0] = ConstructorInvocation(p[3], target=p[1], arguments=p[5])
 
     def p_explicit_constructor_invocation4(self, p):
-        '''explicit_constructor_invocation : name '.' SUPER '(' argument_list_opt ')' ';'
-                                           | name '.' type_arguments SUPER '(' argument_list_opt ')' ';' '''
-        if len(p) == 8:
-            p[0] = (p[3], p[1], None, p[5])
-        else:
-            p[0] = (p[4], p[1], p[3], p[6])
-
-    def p_explicit_constructor_invocation5(self, p):
-        '''explicit_constructor_invocation : primary '.' THIS '(' argument_list_opt ')' ';'
-                                           | primary '.' type_arguments THIS '(' argument_list_opt ')' ';' '''
-        if len(p) == 8:
-            p[0] = (p[3], p[1], None, p[5])
-        else:
-            p[0] = (p[4], p[1], p[3], p[6])
-
-    def p_explicit_constructor_invocation6(self, p):
-        '''explicit_constructor_invocation : name '.' THIS '(' argument_list_opt ')' ';'
+        '''explicit_constructor_invocation : primary '.' type_arguments SUPER '(' argument_list_opt ')' ';'
+                                           | name '.' type_arguments SUPER '(' argument_list_opt ')' ';'
+                                           | primary '.' type_arguments THIS '(' argument_list_opt ')' ';'
                                            | name '.' type_arguments THIS '(' argument_list_opt ')' ';' '''
-        if len(p) == 8:
-            p[0] = (p[3], p[1], None, p[5])
-        else:
-            p[0] = (p[4], p[1], p[3], p[6])
+        p[0] = ConstructorInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
 
     def p_class_instance_creation_expression(self, p):
         '''class_instance_creation_expression : NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
