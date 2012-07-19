@@ -717,9 +717,9 @@ class StatementParser(object):
         '''assert_statement : ASSERT expression ';'
                             | ASSERT expression ':' expression ';' '''
         if len(p) == 4:
-            p[0] = ('assert', p[2], None)
+            p[0] = Assert(p[2])
         else:
-            p[0] = ('assert', p[2], p[4])
+            p[0] = Assert(p[2], message=p[4])
 
     def p_empty_statement(self, p):
         '''empty_statement : ';' '''
@@ -727,7 +727,7 @@ class StatementParser(object):
 
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''
-        p[0] = ('switch', p[3], p[5])
+        p[0] = Switch(p[3], p[5])
 
     def p_switch_block(self, p):
         '''switch_block : '{' '}' '''
@@ -735,15 +735,15 @@ class StatementParser(object):
 
     def p_switch_block2(self, p):
         '''switch_block : '{' switch_block_statements '}' '''
-        p[0] = (p[2], None)
+        p[0] = p[2]
 
     def p_switch_block3(self, p):
         '''switch_block : '{' switch_labels '}' '''
-        p[0] = (None, p[2])
+        p[0] = [SwitchCase(p[2])]
 
     def p_switch_block4(self, p):
         '''switch_block : '{' switch_block_statements switch_labels '}' '''
-        p[0] = (p[2], p[3])
+        p[0] = p[2] + [SwitchCase(p[3])]
 
     def p_switch_block_statements(self, p):
         '''switch_block_statements : switch_block_statement
@@ -755,7 +755,7 @@ class StatementParser(object):
 
     def p_switch_block_statement(self, p):
         '''switch_block_statement : switch_labels block_statements'''
-        p[0] = (p[1], p[2])
+        p[0] = SwitchCase(p[1], body=p[2])
 
     def p_switch_labels(self, p):
         '''switch_labels : switch_label

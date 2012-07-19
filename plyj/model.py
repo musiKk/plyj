@@ -409,3 +409,33 @@ class ForEach(Statement):
         self.iterable = iterable
         self.body = body
         self.modifiers = modifiers
+
+    def __str__(self):
+        return 'foreach ({} {} {} : {}) {}'.format(self.modifiers, self._type, self.variable, self.iterable, self.body)
+
+class Assert(Statement):
+
+    def __init__(self, predicate, message=None):
+        self.predicate = predicate
+        self.message = message
+
+    def __str__(self):
+        return 'assert({} : {})'.format(self.predicate, self.message)
+
+class Switch(Statement):
+
+    def __init__(self, expression, switch_cases):
+        self.expression = expression
+        self.switch_cases = switch_cases
+
+    def __str__(self):
+        return 'switch({}) {}'.format(self.expression, [str(s) for s in self.switch_cases])
+
+class SwitchCase(SourceElement):
+
+    def __init__(self, cases, body=[]):
+        self.cases = cases
+        self.body = body
+
+    def __str__(self):
+        return '{} {}'.format([str(c) for c in self.cases], [str(s) for s in self.body])
