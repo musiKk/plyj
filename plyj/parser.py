@@ -519,9 +519,9 @@ class StatementParser(object):
         '''variable_declarator : variable_declarator_id
                                | variable_declarator_id '=' variable_initializer'''
         if len(p) == 2:
-            p[0] = p[1]
+            p[0] = VariableDeclarator(p[1])
         else:
-            p[0] = ('=', p[1], p[3])
+            p[0] = VariableDeclarator(p[1], initializer=p[3])
 
     def p_variable_declarator_id(self, p):
         '''variable_declarator_id : NAME dims_opt'''

@@ -123,6 +123,15 @@ class Variable(SourceElement):
     def __str__(self):
         return 'Variable[name={}, dims={}]'.format(self.name, self.dimensions)
 
+class VariableDeclarator(SourceElement):
+
+    def __init__(self, variable, initializer=None):
+        self.variable = variable
+        self.initializer = initializer
+
+    def __str__(self):
+        return '{} = {}'.format(self.variable, self.initializer)
+
 class Throws(SourceElement):
 
     def __init__(self, types):
