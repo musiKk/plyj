@@ -958,18 +958,18 @@ class StatementParser(object):
     def p_field_access(self, p):
         '''field_access : primary '.' NAME
                         | SUPER '.' NAME'''
-        p[0] = ('field_access', p[1], p[3])
+        p[0] = FieldAccess(p[3], p[1])
 
     def p_array_access(self, p):
         '''array_access : name '[' expression ']'
                         | primary_no_new_array '[' expression ']'
                         | array_creation_with_array_initializer '[' expression ']' '''
-        p[0] = ('array_access', p[1], p[3])
+        p[0] = ArrayAccess(p[3], p[1])
 
     def p_array_creation_with_array_initializer(self, p):
         '''array_creation_with_array_initializer : NEW primitive_type dim_with_or_without_exprs array_initializer
                                                  | NEW class_or_interface_type dim_with_or_without_exprs array_initializer'''
-        p[0] = ('array_creation', p[2], p[3], p[4])
+        p[0] = ArrayCreation(p[2], dimensions=p[3], initializer=p[4])
 
     def p_dim_with_or_without_exprs(self, p):
         '''dim_with_or_without_exprs : dim_with_or_without_expr
@@ -983,14 +983,14 @@ class StatementParser(object):
         '''dim_with_or_without_expr : '[' expression ']'
                                     | '[' ']' '''
         if len(p) == 3:
-            p[0] = ('dim', None)
+            p[0] = None
         else:
-            p[0] = ('dim', p[2])
+            p[0] = p[2]
 
     def p_array_creation_without_array_initializer(self, p):
         '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs
                                                     | NEW class_or_interface_type dim_with_or_without_exprs'''
-        p[0] = ('array_creation', p[2], p[3], None)
+        p[0] = ArrayCreation(p[2], dimensions=p[3])
 
 class NameParser(object):
 

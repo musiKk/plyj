@@ -564,3 +564,32 @@ class InstanceCreation(Expression):
     def __str__(self):
         return 'InstanceCreation[type={}, type_arguments={}, enclosed_in={}, arguments={}, body={}]'.format(
                self._type, self.type_arguments, self.enclosed_in, self.arguments, self.body)
+
+class FieldAccess(Expression):
+
+    def __init__(self, name, target):
+        self.name = name
+        self.target = target
+
+    def __str__(self):
+        return 'FieldAccess[name={}, target={}]'.format(self.name, self.target)
+
+class ArrayAccess(Expression):
+
+    def __init__(self, index, target):
+        self.index = index
+        self.target = target
+
+    def __str__(self):
+        return 'ArrayAccess[index={}, target={}]'.format(self.index, self.target)
+
+class ArrayCreation(Expression):
+
+    def __init__(self, _type, dimensions=[], initializer=None):
+        self._type = _type
+        self.dimensions = dimensions
+        self.initializer = initializer
+
+    def __str__(self):
+        return 'ArrayCreation[type={}, dimensions={}, initializer={}]'.format(
+               self._type, self.dimensions, self.initializer)
