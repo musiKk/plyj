@@ -551,3 +551,16 @@ class ConstructorInvocation(Statement):
     def __str__(self):
         return 'ConstructorInvocation[name={}, target={}, type_arguments={}, arguments={}]'.format(
                self.name, self.target, self.type_arguments, self.arguments)
+
+class InstanceCreation(Expression):
+
+    def __init__(self, _type, type_arguments=[], arguments=[], body=[], enclosed_in=None):
+        self._type = _type
+        self.type_arguments = type_arguments
+        self.arguments = arguments
+        self.body = body
+        self.enclosed_in = enclosed_in
+
+    def __str__(self):
+        return 'InstanceCreation[type={}, type_arguments={}, enclosed_in={}, arguments={}, body={}]'.format(
+               self._type, self.type_arguments, self.enclosed_in, self.arguments, self.body)
