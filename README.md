@@ -1,4 +1,4 @@
-plyj
+plyj [![Build Status](https://secure.travis-ci.org/musiKk/plyj.png?branch=master)](http://travis-ci.org/musiKk/plyj)
 ====
 
 plyj is a Java parser written in Python. It has the awesome [PLY] as its sole dependency.
