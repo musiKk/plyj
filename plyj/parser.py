@@ -1986,6 +1986,10 @@ class MyParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassPar
         '''goal : MINUSMINUS expression'''
         p[0] = p[2]
 
+    def p_goal_statement(self, p):
+        '''goal : '*' block_statement'''
+        p[0] = p[2]
+
     def p_error(self, p):
         print 'error: {}'.format(p)
 
@@ -2013,6 +2017,9 @@ class Parser(object):
 
     def parse_expression(self, code, debug=0, lineno=1):
         return self.parse_string(code, debug, lineno, prefix='--')
+
+    def parse_statement(self, code, debug=0, lineno=1):
+        return self.parse_string(code, debug, lineno, prefix='* ')
 
     def parse_string(self, code, debug=0, lineno=1, prefix='++'):
         self.lexer.lineno = lineno
