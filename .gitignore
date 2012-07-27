@@ -1,2 +1,8 @@
+*.egg-info
+
 *.py[co]
 MANIFEST
+
+lextab.py
+parsetab.py
+parser.out
