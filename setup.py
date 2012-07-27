@@ -13,4 +13,5 @@ setup(
     install_requires=[
         "ply >= 3.4",
     ],
+    test_suite='test'
 )
