@@ -116,6 +116,11 @@ class FormalParameter(SourceElement):
                 self.variable, self._type, self.modifiers, self.vararg)
 
 class Variable(SourceElement):
+# I would like to remove this class. In theory, the dimension could be added to
+# the type but this means variable declarations have to be changed somehow.
+# Consider 'int i, j[];'. In this case there currently is only one type with two
+# variable declarators; this closely resembles the source code. If the variable
+# is to go away, the type has to be duplicated for every variable...
 
     def __init__(self, name, dimensions=0):
         self.name = name
