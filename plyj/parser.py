@@ -334,11 +334,11 @@ class ExpressionParser(object):
 
     def p_pre_increment_expression(self, p):
         '''pre_increment_expression : PLUSPLUS unary_expression'''
-        p[0] = Unary('x++', p[2])
+        p[0] = Unary('++x', p[2])
 
     def p_pre_decrement_expression(self, p):
         '''pre_decrement_expression : MINUSMINUS unary_expression'''
-        p[0] = Unary('x--', p[2])
+        p[0] = Unary('--x', p[2])
 
     def p_unary_expression_not_plus_minus(self, p):
         '''unary_expression_not_plus_minus : postfix_expression
@@ -375,11 +375,11 @@ class ExpressionParser(object):
 
     def p_post_increment_expression(self, p):
         '''post_increment_expression : postfix_expression PLUSPLUS'''
-        p[0] = Unary('++x', p[1])
+        p[0] = Unary('x++', p[1])
 
     def p_post_decrement_expression(self, p):
         '''post_decrement_expression : postfix_expression MINUSMINUS'''
-        p[0] = Unary('--x', p[1])
+        p[0] = Unary('x--', p[1])
 
     def p_primary(self, p):
         '''primary : primary_no_new_array
