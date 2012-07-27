@@ -3,7 +3,8 @@ class SourceElement(object):
     A SourceElement is the base class for all elements that occur in a Java
     file parsed by plyj.
     '''
-    pass
+    def __eq__(self, other):
+        return self.__dict__ == other.__dict__
 
 class CompilationUnit(SourceElement):
 
