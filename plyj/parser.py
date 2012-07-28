@@ -695,6 +695,7 @@ class StatementParser(object):
     def p_enhanced_for_statement_header(self, p):
         '''enhanced_for_statement_header : enhanced_for_statement_header_init ':' expression ')' '''
         p[1]['iterable'] = p[3]
+        p[0] = p[1]
 
     def p_enhanced_for_statement_header_init(self, p):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
