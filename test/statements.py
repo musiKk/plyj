@@ -20,6 +20,7 @@ class StatementTest(unittest.TestCase):
         predicate = model.BinaryExpression('<', 'i', '10')
         update = model.Unary('x++', 'i')
 
+        self.assert_stmt('for(;;);', model.For(None, None, None, body=None))
         self.assert_stmt('for(;;) return;', model.For(None, None, None, body=model.Return()))
         self.assert_stmt('for(;;) { return; }', model.For(None, None, None, body=[model.Return()]))
         self.assert_stmt('for(int i=0;;) return;', model.For(initializer, None, None, body=model.Return()))
@@ -32,6 +33,78 @@ class StatementTest(unittest.TestCase):
 
         update2 = model.Unary('x++', 'j')
         self.assert_stmt('for(;;i++, j++) return;', model.For(None, None, [update, update2], body=model.Return()))
+
+        self.assert_stmt('for(int i : foo) return;', model.ForEach('int', model.Variable('i'), 'foo', body=model.Return()))
+
+    def test_assert(self):
+        self.assert_stmt('assert foo;', model.Assert('foo'))
+        self.assert_stmt('assert foo : "bar";', model.Assert('foo', message='"bar"'))
+
+    def test_switch(self):
+        default = model.SwitchCase(['default'], body=[model.Return()])
+
+        self.assert_stmt('switch(foo) {}', model.Switch('foo', []))
+        self.assert_stmt('switch(foo) { default: return; }', model.Switch('foo', [default]))
+
+        case1 = model.SwitchCase(['1'], [model.Return('1')])
+        self.assert_stmt('switch(foo) { case 1: return 1; }', model.Switch('foo', [case1]))
+        self.assert_stmt('switch(foo) { case 1: return 1; default: return; }', model.Switch('foo', [case1, default]))
+
+        case12 = model.SwitchCase(['1', '2'], [model.Return('3')])
+        self.assert_stmt('switch(foo) { case 1: case 2: return 3; }', model.Switch('foo', [case12]))
+        self.assert_stmt('switch(foo) { case 1: case 2: return 3; default: return; }', model.Switch('foo', [case12, default]))
+
+    def test_control_flow(self):
+        self.assert_stmt('break;', model.Break())
+        self.assert_stmt('break label;', model.Break('label'))
+
+        self.assert_stmt('continue;', model.Continue())
+        self.assert_stmt('continue label;', model.Continue('label'))
+
+        self.assert_stmt('return;', model.Return())
+        self.assert_stmt('return 1;', model.Return('1'))
+
+        self.assert_stmt('throw foo;', model.Throw('foo'))
+
+    def test_synchronized(self):
+        self.assert_stmt('synchronized (foo) { return; }', model.Synchronized('foo', body=[model.Return()]))
+
+    def test_try(self):
+        r1 = model.Return('1')
+        r2 = model.Return('2')
+        r3 = model.Return('3')
+        c1 = model.Catch(model.Variable('e'), types=[model.Type('Exception')], block=[r2])
+        self.assert_stmt('try { return 1; } catch (Exception e) { return 2; }', model.Try([r1], catches=[c1]))
+        self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } finally { return 3; }',
+                         model.Try([r1], catches=[c1], _finally=[r3]))
+        self.assert_stmt('try { return 1; } finally { return 2; }', model.Try([r1], _finally=[r2]))
+
+        c2 = model.Catch(model.Variable('e'), types=[model.Type('Exception1'), model.Type('Exception2')], block=[r3])
+        self.assert_stmt('try { return 1; } catch (Exception1 | Exception2 e) { return 3; }',
+                         model.Try([r1], catches=[c2]))
+        self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; }',
+                         model.Try([r1], catches=[c1, c2]))
+        self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; } finally { return 3; }',
+                         model.Try([r1], catches=[c1, c2], _finally=[r3]))
+
+        res1 = model.Resource(model.Variable('r'), _type=model.Type('Resource'), initializer='foo')
+        res2 = model.Resource(model.Variable('r2'), _type=model.Type('Resource2'), initializer='bar')
+        self.assert_stmt('try(Resource r = foo) { return 1; }', model.Try([r1], resources=[res1]))
+        self.assert_stmt('try(Resource r = foo;) { return 1; }', model.Try([r1], resources=[res1]))
+        self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar) { return 1; }', model.Try([r1], resources=[res1, res2]))
+        self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar;) { return 1; }', model.Try([r1], resources=[res1, res2]))
+        self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; }',
+                         model.Try([r1], resources=[res1], catches=[c1]))
+        self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception1 | Exception2 e) { return 3;}',
+                         model.Try([r1], resources=[res1], catches=[c2]))
+        self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; }',
+                         model.Try([r1], resources=[res1], catches=[c1, c2]))
+        self.assert_stmt('try(Resource r = foo) { return 1; } finally { return 3; }',
+                         model.Try([r1], resources=[res1], _finally=[r3]))
+        self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } finally { return 3; }',
+                         model.Try([r1], resources=[res1], catches=[c1], _finally=[r3]))
+        self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; } finally { return 3; }',
+                         model.Try([r1], resources=[res1], catches=[c1, c2], _finally=[r3]))
 
     def test_if(self):
         self.assert_stmt('if(foo) return;', model.IfThenElse('foo', if_true=model.Return()))
