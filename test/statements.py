@@ -8,6 +8,31 @@ class StatementTest(unittest.TestCase):
     def setUp(self):
         self.parser = plyj.Parser()
 
+    def test_while(self):
+        self.assert_stmt('while(foo) return;', model.While('foo', body=model.Return()))
+        self.assert_stmt('while(foo) { return; }', model.While('foo', body=[model.Return()]))
+
+        self.assert_stmt('do return; while(foo);', model.DoWhile('foo', body=model.Return()))
+        self.assert_stmt('do { return; } while(foo);', model.DoWhile('foo', body=[model.Return()]))
+
+    def test_for(self):
+        initializer = model.VariableDeclaration('int', [model.VariableDeclarator(model.Variable('i'), initializer='0')])
+        predicate = model.BinaryExpression('<', 'i', '10')
+        update = model.Unary('x++', 'i')
+
+        self.assert_stmt('for(;;) return;', model.For(None, None, None, body=model.Return()))
+        self.assert_stmt('for(;;) { return; }', model.For(None, None, None, body=[model.Return()]))
+        self.assert_stmt('for(int i=0;;) return;', model.For(initializer, None, None, body=model.Return()))
+        self.assert_stmt('for(;i<10;) return;', model.For(None, predicate, None, body=model.Return()))
+        self.assert_stmt('for(;;i++) return;', model.For(None, None, [update], body=model.Return()))
+        self.assert_stmt('for(int i=0; i<10; i++) return;', model.For(initializer, predicate, [update], body=model.Return()))
+
+        initializer2 = [model.Assignment('=', 'i', '0'), model.Assignment('=', 'j', '2')]
+        self.assert_stmt('for(i=0, j=2;;) return;', model.For(initializer2, None, None, body=model.Return()))
+
+        update2 = model.Unary('x++', 'j')
+        self.assert_stmt('for(;;i++, j++) return;', model.For(None, None, [update, update2], body=model.Return()))
+
     def test_if(self):
         self.assert_stmt('if(foo) return;', model.IfThenElse('foo', if_true=model.Return()))
         self.assert_stmt('if(foo) { return; }', model.IfThenElse('foo', if_true=[model.Return()]))
@@ -26,7 +51,7 @@ class StatementTest(unittest.TestCase):
         self.assert_stmt('if(foo) return 1; else if(bar) return 2;',
                          model.IfThenElse('foo', if_true=r1, if_false=model.IfThenElse('bar', if_true=r2)))
 
-    def test_assignment(self):
+    def test_variable_declaration(self):
         var_i = model.Variable('i')
         var_i_decltor = model.VariableDeclarator(var_i)
         var_j = model.Variable('j')
