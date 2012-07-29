@@ -468,7 +468,7 @@ class StatementParser(object):
 
     def p_block(self, p):
         '''block : '{' block_statements_opt '}' '''
-        p[0] = p[2]
+        p[0] = Block(p[2])
 
     def p_block_statements_opt(self, p):
         '''block_statements_opt : block_statements'''

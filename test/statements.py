@@ -10,10 +10,10 @@ class StatementTest(unittest.TestCase):
 
     def test_while(self):
         self.assert_stmt('while(foo) return;', model.While('foo', body=model.Return()))
-        self.assert_stmt('while(foo) { return; }', model.While('foo', body=[model.Return()]))
+        self.assert_stmt('while(foo) { return; }', model.While('foo', body=model.Block([model.Return()])))
 
         self.assert_stmt('do return; while(foo);', model.DoWhile('foo', body=model.Return()))
-        self.assert_stmt('do { return; } while(foo);', model.DoWhile('foo', body=[model.Return()]))
+        self.assert_stmt('do { return; } while(foo);', model.DoWhile('foo', body=model.Block([model.Return()])))
 
     def test_for(self):
         initializer = model.VariableDeclaration('int', [model.VariableDeclarator(model.Variable('i'), initializer='0')])
@@ -22,7 +22,7 @@ class StatementTest(unittest.TestCase):
 
         self.assert_stmt('for(;;);', model.For(None, None, None, body=None))
         self.assert_stmt('for(;;) return;', model.For(None, None, None, body=model.Return()))
-        self.assert_stmt('for(;;) { return; }', model.For(None, None, None, body=[model.Return()]))
+        self.assert_stmt('for(;;) { return; }', model.For(None, None, None, body=model.Block([model.Return()])))
         self.assert_stmt('for(int i=0;;) return;', model.For(initializer, None, None, body=model.Return()))
         self.assert_stmt('for(;i<10;) return;', model.For(None, predicate, None, body=model.Return()))
         self.assert_stmt('for(;;i++) return;', model.For(None, None, [update], body=model.Return()))
@@ -67,44 +67,46 @@ class StatementTest(unittest.TestCase):
         self.assert_stmt('throw foo;', model.Throw('foo'))
 
     def test_synchronized(self):
-        self.assert_stmt('synchronized (foo) { return; }', model.Synchronized('foo', body=[model.Return()]))
+        self.assert_stmt('synchronized (foo) { return; }', model.Synchronized('foo', body=model.Block([model.Return()])))
 
     def test_try(self):
         r1 = model.Return('1')
         r2 = model.Return('2')
         r3 = model.Return('3')
-        c1 = model.Catch(model.Variable('e'), types=[model.Type('Exception')], block=[r2])
-        self.assert_stmt('try { return 1; } catch (Exception e) { return 2; }', model.Try([r1], catches=[c1]))
+        c1 = model.Catch(model.Variable('e'), types=[model.Type('Exception')], block=model.Block([r2]))
+        self.assert_stmt('try { return 1; } catch (Exception e) { return 2; }', model.Try(model.Block([r1]), catches=[c1]))
         self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } finally { return 3; }',
-                         model.Try([r1], catches=[c1], _finally=[r3]))
-        self.assert_stmt('try { return 1; } finally { return 2; }', model.Try([r1], _finally=[r2]))
+                         model.Try(model.Block([r1]), catches=[c1], _finally=model.Block([r3])))
+        self.assert_stmt('try { return 1; } finally { return 2; }', model.Try(model.Block([r1]), _finally=model.Block([r2])))
 
-        c2 = model.Catch(model.Variable('e'), types=[model.Type('Exception1'), model.Type('Exception2')], block=[r3])
+        c2 = model.Catch(model.Variable('e'), types=[model.Type('Exception1'), model.Type('Exception2')], block=model.Block([r3]))
         self.assert_stmt('try { return 1; } catch (Exception1 | Exception2 e) { return 3; }',
-                         model.Try([r1], catches=[c2]))
+                         model.Try(model.Block([r1]), catches=[c2]))
         self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; }',
-                         model.Try([r1], catches=[c1, c2]))
+                         model.Try(model.Block([r1]), catches=[c1, c2]))
         self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; } finally { return 3; }',
-                         model.Try([r1], catches=[c1, c2], _finally=[r3]))
+                         model.Try(model.Block([r1]), catches=[c1, c2], _finally=model.Block([r3])))
 
         res1 = model.Resource(model.Variable('r'), _type=model.Type('Resource'), initializer='foo')
         res2 = model.Resource(model.Variable('r2'), _type=model.Type('Resource2'), initializer='bar')
-        self.assert_stmt('try(Resource r = foo) { return 1; }', model.Try([r1], resources=[res1]))
-        self.assert_stmt('try(Resource r = foo;) { return 1; }', model.Try([r1], resources=[res1]))
-        self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar) { return 1; }', model.Try([r1], resources=[res1, res2]))
-        self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar;) { return 1; }', model.Try([r1], resources=[res1, res2]))
+        self.assert_stmt('try(Resource r = foo) { return 1; }', model.Try(model.Block([r1]), resources=[res1]))
+        self.assert_stmt('try(Resource r = foo;) { return 1; }', model.Try(model.Block([r1]), resources=[res1]))
+        self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar) { return 1; }',
+                         model.Try(model.Block([r1]), resources=[res1, res2]))
+        self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar;) { return 1; }',
+                         model.Try(model.Block([r1]), resources=[res1, res2]))
         self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; }',
-                         model.Try([r1], resources=[res1], catches=[c1]))
+                         model.Try(model.Block([r1]), resources=[res1], catches=[c1]))
         self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception1 | Exception2 e) { return 3;}',
-                         model.Try([r1], resources=[res1], catches=[c2]))
+                         model.Try(model.Block([r1]), resources=[res1], catches=[c2]))
         self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; }',
-                         model.Try([r1], resources=[res1], catches=[c1, c2]))
+                         model.Try(model.Block([r1]), resources=[res1], catches=[c1, c2]))
         self.assert_stmt('try(Resource r = foo) { return 1; } finally { return 3; }',
-                         model.Try([r1], resources=[res1], _finally=[r3]))
+                         model.Try(model.Block([r1]), resources=[res1], _finally=model.Block([r3])))
         self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } finally { return 3; }',
-                         model.Try([r1], resources=[res1], catches=[c1], _finally=[r3]))
+                         model.Try(model.Block([r1]), resources=[res1], catches=[c1], _finally=model.Block([r3])))
         self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; } finally { return 3; }',
-                         model.Try([r1], resources=[res1], catches=[c1, c2], _finally=[r3]))
+                         model.Try(model.Block([r1]), resources=[res1], catches=[c1, c2], _finally=model.Block([r3])))
 
     def test_constructor_invocation(self):
         foo_type = model.Type('Foo')
@@ -123,14 +125,17 @@ class StatementTest(unittest.TestCase):
 
     def test_if(self):
         self.assert_stmt('if(foo) return;', model.IfThenElse('foo', if_true=model.Return()))
-        self.assert_stmt('if(foo) { return; }', model.IfThenElse('foo', if_true=[model.Return()]))
+        self.assert_stmt('if(foo) { return; }', model.IfThenElse('foo', if_true=model.Block([model.Return()])))
 
         r1 = model.Return(result='1')
         r2 = model.Return(result='2')
         self.assert_stmt('if(foo) return 1; else return 2;', model.IfThenElse('foo', if_true=r1, if_false=r2))
-        self.assert_stmt('if(foo) {return 1;} else return 2;', model.IfThenElse('foo', if_true=[r1], if_false=r2))
-        self.assert_stmt('if(foo) return 1; else {return 2;}', model.IfThenElse('foo', if_true=r1, if_false=[r2]))
-        self.assert_stmt('if(foo) {return 1;} else {return 2;}', model.IfThenElse('foo', if_true=[r1], if_false=[r2]))
+        self.assert_stmt('if(foo) {return 1;} else return 2;',
+                         model.IfThenElse('foo', if_true=model.Block([r1]), if_false=r2))
+        self.assert_stmt('if(foo) return 1; else {return 2;}',
+                         model.IfThenElse('foo', if_true=r1, if_false=model.Block([r2])))
+        self.assert_stmt('if(foo) {return 1;} else {return 2;}',
+                         model.IfThenElse('foo', if_true=model.Block([r1]), if_false=model.Block([r2])))
 
         # test proper nesting, every parser writer's favorite
         self.assert_stmt('if(foo) if(bar) return 1;', model.IfThenElse('foo', if_true=model.IfThenElse('bar', if_true=r1)))

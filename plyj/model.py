@@ -359,6 +359,18 @@ class Cast(Expression):
 class Statement(SourceElement):
     pass
 
+class Block(Statement):
+
+    def __init__(self, statements=[]):
+        self.statements = statements
+
+    def __str__(self):
+        return 'Block[statements={}]'.format([str(s) for s in self.statements])
+
+    def __iter__(self):
+        for s in self.statements:
+            yield s
+
 class VariableDeclaration(Statement, FieldDeclaration):
 
     def __str__(self):
