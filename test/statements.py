@@ -106,6 +106,21 @@ class StatementTest(unittest.TestCase):
         self.assert_stmt('try(Resource r = foo) { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; } finally { return 3; }',
                          model.Try([r1], resources=[res1], catches=[c1, c2], _finally=[r3]))
 
+    def test_constructor_invocation(self):
+        foo_type = model.Type('Foo')
+        bar_type = model.Type('Bar')
+        for call in ['super', 'this']:
+            self.assert_stmt('{}();'.format(call), model.ConstructorInvocation(call))
+            self.assert_stmt('{}(1);'.format(call), model.ConstructorInvocation(call, arguments=['1']))
+            self.assert_stmt('{}(1, foo, "bar");'.format(call),
+                             model.ConstructorInvocation(call, arguments=['1', 'foo', '"bar"']))
+            self.assert_stmt('<Foo> {}();'.format(call),
+                             model.ConstructorInvocation(call, type_arguments=[foo_type]))
+            self.assert_stmt('Foo.{}();'.format(call),
+                             model.ConstructorInvocation(call, target='Foo'))
+            self.assert_stmt('Foo.<Bar> {}();'.format(call),
+                             model.ConstructorInvocation(call, type_arguments=[bar_type], target='Foo'))
+
     def test_if(self):
         self.assert_stmt('if(foo) return;', model.IfThenElse('foo', if_true=model.Return()))
         self.assert_stmt('if(foo) { return; }', model.IfThenElse('foo', if_true=[model.Return()]))
