@@ -611,3 +611,19 @@ class ArrayCreation(Expression):
     def __str__(self):
         return 'ArrayCreation[type={}, dimensions={}, initializer={}]'.format(
                self._type, self.dimensions, self.initializer)
+
+class Literal(SourceElement):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return 'Literal[{}]'.format(self.value)
+
+class Name(SourceElement):
+
+    def __init__(self, value):
+        self.value = value
+
+    def __str__(self):
+        return 'Name[{}]'.format(self.value)

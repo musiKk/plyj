@@ -1002,11 +1002,11 @@ class NameParser(object):
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        p[0] = p[1]
+        p[0] = Name(p[1])
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
-        p[0] = p[1] + '.' + p[3]
+        p[0] = p[1].append_name(p[3])
 
 class LiteralParser(object):
 
@@ -1017,7 +1017,7 @@ class LiteralParser(object):
                    | TRUE
                    | FALSE
                    | NULL'''
-        p[0] = p[1]
+        p[0] = Literal(p[1])
 
 class TypeParser(object):
 
