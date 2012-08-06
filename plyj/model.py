@@ -9,6 +9,9 @@ class SourceElement(object):
         except AttributeError:
             return False
 
+    def accept(self, visitor):
+        pass
+
 class CompilationUnit(SourceElement):
 
     def __init__(self, package_declaration=None, import_declarations=[],
@@ -21,6 +24,15 @@ class CompilationUnit(SourceElement):
         return 'CompilationUnit[package_declaration={}, import_declarations={}, type_declarations={}]'.format(
                 self.package_declaration, [str(i) for i in self.import_declarations], [str(t) for t in self.type_declarations])
 
+    def accept(self, visitor):
+        if visitor.visit_CompilationUnit(self):
+            if self.package_declaration:
+                self.package_declaration.accept(visitor)
+            for import_decl in self.import_declarations:
+                import_decl.accept(visitor)
+            for type_decl in self.type_declarations:
+                type_decl.accept(visitor)
+
 class PackageDeclaration(SourceElement):
 
     def __init__(self, name, modifiers=[]):
@@ -29,6 +41,9 @@ class PackageDeclaration(SourceElement):
 
     def __str__(self):
         return 'PackageDeclaration[name={}, modifiers={}]'.format(self.name, self.modifiers)
+
+    def accept(self, visitor):
+        visitor.visit_PackageDeclaration(self)
 
 class ImportDeclaration(SourceElement):
 
@@ -40,6 +55,9 @@ class ImportDeclaration(SourceElement):
     def __str__(self):
         return 'ImportDeclaration[name={}, static={}, on_demand={}]'.format(
                 self.name, self.static, self.on_demand)
+
+    def accept(self, visitor):
+        visitor.visit_ImportDeclaration(self)
 
 class ClassDeclaration(SourceElement):
 
@@ -55,6 +73,11 @@ class ClassDeclaration(SourceElement):
         return 'ClassDeclaration[name={}, modifiers={}, type_parameters={}, extends={}, implements={}, body={}]'.format(
                 self.name, self.modifiers, self.type_parameters, self.extends, self.implements, [str(e) for e in self.body])
 
+    def accept(self, visitor):
+        if visitor.visit_ClassDeclaration(self):
+            for decl in self.body:
+                decl.accept(visitor)
+
 class ClassInitializer(SourceElement):
 
     def __init__(self, block, static=False):
@@ -63,6 +86,11 @@ class ClassInitializer(SourceElement):
 
     def __str__(self):
         return 'ClassInitializer[static={}, block={}]'.format(self.static, self.block)
+
+    def accept(self, visitor):
+        if visitor.visit_ClassInitializer(self):
+            for expr in self.block:
+                expr.accept(visitor)
 
 class ConstructorDeclaration(SourceElement):
 
@@ -78,6 +106,11 @@ class ConstructorDeclaration(SourceElement):
         return 'ConstructorDeclaration[name={}, modifiers={}, type_parameters={}, parameters={}, throws={}, block={}]'.format(
                 self.name, self.modifiers, self.type_parameters, self.parameters, self.throws, [str(e) for e in self.block])
 
+    def accept(self, visitor):
+        if visitor.visit_ConstructorDeclaration(self):
+            for expr in self.block:
+                expr.accept(visitor)
+
 class FieldDeclaration(SourceElement):
 
     def __init__(self, _type, variable_declarators, modifiers=[]):
@@ -88,6 +121,9 @@ class FieldDeclaration(SourceElement):
     def __str__(self):
         return 'FieldDeclaration[type={}, modifiers={}, variable_declarators={}]'.format(
                 self._type, self.modifiers, self.variable_declarators)
+
+    def accept(self, visitor):
+        visitor.visit_FieldDeclaration(self)
 
 class MethodDeclaration(SourceElement):
 
@@ -105,6 +141,11 @@ class MethodDeclaration(SourceElement):
     def __str__(self):
         return 'MethodDeclaration[name={}, parameters={}, return_type={}, modifiers={}, type_parameters={}, abstract={}, throws={}, body={}]'.format(
                 self.name, self.parameters, self.return_type, self.modifiers, self.type_parameters, self.abstract, self.throws, [str(s) for s in self.body])
+
+    def accept(self, visitor):
+        if visitor.visit_MethodDeclaration(self):
+            for e in self.body:
+                e.accept(visitor)
 
 class FormalParameter(SourceElement):
 
@@ -162,6 +203,11 @@ class InterfaceDeclaration(SourceElement):
         return 'InterfaceDeclaration[name={}, modifiers={}, extends={}, type_parameters={}, body={}]'.format(
                self.name, self.modifiers, self.extends, self.type_parameters, self.body)
 
+    def accept(self, visitor):
+        if visitor.visit_InterfaceDeclaration(self):
+            for decl in self.body:
+                decl.accept(visitor)
+
 class EnumDeclaration(SourceElement):
 
     def __init__(self, name, implements=[], modifiers=[], type_parameters=[], body=[]):
@@ -175,6 +221,11 @@ class EnumDeclaration(SourceElement):
         return 'EnumDeclaration[name={}, modifiers={}, implements={}, type_parameters={}, body={}]'.format(
                self.name, self.modifiers, self.implements, self.type_parameters, [str(e) for e in self.body])
 
+    def accept(self, visitor):
+        if visitor.visit_EnumDeclaration(self):
+            for decl in self.body:
+                decl.accept(visitor)
+
 class EnumConstant(SourceElement):
 
     def __init__(self, name, arguments=[], modifiers=[], body=[]):
@@ -186,6 +237,11 @@ class EnumConstant(SourceElement):
     def __str__(self):
         return 'EnumConstant[name={}, arguments={}, modifiers={}, body={}]'.format(
                self.name, self.arguments, self.modifiers, [str(e) for e in self.body])
+
+    def accept(self, visitor):
+        if visitor.visit_EnumConstant(self):
+            for expr in self.body:
+                expr.accept(visitor)
 
 class AnnotationDeclaration(SourceElement):
 
@@ -201,6 +257,11 @@ class AnnotationDeclaration(SourceElement):
         return 'AnnotationDeclaration[name={}, modifiers={}, type_parameters={}, extends={}, implements={}, body={}]'.format(
                self.name, [str(m) for m in self.modifiers], self.type_parameters, self.extends, self.implements, [str(e) for e in self.body])
 
+    def accept(self, visitor):
+        if visitor.visit_AnnotationDeclaration(self):
+            for decl in self.body:
+                decl.accept(visitor)
+
 class AnnotationMethodDeclaration(SourceElement):
 
     def __init__(self, name, _type, parameters=[], default=None, modifiers=[], type_parameters=[], extended_dims=0):
@@ -215,6 +276,9 @@ class AnnotationMethodDeclaration(SourceElement):
     def __str__(self):
         return 'AnnotationMethodDeclaration[name={}, type={}, parameters={}, default={}, modifiers={}, type_parameters={}]'.format(
                self.name, self._type, self.parameters, self.default, self.modifiers, self.type_parameters)
+
+    def accept(self, visitor):
+        visitor.visit_AnnotationMethodDeclaration(self)
 
 class Annotation(SourceElement):
 
@@ -283,7 +347,9 @@ class TypeParameter(SourceElement):
         return 'TypeParameter[name={}, extends={}]'.format(self.name, self.extends)
 
 class Expression(SourceElement):
-    pass
+
+    def accept(self, visitor):
+        visitor.visit_Expression(self)
 
 class BinaryExpression(Expression):
 
@@ -294,6 +360,11 @@ class BinaryExpression(Expression):
 
     def __str__(self):
         return '({}, {}, {})'.format(self.operator, self.lhs, self.rhs)
+
+    def accept(self, visitor):
+        if visitor.visit_BinaryExpression(self):
+            self.lhs.accept(visitor)
+            self.rhs.accept(visitor)
 
 class Assignment(BinaryExpression):
     pass
@@ -623,6 +694,9 @@ class Literal(SourceElement):
     def __str__(self):
         return 'Literal[{}]'.format(self.value)
 
+    def accept(self, visitor):
+        visitor.visit_Literal(self)
+
 class Name(SourceElement):
 
     def __init__(self, value):
@@ -630,3 +704,20 @@ class Name(SourceElement):
 
     def __str__(self):
         return 'Name[{}]'.format(self.value)
+
+    def append_name(self, name):
+        self.value = self.value + '.' + name.value
+
+    def accept(self, visitor):
+        visitor.visit_Name(self)
+
+class Visitor(object):
+
+    def __getattr__(self, name):
+        if not name.startswith('visit_'):
+            raise AttributeError('name must start with visit_ but was {}'\
+                                 .format(name))
+        def f(element):
+            print 'unimplemented call to {}; ignoring ({})'.format(name, element)
+            return True
+        return f
