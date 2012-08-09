@@ -718,6 +718,6 @@ class Visitor(object):
             raise AttributeError('name must start with visit_ but was {}'\
                                  .format(name))
         def f(element):
-            print 'unimplemented call to {}; ignoring ({})'.format(name, element)
+            print('unimplemented call to {}; ignoring ({})'.format(name, element))
             return True
         return f
