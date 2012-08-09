@@ -83,7 +83,7 @@ class ExpressionTest(unittest.TestCase):
     def test_expressions(self):
         for expr, result in expression_tests:
             t = self.parser.parse_expression(expr)
-            self.assertEquals(t, result, 'for {} got: {}, expected: {}'.format(expr, t, result))
+            self.assertEqual(t, result, 'for {} got: {}, expected: {}'.format(expr, t, result))
 
 if __name__ == '__main__':
     unittest.main()
