@@ -97,7 +97,7 @@ class MyLexer(object):
         t.lexer.lineno += len(t.value) / 2
 
     def t_error(self, t):
-        print "Illegal character '{}' ({}) in line {}".format(t.value[0], hex(ord(t.value[0])), t.lexer.lineno)
+        print("Illegal character '{}' ({}) in line {}".format(t.value[0], hex(ord(t.value[0])), t.lexer.lineno))
         t.lexer.skip(1)
 
 class ExpressionParser(object):
@@ -1992,7 +1992,7 @@ class MyParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassPar
         p[0] = p[2]
 
     def p_error(self, p):
-        print 'error: {}'.format(p)
+        print('error: {}'.format(p))
 
     def p_empty(self, p):
         '''empty :'''
@@ -2006,7 +2006,7 @@ class Parser(object):
     def tokenize_string(self, code):
         self.lexer.input(code)
         for token in self.lexer:
-            print token
+            print(token)
 
     def tokenize_file(self, _file):
         if type(_file) == str:
@@ -2044,13 +2044,13 @@ if __name__ == '__main__':
     ]
 
     for expr in expressions:
-        print 'lexing expression {}'.format(expr)
+        print('lexing expression {}'.format(expr))
         lexer.input(expr)
         for token in lexer:
-            print token
+            print(token)
 
-        print 'parsing expression {}'.format(expr)
+        print('parsing expression {}'.format(expr))
         t = parser.parse(expr, lexer=lexer, debug=1)
-        print 'result: {}'.format(t)
-        print '--------------------------------'
+        print('result: {}'.format(t))
+        print('--------------------------------')
 
