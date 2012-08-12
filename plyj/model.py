@@ -445,11 +445,18 @@ class Block(Statement):
         for s in self.statements:
             yield s
 
+    def accept(self, visitor):
+        if visitor.visit_Block(self):
+            [s.accept(visitor) for s in self.statements]
+
 class VariableDeclaration(Statement, FieldDeclaration):
 
     def __str__(self):
         return 'VariableDeclaration[type={}, modifiers={}, variable_declarators={}]'.format(
                self._type, [str(m) for m in self.modifiers], [str(d) for d in self.variable_declarators])
+
+    def accept(self, visitor):
+        visitor.visit_VariableDeclaration(self)
 
 class ArrayInitializer(SourceElement):
 
@@ -472,6 +479,9 @@ class MethodInvocation(Expression):
         return 'MethodInvocation[name={}, arguments={}, type_arguments={}, target={}]'.format(
                self.name, self.arguments, self.type_arguments, self.target)
 
+    def accept(self, visitor):
+        visitor.visit_MethodInvocation(self)
+
 class IfThenElse(Statement):
 
     def __init__(self, predicate, if_true=None, if_false=None):
@@ -482,6 +492,9 @@ class IfThenElse(Statement):
     def __str__(self):
         return 'if {} then {} else {}'.format(self.predicate, self.if_true, self.if_false)
 
+    def accept(self, visitor):
+        visitor.visit_IfThenElse(self)
+
 class While(Statement):
 
     def __init__(self, predicate, body=None):
@@ -490,6 +503,9 @@ class While(Statement):
 
     def __str__(self):
         return 'while {} {}'.format(self.predicate, self.body)
+
+    def accept(self, visitor):
+        visitor.visit_While(self)
 
 class For(Statement):
 
@@ -501,6 +517,10 @@ class For(Statement):
 
     def __str__(self):
         return 'for {} {} {} {}'.format(self.init, self.predicate, self.update, self.body)
+
+    def accept(self, visitor):
+        if visitor.visit_For(self):
+            self.body.accept(visitor)
 
 class ForEach(Statement):
 
@@ -514,6 +534,10 @@ class ForEach(Statement):
     def __str__(self):
         return 'foreach ({} {} {} : {}) {}'.format(self.modifiers, self._type, self.variable, self.iterable, self.body)
 
+    def accept(self, visitor):
+        if visitor.visit_ForEach(self):
+            self.body.accept(visitor)
+
 class Assert(Statement):
 
     def __init__(self, predicate, message=None):
@@ -522,6 +546,9 @@ class Assert(Statement):
 
     def __str__(self):
         return 'assert({} : {})'.format(self.predicate, self.message)
+
+    def accept(self, visitor):
+        visitor.visit_Assert(self)
 
 class Switch(Statement):
 
@@ -532,6 +559,11 @@ class Switch(Statement):
     def __str__(self):
         return 'switch({}) {}'.format(self.expression, [str(s) for s in self.switch_cases])
 
+    def accept(self, visitor):
+        if visitor.visit_Switch(self):
+            for s in self.switch_cases:
+                s.accept(visitor)
+
 class SwitchCase(SourceElement):
 
     def __init__(self, cases, body=[]):
@@ -540,6 +572,11 @@ class SwitchCase(SourceElement):
 
     def __str__(self):
         return '{} {}'.format([str(c) for c in self.cases], [str(s) for s in self.body])
+
+    def accept(self, visitor):
+        if visitor.visit_SwitchCase(self):
+            for s in self.body:
+                s.accept(visitor)
 
 class DoWhile(Statement):
 
@@ -550,6 +587,10 @@ class DoWhile(Statement):
     def __str__(self):
         return 'do {} while {}'.format(self.predicate, self.body)
 
+    def accept(self, visitor):
+        if visitor.visit_DoWhile(self):
+            self.body.accept(visitor)
+
 class Continue(Statement):
 
     def __init__(self, label=None):
@@ -557,6 +598,9 @@ class Continue(Statement):
 
     def __str__(self):
         return 'continue {}'.format(self.label)
+
+    def accept(self, visitor):
+        visitor.visit_Continue(self)
 
 class Break(Statement):
 
@@ -566,6 +610,9 @@ class Break(Statement):
     def __str__(self):
         return 'break {}'.format(self.label)
 
+    def accept(self, visitor):
+        visitor.visit_Break(self)
+
 class Return(Statement):
 
     def __init__(self, result=None):
@@ -573,6 +620,9 @@ class Return(Statement):
 
     def __str__(self):
         return 'return {}'.format(self.result)
+
+    def accept(self, visitor):
+        visitor.visit_Return(self)
 
 class Synchronized(Statement):
 
@@ -583,6 +633,11 @@ class Synchronized(Statement):
     def __str__(self):
         return 'synchronized {} {}'.format(self.monitor, self.body)
 
+    def accept(self, visitor):
+        if visitor.visit_Synchronized(self):
+            for s in self.body:
+                s.accept(visitor)
+
 class Throw(Statement):
 
     def __init__(self, exception):
@@ -591,20 +646,32 @@ class Throw(Statement):
     def __str__(self):
         return 'throw {}'.format(self.exception)
 
+    def accept(self, visitor):
+        visitor.visit_Throw(self)
+
 class Try(Statement):
 
-    def __init__(self, block, catches=[], _finally=[], resources=[]):
+    def __init__(self, block, catches=[], _finally=None, resources=[]):
         self.block = block
         self.catches = catches
         self._finally = _finally
         self.resources = resources
 
     def __str__(self):
-        return 'try {} {} catch {} finally {}'.format([str(r) for r in self.resources], [str(e) for e in self.block], [str(c) for c in self.catches], [str(e) for e in self._finally])
+        return 'try {} {} catch {} finally {}'.format([str(r) for r in self.resources], [str(e) for e in self.block], [str(c) for c in self.catches], self._finally)
+
+    def accept(self, visitor):
+        if visitor.visit_Try(self):
+            for s in self.block:
+                s.accept(visitor)
+        for c in self.catches:
+            visitor.visit_Catch(c)
+        if self._finally:
+            self._finally.accept(visitor)
 
 class Catch(SourceElement):
 
-    def __init__(self, variable, modifiers=[], types=[], block=[]):
+    def __init__(self, variable, modifiers=[], types=[], block=None):
         self.variable = variable
         self.modifiers = modifiers
         self.types = types
@@ -612,6 +679,10 @@ class Catch(SourceElement):
 
     def __str__(self):
         return 'catch {} {} {} {}'.format(self.modifiers, [str(t) for t in self.types], self.variable, [str(e) for e in self.block])
+
+    def accept(self, visitor):
+        if visitor.visit_Catch(self):
+            self.block.accept(visitor)
 
 class Resource(SourceElement):
 
@@ -644,6 +715,9 @@ class ConstructorInvocation(Statement):
         return 'ConstructorInvocation[name={}, target={}, type_arguments={}, arguments={}]'.format(
                self.name, self.target, self.type_arguments, self.arguments)
 
+    def accept(self, visitor):
+        visitor.visit_ConstructorInvocation(self)
+
 class InstanceCreation(Expression):
 
     def __init__(self, _type, type_arguments=[], arguments=[], body=[], enclosed_in=None):
@@ -657,6 +731,9 @@ class InstanceCreation(Expression):
         return 'InstanceCreation[type={}, type_arguments={}, enclosed_in={}, arguments={}, body={}]'.format(
                self._type, self.type_arguments, self.enclosed_in, self.arguments, self.body)
 
+    def accept(self, visitor):
+        visitor.visit_InstanceCreation(self)
+
 class FieldAccess(Expression):
 
     def __init__(self, name, target):
@@ -666,6 +743,9 @@ class FieldAccess(Expression):
     def __str__(self):
         return 'FieldAccess[name={}, target={}]'.format(self.name, self.target)
 
+    def accept(self, visitor):
+        visitor.visit_FieldAccess(self)
+
 class ArrayAccess(Expression):
 
     def __init__(self, index, target):
@@ -674,6 +754,9 @@ class ArrayAccess(Expression):
 
     def __str__(self):
         return 'ArrayAccess[index={}, target={}]'.format(self.index, self.target)
+
+    def accept(self, visitor):
+        visitor.visit_ArrayAccess(self)
 
 class ArrayCreation(Expression):
 
@@ -685,6 +768,9 @@ class ArrayCreation(Expression):
     def __str__(self):
         return 'ArrayCreation[type={}, dimensions={}, initializer={}]'.format(
                self._type, self.dimensions, self.initializer)
+
+    def accept(self, visitor):
+        visitor.visit_ArrayCreation(self)
 
 class Literal(SourceElement):
 
