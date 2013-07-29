@@ -404,7 +404,8 @@ class ExpressionParser(object):
     def p_primary_no_new_array3(self, p):
         '''primary_no_new_array : name '.' THIS
                                 | name '.' SUPER'''
-        p[0] = p[1] + '.' + p[3]
+        p[1].append_name(p[3])
+        p[0] = p[1]
 
     def p_primary_no_new_array4(self, p):
         '''primary_no_new_array : name '.' CLASS
@@ -412,7 +413,8 @@ class ExpressionParser(object):
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS'''
         if len(p) == 4:
-            p[0] = p[1] + '.' + p[3]
+            p[1].append_name(p[3])
+            p[0] = p[1]
         else:
             p[0] = p[1] + '[' + p[2] + '].' + p[4]
 

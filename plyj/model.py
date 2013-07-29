@@ -792,7 +792,10 @@ class Name(SourceElement):
         return 'Name[{}]'.format(self.value)
 
     def append_name(self, name):
-        self.value = self.value + '.' + name.value
+        try:
+            self.value = self.value + '.' + name.value
+        except:
+            self.value = self.value + '.' + name
 
     def accept(self, visitor):
         visitor.visit_Name(self)
