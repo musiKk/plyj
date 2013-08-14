@@ -413,10 +413,14 @@ class ExpressionParser(object):
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS'''
         if len(p) == 4:
+            if type(p[1]) == str:
+              p[1] = Name(p[1])
             p[1].append_name(p[3])
             p[0] = p[1]
         else:
-            p[0] = p[1] + '[' + p[2] + '].' + p[4]
+            if type(p[1]) == Name:
+              p[1] = p[1].value
+            p[0] = p[1] + '[' + str(p[2]) + '].' + p[4]
 
     def p_dims_opt(self, p):
         '''dims_opt : dims'''
