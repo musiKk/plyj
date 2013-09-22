@@ -413,10 +413,9 @@ class ExpressionParser(object):
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS'''
         if len(p) == 4:
-            p[1].append_name(p[3])
-            p[0] = p[1]
+            p[0] = ClassLiteral(Type(p[1]))
         else:
-            p[0] = p[1] + '[' + p[2] + '].' + p[4]
+            p[0] = ClassLiteral(Type(p[1], dimensions=p[2]))
 
     def p_dims_opt(self, p):
         '''dims_opt : dims'''

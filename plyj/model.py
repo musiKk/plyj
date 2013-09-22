@@ -783,6 +783,14 @@ class Literal(SourceElement):
     def accept(self, visitor):
         visitor.visit_Literal(self)
 
+class ClassLiteral(SourceElement):
+
+    def __init__(self, _type):
+        self._type = _type
+
+    def __str__(self):
+        return 'ClassLiteral[{}]'.format(self._type)
+
 class Name(SourceElement):
 
     def __init__(self, value):

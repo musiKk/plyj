@@ -75,7 +75,9 @@ expression_tests = [
     ('a >>>= 1', model.Assignment('>>>=', a, one)),
     # method invocation
     ('foo.bar()', model.MethodInvocation(name=model.Name('foo.bar'))),
-    ('foo.class.getName()', model.MethodInvocation(target=model.Name('foo.class'), name='getName'))
+    ('foo.class.getName()', model.MethodInvocation(target=model.ClassLiteral(model.Type(model.Name('foo'))), name='getName')),
+
+    ('foo.Class[].class', model.ClassLiteral(model.Type(model.Name('foo.Class'), dimensions=1)))
 ]
 
 class ExpressionTest(unittest.TestCase):
