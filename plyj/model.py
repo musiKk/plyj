@@ -959,6 +959,3 @@ class Visitor(object):
                 print(msg.format(name, element))
             return True
         return f
-
-if __name__ == '__main__':
-    Conditional(1, 1, 1)
