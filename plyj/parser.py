@@ -890,11 +890,11 @@ class StatementParser(object):
 
     def p_resource(self, p):
         '''resource : type variable_declarator_id '=' variable_initializer'''
-        p[0] = Resource(p[2], _type=p[1], initializer=p[4])
+        p[0] = Resource(p[2], type=p[1], initializer=p[4])
 
     def p_resource2(self, p):
         '''resource : modifiers type variable_declarator_id '=' variable_initializer'''
-        p[0] = Resource(p[3], _type=p[2], modifiers=p[1], initializer=p[5])
+        p[0] = Resource(p[3], type=p[2], modifiers=p[1], initializer=p[5])
 
     def p_finally(self, p):
         '''finally : FINALLY block'''

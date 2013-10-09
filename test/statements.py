@@ -97,8 +97,8 @@ class StatementTest(unittest.TestCase):
         self.assert_stmt('try { return 1; } catch (Exception e) { return 2; } catch (Exception1 | Exception2 e) { return 3; } finally { return 3; }',
                          model.Try(model.Block([r1]), catches=[c1, c2], _finally=model.Block([r3])))
 
-        res1 = model.Resource(model.Variable('r'), _type=model.Type(model.Name('Resource')), initializer=model.Name('foo'))
-        res2 = model.Resource(model.Variable('r2'), _type=model.Type(model.Name('Resource2')), initializer=model.Name('bar'))
+        res1 = model.Resource(model.Variable('r'), type=model.Type(model.Name('Resource')), initializer=model.Name('foo'))
+        res2 = model.Resource(model.Variable('r2'), type=model.Type(model.Name('Resource2')), initializer=model.Name('bar'))
         self.assert_stmt('try(Resource r = foo) { return 1; }', model.Try(model.Block([r1]), resources=[res1]))
         self.assert_stmt('try(Resource r = foo;) { return 1; }', model.Try(model.Block([r1]), resources=[res1]))
         self.assert_stmt('try(Resource r = foo; Resource2 r2 = bar) { return 1; }',
@@ -119,19 +119,19 @@ class StatementTest(unittest.TestCase):
                          model.Try(model.Block([r1]), resources=[res1], catches=[c1, c2], _finally=model.Block([r3])))
 
     def test_constructor_invocation(self):
-        foo_type = model.Type(model.Name('Foo'))
-        bar_type = model.Type(model.Name('Bar'))
+        footype = model.Type(model.Name('Foo'))
+        bartype = model.Type(model.Name('Bar'))
         for call in ['super', 'this']:
             self.assert_stmt('{}();'.format(call), model.ConstructorInvocation(call))
             self.assert_stmt('{}(1);'.format(call), model.ConstructorInvocation(call, arguments=[one]))
             self.assert_stmt('{}(1, foo, "bar");'.format(call),
                              model.ConstructorInvocation(call, arguments=[one, foo, model.Literal('"bar"')]))
             self.assert_stmt('<Foo> {}();'.format(call),
-                             model.ConstructorInvocation(call, type_arguments=[foo_type]))
+                             model.ConstructorInvocation(call, type_arguments=[footype]))
             self.assert_stmt('Foo.{}();'.format(call),
                              model.ConstructorInvocation(call, target=model.Name('Foo')))
             self.assert_stmt('Foo.<Bar> {}();'.format(call),
-                             model.ConstructorInvocation(call, type_arguments=[bar_type], target=model.Name('Foo')))
+                             model.ConstructorInvocation(call, type_arguments=[bartype], target=model.Name('Foo')))
 
     def test_if(self):
         self.assert_stmt('if(foo) return;', model.IfThenElse(foo, if_true=model.Return()))
