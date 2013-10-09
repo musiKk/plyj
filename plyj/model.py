@@ -120,11 +120,11 @@ class ClassInitializer(SourceElement):
                 expr.accept(visitor)
 
 
-class ConrepructorDeclaration(SourceElement):
+class ConstructorDeclaration(SourceElement):
 
     def __init__(self, name, block, modifiers=None, type_parameters=None,
                  parameters=None, throws=None):
-        super(ConrepructorDeclaration, self).__init__()
+        super(ConstructorDeclaration, self).__init__()
         self._fields = ['name', 'block', 'modifiers',
                         'type_parameters', 'parameters', 'throws']
         if modifiers is None:
@@ -443,7 +443,7 @@ class Expression(SourceElement):
         visitor.visit_Expression(self)
 
 
-class BinaryExpression(SourceElement):
+class BinaryExpression(Expression):
 
     def __init__(self, operator, lhs, rhs):
         super(BinaryExpression, self).__init__()
@@ -586,19 +586,6 @@ class MethodInvocation(Expression):
     def accept(self, visitor):
         visitor.visit_MethodInvocation(self)
 
-
-class ConstructorInvocation(SourceElement):
-    def __init__(self, name, target=None, type_arguments=None, arguments=None):
-        super(ConstructorInvocation, self).__init__()
-        if type_arguments is None:
-           type_arguments = []
-        if arguments is None:
-           arguments = []
-
-        self.name = name
-        self.target = target
-        self.type_arguments = type_arguments
-        self.arguments = arguments
 
 class IfThenElse(Statement):
 
@@ -827,14 +814,14 @@ class Resource(SourceElement):
         self.initializer = initializer
 
 
-class ConrepructorInvocation(Statement):
+class ConstructorInvocation(Statement):
     """An explicit invocations of a class's conrepructor.
 
     This is a variant of either this() or super(), NOT a "new" expression.
     """
 
     def __init__(self, name, target=None, type_arguments=None, arguments=None):
-        super(ConrepructorInvocation, self).__init__()
+        super(ConstructorInvocation, self).__init__()
         self._fields = ['name', 'target', 'type_arguments', 'arguments']
         if type_arguments is None:
             type_arguments = []
