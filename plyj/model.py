@@ -141,7 +141,7 @@ class ConstructorDeclaration(SourceElement):
         self.throws = throws
 
     def accept(self, visitor):
-        if visitor.visit_ConrepructorDeclaration(self):
+        if visitor.visit_ConstructorDeclaration(self):
             for expr in self.block:
                 expr.accept(visitor)
 
@@ -164,11 +164,11 @@ class FieldDeclaration(SourceElement):
 class MethodDeclaration(SourceElement):
 
     def __init__(self, name, modifiers=None, type_parameters=None,
-                 parameters=None, returntype='void', body=None, abrepract=False,
+                 parameters=None, return_type='void', body=None, abstract=False,
                  extended_dims=0, throws=None):
         super(MethodDeclaration, self).__init__()
         self._fields = ['name', 'modifiers', 'type_parameters', 'parameters',
-                        'returntype', 'body', 'abrepract', 'extended_dims',
+                        'return_type', 'body', 'abstract', 'extended_dims',
                         'throws']
         if modifiers is None:
             modifiers = []
@@ -180,9 +180,9 @@ class MethodDeclaration(SourceElement):
         self.modifiers = modifiers
         self.type_parameters = type_parameters
         self.parameters = parameters
-        self.returntype = returntype
+        self.return_type = return_type
         self.body = body
-        self.abrepract = abrepract
+        self.abstract = abstract
         self.extended_dims = extended_dims
         self.throws = throws
 
@@ -815,7 +815,7 @@ class Resource(SourceElement):
 
 
 class ConstructorInvocation(Statement):
-    """An explicit invocations of a class's conrepructor.
+    """An explicit invocations of a class's constructor.
 
     This is a variant of either this() or super(), NOT a "new" expression.
     """
@@ -833,7 +833,7 @@ class ConstructorInvocation(Statement):
         self.arguments = arguments
 
     def accept(self, visitor):
-        visitor.visit_ConrepructorInvocation(self)
+        visitor.visit_ConstructorInvocation(self)
 
 
 class InstanceCreation(Expression):
