@@ -30,7 +30,7 @@ class StatementTest(unittest.TestCase):
         predicate = model.BinaryExpression('<', i, ten)
         update = model.Unary('x++', i)
 
-        self.assert_stmt('for(;;);', model.For(None, None, None, body=None))
+        self.assert_stmt('for(;;);', model.For(None, None, None, body=model.Empty()))
         self.assert_stmt('for(;;) return;', model.For(None, None, None, body=model.Return()))
         self.assert_stmt('for(;;) { return; }', model.For(None, None, None, body=model.Block([model.Return()])))
         self.assert_stmt('for(int i=0;;) return;', model.For(initializer, None, None, body=model.Return()))
@@ -192,6 +192,9 @@ class StatementTest(unittest.TestCase):
 
         arr_creation.dimensions = [two]
         self.assert_stmt('int[] i = new int[2] {1, 3};', model.VariableDeclaration(int_ar, [var_i_decltor]))
+
+    def test_empty(self):
+        self.assert_stmt(';', model.Empty())
 
     def assert_stmt(self, stmt, result):
         s = self.parser.parse_statement(stmt)

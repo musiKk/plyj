@@ -725,7 +725,7 @@ class StatementParser(object):
 
     def p_empty_statement(self, p):
         '''empty_statement : ';' '''
-        # ignore
+        p[0] = Empty()
 
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''

@@ -537,6 +537,9 @@ class Cast(Expression):
 class Statement(SourceElement):
     pass
 
+class Empty(Statement):
+    pass
+
 
 class Block(Statement):
 
