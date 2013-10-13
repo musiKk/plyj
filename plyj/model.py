@@ -938,6 +938,10 @@ class Name(SourceElement):
 
 
 class Visitor(object):
+
+    def __init__(self, verbose=False):
+        self.verbose = verbose
+
     def __getattr__(self, name):
         if not name.startswith('visit_'):
             raise AttributeError('name must start with visit_ but was {}'
