@@ -41,12 +41,14 @@ The grammar is complete. There may still be errors left though. It successfully 
 Performance
 -----------
 
-A word of caution: Since plyj is pure Python (and I mean 100% from front to back), it is quite slow. Based on my old laptop (which usually runs with 1 GHz) I can present the following numbers:
+A word of caution: Since plyj is pure Python, it is quite slow. Based on my laptop (which has an i7-3517U @ 1.90 GHz) I can present the following numbers (running inside a virtual machine):
 
 * 619 rules
 * 1149 states
-* ~17 seconds to compile the grammar
-* java/util/Collections.java takes ~1.8 seconds to parse (it's quite big though)
+* ~3.28 seconds to compile the grammar
+* java/util/Collections.java takes ~0.44 seconds to parse (it's quite big though)
+
+The timings are obviously highly dependent on the used hardware. My old laptop (Core 2 Duo @ 1 GHz) took 17 and 1.8 seconds respectively.
 
 [PLY]: https://github.com/dabeaz/ply
 [Java Development Tools]: http://www.eclipse.org/jdt/
