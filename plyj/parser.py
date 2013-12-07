@@ -1875,7 +1875,7 @@ class ClassParser(object):
 
     def p_member_value_pair(self, p):
         '''member_value_pair : simple_name '=' member_value'''
-        p[0] = AnnotationMember(p[1], p[2])
+        p[0] = AnnotationMember(p[1], p[3])
 
     def p_marker_annotation(self, p):
         '''marker_annotation : annotation_name'''
