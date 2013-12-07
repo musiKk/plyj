@@ -1460,7 +1460,7 @@ class ClassParser(object):
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
-        p[0] = ConstructorDeclaration(p[1], p[2], modifiers=p[1]['modifiers'],
+        p[0] = ConstructorDeclaration(p[1]['name'], p[2], modifiers=p[1]['modifiers'],
                                       type_parameters=p[1]['type_parameters'],
                                       parameters=p[1]['parameters'], throws=p[1]['throws'])
 
@@ -1566,7 +1566,7 @@ class ClassParser(object):
 
     def p_interface_declaration(self, p):
         '''interface_declaration : interface_header interface_body'''
-        p[0] = InterfaceDeclaration(p[1], modifiers=p[1]['modifiers'],
+        p[0] = InterfaceDeclaration(p[1]['name'], modifiers=p[1]['modifiers'],
                                     type_parameters=p[1]['type_parameters'],
                                     extends=p[1]['extends'],
                                     body=p[2])
@@ -1875,7 +1875,7 @@ class ClassParser(object):
 
     def p_member_value_pair(self, p):
         '''member_value_pair : simple_name '=' member_value'''
-        p[0] = AnnotationMember(p[1], p[2])
+        p[0] = AnnotationMember(p[1], p[3])
 
     def p_marker_annotation(self, p):
         '''marker_annotation : annotation_name'''
