@@ -38,6 +38,20 @@ Completeness
 
 The grammar is complete. There may still be errors left though. It successfully parsed every source file of the Oracle JDK. A lot of bugs were found that way but for all I know there may be many more. Time will tell.
 
+Contributions
+-------------
+
+Contributions are always welcome. Depending on the type of work it may
+take a little while until I get around to accepting them.
+
+* commit test that demonstrates a bug (optional)
+* commit the fix
+* open pull request
+
+The test is required but does *not* have to be provided by you. If you
+do provide it, committing it first shows appropriate messages in the
+pull request and makes it easier to accept via Web.
+
 Performance
 -----------
 
