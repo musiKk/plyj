@@ -73,6 +73,13 @@ expression_tests = [
     ('a <<= 1', model.Assignment('<<=', a, one)),
     ('a >>= 1', model.Assignment('>>=', a, one)),
     ('a >>>= 1', model.Assignment('>>>=', a, one)),
+    # casts
+    ('(Foo) a', model.Cast(model.Type(model.Name('Foo')), a)),
+    ('(int[]) a', model.Cast(model.Type('int', dimensions=1), a)),
+    ('(Foo[]) a', model.Cast(model.Type(model.Name('Foo'), dimensions=1), a)),
+    ('(Foo<T>) a', model.Cast(model.Type(model.Name('Foo'), type_arguments=[model.Type(model.Name('T'))]), a)),
+    ('(Foo<T>.Bar) a', model.Cast(model.Type(model.Name('Bar'),
+                                  enclosed_in=model.Type(model.Name('Foo'), type_arguments=[model.Type(model.Name('T'))])), a)),
     # method invocation
     ('foo.bar()', model.MethodInvocation(name=model.Name('foo.bar'))),
     ('foo.class.getName()', model.MethodInvocation(target=model.ClassLiteral(model.Type(model.Name('foo'))), name='getName')),
