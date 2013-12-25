@@ -28,6 +28,6 @@ class CompilationUnitTest(unittest.TestCase):
 
         self.assertIsInstance(member, model.AnnotationMember)
 
-        self.assertEquals(member, model.AnnotationMember(
+        self.assertEqual(member, model.AnnotationMember(
             name=model.Name('key'),
             value=model.Literal('1')))
