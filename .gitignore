@@ -6,4 +6,6 @@ MANIFEST
 lextab.py
 parsetab.py
 parser.out
-*.pythoscope*
+
+.coverage
+cover/
