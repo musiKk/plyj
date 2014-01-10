@@ -597,7 +597,7 @@ class StatementParser(object):
             p[0] = p[1] + [p[3]]
 
     def p_method_invocation(self, p):
-        '''method_invocation : name '(' argument_list_opt ')' '''
+        '''method_invocation : NAME '(' argument_list_opt ')' '''
         p[0] = MethodInvocation(p[1], arguments=p[3])
 
     def p_method_invocation2(self, p):
@@ -607,7 +607,8 @@ class StatementParser(object):
         p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
 
     def p_method_invocation3(self, p):
-        '''method_invocation : primary '.' NAME '(' argument_list_opt ')'
+        '''method_invocation : name '.' NAME '(' argument_list_opt ')'
+                             | primary '.' NAME '(' argument_list_opt ')'
                              | SUPER '.' NAME '(' argument_list_opt ')' '''
         p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
 
