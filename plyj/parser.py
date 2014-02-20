@@ -43,9 +43,7 @@ class MyLexer(object):
     t_CHAR_LITERAL = r'\'([^\\\n]|(\\.))*?\''
     t_STRING_LITERAL = r'\"([^\\\n]|(\\.))*?\"'
 
-    def t_LINE_COMMENT(self, t):
-        r'//.*?\n'
-        t.lexer.lineno += 1
+    t_ignore_LINE_COMMENT = r'//[^\\\n].*'
 
     def t_BLOCK_COMMENT(self, t):
         r'/\*(.|\n)*?\*/'

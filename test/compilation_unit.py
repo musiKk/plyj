@@ -86,6 +86,12 @@ class CompilationUnitTest(unittest.TestCase):
             members=[model.AnnotationMember(name=model.Name('key'),
                                             value=model.Literal('1'))])])
 
+    def test_line_comment(self):
+        m = self.parser.parse_string('''
+        class Foo {}
+        // line comment at last line''');
+        self._assert_declaration(m, 'Foo') 
+
     def _assert_declaration(self, compilation_unit, name, index=0, type=model.ClassDeclaration):
         self.assertIsInstance(compilation_unit, model.CompilationUnit)
         self.assertTrue(len(compilation_unit.type_declarations) >= index + 1)
