@@ -1529,10 +1529,7 @@ class ClassParser(object):
         '''method_declaration : abstract_method_declaration
                               | method_header method_body'''
         if len(p) == 2:
-            p[0] = MethodDeclaration(p[1]['name'], abstract=True, parameters=p[1]['parameters'],
-                                     extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
-                                     return_type=p[1]['type'], modifiers=p[1]['modifiers'],
-                                     throws=p[1]['throws'])
+            p[0] = p[1]
         else:
             p[0] = MethodDeclaration(p[1]['name'], parameters=p[1]['parameters'],
                                      extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
@@ -1541,8 +1538,11 @@ class ClassParser(object):
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
-        p[0] = p[1]
-
+        p[0] = MethodDeclaration(p[1]['name'], abstract=True, parameters=p[1]['parameters'],
+                                 extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
+                                 return_type=p[1]['type'], modifiers=p[1]['modifiers'],
+                                 throws=p[1]['throws'])
+ 
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
         p[1]['parameters'] = p[2]
