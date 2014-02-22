@@ -81,7 +81,7 @@ expression_tests = [
     ('(Foo<T>.Bar) a', model.Cast(model.Type(model.Name('Bar'),
                                   enclosed_in=model.Type(model.Name('Foo'), type_arguments=[model.Type(model.Name('T'))])), a)),
     # method invocation
-    ('foo.bar()', model.MethodInvocation(name=model.Name('foo.bar'))),
+    ('foo.bar()', model.MethodInvocation(name='bar', target=model.Name(value='foo'))),
     ('foo.class.getName()', model.MethodInvocation(target=model.ClassLiteral(model.Type(model.Name('foo'))), name='getName')),
 
     ('foo.Class[].class', model.ClassLiteral(model.Type(model.Name('foo.Class'), dimensions=1)))
