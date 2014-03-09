@@ -87,8 +87,10 @@ class CompilationUnitTest(unittest.TestCase):
                                             value=model.Literal('1'))])])
 
     def test_line_comment(self):
-        m = self.parser.parse_string('''
+        m = self.parser.parse_string(r'''
         class Foo {}
+        //
+        //\
         // line comment at last line''');
         self._assert_declaration(m, 'Foo') 
 
