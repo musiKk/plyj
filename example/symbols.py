@@ -38,6 +38,8 @@ for type_decl in tree.type_declarations:
 
         if method_decl.body is not None:
             for statement in method_decl.body:
+                # note that this misses variables in inner blocks such as for loops
+                # see symbols_visitor.py for a better way of handling this
                 if type(statement) is m.VariableDeclaration:
                     for var_decl in statement.variable_declarators:
                         if type(statement.type) is str:
