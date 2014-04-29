@@ -1447,7 +1447,7 @@ class ClassParser(object):
 
     def p_class_member_declaration2(self, p):
         '''class_member_declaration : ';' '''
-        # ignore
+        p[0] = EmptyDeclaration()
 
     def p_field_declaration(self, p):
         '''field_declaration : modifiers_opt type variable_declarators ';' '''
