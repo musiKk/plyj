@@ -94,6 +94,17 @@ class CompilationUnitTest(unittest.TestCase):
         // line comment at last line''');
         self._assert_declaration(m, 'Foo') 
 
+    def test_visit_empty_declaration(self):
+        m = self.parser.parse_string(r'''
+        interface IFoo {
+            ;
+        }
+        class Foo {
+            ;
+        };''');
+        v = model.Visitor()
+        m.accept(v)
+
     def _assert_declaration(self, compilation_unit, name, index=0, type=model.ClassDeclaration):
         self.assertIsInstance(compilation_unit, model.CompilationUnit)
         self.assertTrue(len(compilation_unit.type_declarations) >= index + 1)

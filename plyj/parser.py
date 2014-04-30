@@ -1349,7 +1349,7 @@ class ClassParser(object):
 
     def p_type_declaration2(self, p):
         '''type_declaration : ';' '''
-        # ignore
+        p[0] = EmptyDeclaration()
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
@@ -1631,7 +1631,7 @@ class ClassParser(object):
 
     def p_interface_member_declaration2(self, p):
         '''interface_member_declaration : ';' '''
-        # ignore
+        p[0] = EmptyDeclaration()
 
     def p_constant_declaration(self, p):
         '''constant_declaration : field_declaration'''
