@@ -192,8 +192,9 @@ class MethodDeclaration(SourceElement):
 
     def accept(self, visitor):
         if visitor.visit_MethodDeclaration(self):
-            for e in self.body:
-                e.accept(visitor)
+            if not self.body == None:
+                for e in self.body:
+                    e.accept(visitor)
 
 
 class FormalParameter(SourceElement):
