@@ -605,7 +605,11 @@ class IfThenElse(Statement):
         self.if_false = if_false
 
     def accept(self, visitor):
-        visitor.visit_IfThenElse(self)
+        if visitor.visit_IfThenElse(self):
+            self.predicate.accept(visitor)
+            self.if_true.accept(visitor)
+            if self.if_false is not None:
+                self.if_false.accept(visitor)
 
 
 class While(Statement):
