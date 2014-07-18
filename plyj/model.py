@@ -459,8 +459,10 @@ class BinaryExpression(Expression):
 
     def accept(self, visitor):
         if visitor.visit_BinaryExpression(self):
-            self.lhs.accept(visitor)
-            self.rhs.accept(visitor)
+            if type(self.lhs) is not str:
+                self.lhs.accept(visitor)
+            if type(self.rhs) is not str:
+                self.rhs.accept(visitor)
 
 
 class Assignment(BinaryExpression):
