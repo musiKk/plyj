@@ -29,7 +29,8 @@ class SourceElement(object):
         default implementation that visit the subnodes in the order
         they are stored in self_field
         """
-        visit = getattr(visitor, 'visit_' + self.__class__.__name__)
+        class_name = self.__class__.__name__
+        visit = getattr(visitor, 'visit_' + class_name)
         if visit(self):
             for f in self._fields:
                 field = getattr(self, f)
@@ -40,6 +41,7 @@ class SourceElement(object):
                                 elem.accept(visitor)
                     elif isinstance(field, SourceElement):
                         field.accept(visitor)
+        getattr(visitor, 'leave_' + class_name)(self)
 
 
 class CompilationUnit(SourceElement):
@@ -784,8 +786,8 @@ class Visitor(object):
         self.verbose = verbose
 
     def __getattr__(self, name):
-        if not name.startswith('visit_'):
-            raise AttributeError('name must start with visit_ but was {}'
+        if not (name.startswith('visit_') or name.startswith('leave_')):
+            raise AttributeError('name must start with visit_ or leave_ but was {}'
                                  .format(name))
 
         def f(element):
