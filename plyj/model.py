@@ -25,7 +25,23 @@ class SourceElement(object):
         return not self == other
 
     def accept(self, visitor):
-        pass
+        """
+        default implementation that visit the subnodes in the order
+        they are stored in self_field
+        """
+        class_name = self.__class__.__name__
+        visit = getattr(visitor, 'visit_' + class_name)
+        if visit(self):
+            for f in self._fields:
+                field = getattr(self, f)
+                if field:
+                    if isinstance(field, list):
+                        for elem in field:
+                            if isinstance(elem, SourceElement):
+                                elem.accept(visitor)
+                    elif isinstance(field, SourceElement):
+                        field.accept(visitor)
+        getattr(visitor, 'leave_' + class_name)(self)
 
 
 class CompilationUnit(SourceElement):
@@ -43,16 +59,6 @@ class CompilationUnit(SourceElement):
         self.import_declarations = import_declarations
         self.type_declarations = type_declarations
 
-    def accept(self, visitor):
-        if visitor.visit_CompilationUnit(self):
-            if self.package_declaration:
-                self.package_declaration.accept(visitor)
-            for import_decl in self.import_declarations:
-                import_decl.accept(visitor)
-            for type_decl in self.type_declarations:
-                type_decl.accept(visitor)
-
-
 class PackageDeclaration(SourceElement):
 
     def __init__(self, name, modifiers=None):
@@ -63,9 +69,6 @@ class PackageDeclaration(SourceElement):
         self.name = name
         self.modifiers = modifiers
 
-    def accept(self, visitor):
-        visitor.visit_PackageDeclaration(self)
-
 
 class ImportDeclaration(SourceElement):
 
@@ -75,9 +78,6 @@ class ImportDeclaration(SourceElement):
         self.name = name
         self.static = static
         self.on_demand = on_demand
-
-    def accept(self, visitor):
-        visitor.visit_ImportDeclaration(self)
 
 
 class ClassDeclaration(SourceElement):
@@ -100,12 +100,6 @@ class ClassDeclaration(SourceElement):
         self.extends = extends
         self.implements = implements
 
-    def accept(self, visitor):
-        if visitor.visit_ClassDeclaration(self):
-            for decl in self.body:
-                decl.accept(visitor)
-
-
 class ClassInitializer(SourceElement):
 
     def __init__(self, block, static=False):
@@ -113,12 +107,6 @@ class ClassInitializer(SourceElement):
         self._fields = ['block', 'static']
         self.block = block
         self.static = static
-
-    def accept(self, visitor):
-        if visitor.visit_ClassInitializer(self):
-            for expr in self.block:
-                expr.accept(visitor)
-
 
 class ConstructorDeclaration(SourceElement):
 
@@ -140,15 +128,8 @@ class ConstructorDeclaration(SourceElement):
         self.parameters = parameters
         self.throws = throws
 
-    def accept(self, visitor):
-        if visitor.visit_ConstructorDeclaration(self):
-            for expr in self.block:
-                expr.accept(visitor)
-
 class EmptyDeclaration(SourceElement):
-
-    def accept(self, visitor):
-        visitor.visit_EmptyDeclaration(self)
+    pass
 
 class FieldDeclaration(SourceElement):
 
@@ -160,10 +141,6 @@ class FieldDeclaration(SourceElement):
         self.type = type
         self.variable_declarators = variable_declarators
         self.modifiers = modifiers
-
-    def accept(self, visitor):
-        visitor.visit_FieldDeclaration(self)
-
 
 class MethodDeclaration(SourceElement):
 
@@ -189,13 +166,6 @@ class MethodDeclaration(SourceElement):
         self.abstract = abstract
         self.extended_dims = extended_dims
         self.throws = throws
-
-    def accept(self, visitor):
-        if visitor.visit_MethodDeclaration(self):
-            if self.body is not None:
-                for e in self.body:
-                    e.accept(visitor)
-
 
 class FormalParameter(SourceElement):
 
@@ -233,14 +203,12 @@ class VariableDeclarator(SourceElement):
         self.variable = variable
         self.initializer = initializer
 
-
 class Throws(SourceElement):
 
     def __init__(self, types):
         super(Throws, self).__init__()
         self._fields = ['types']
         self.types = types
-
 
 class InterfaceDeclaration(SourceElement):
 
@@ -263,12 +231,6 @@ class InterfaceDeclaration(SourceElement):
         self.type_parameters = type_parameters
         self.body = body
 
-    def accept(self, visitor):
-        if visitor.visit_InterfaceDeclaration(self):
-            for decl in self.body:
-                decl.accept(visitor)
-
-
 class EnumDeclaration(SourceElement):
 
     def __init__(self, name, implements=None, modifiers=None,
@@ -290,12 +252,6 @@ class EnumDeclaration(SourceElement):
         self.type_parameters = type_parameters
         self.body = body
 
-    def accept(self, visitor):
-        if visitor.visit_EnumDeclaration(self):
-            for decl in self.body:
-                decl.accept(visitor)
-
-
 class EnumConstant(SourceElement):
 
     def __init__(self, name, arguments=None, modifiers=None, body=None):
@@ -311,12 +267,6 @@ class EnumConstant(SourceElement):
         self.arguments = arguments
         self.modifiers = modifiers
         self.body = body
-
-    def accept(self, visitor):
-        if visitor.visit_EnumConstant(self):
-            for expr in self.body:
-                expr.accept(visitor)
-
 
 class AnnotationDeclaration(SourceElement):
 
@@ -341,12 +291,6 @@ class AnnotationDeclaration(SourceElement):
         self.implements = implements
         self.body = body
 
-    def accept(self, visitor):
-        if visitor.visit_AnnotationDeclaration(self):
-            for decl in self.body:
-                decl.accept(visitor)
-
-
 class AnnotationMethodDeclaration(SourceElement):
 
     def __init__(self, name, type, parameters=None, default=None,
@@ -367,10 +311,6 @@ class AnnotationMethodDeclaration(SourceElement):
         self.modifiers = modifiers
         self.type_parameters = type_parameters
         self.extended_dims = extended_dims
-
-    def accept(self, visitor):
-        visitor.visit_AnnotationMethodDeclaration(self)
-
 
 class Annotation(SourceElement):
 
@@ -444,10 +384,6 @@ class Expression(SourceElement):
         super(Expression, self).__init__()
         self._fields = []
 
-    def accept(self, visitor):
-        visitor.visit_Expression(self)
-
-
 class BinaryExpression(Expression):
 
     def __init__(self, operator, lhs, rhs):
@@ -456,14 +392,6 @@ class BinaryExpression(Expression):
         self.operator = operator
         self.lhs = lhs
         self.rhs = rhs
-
-    def accept(self, visitor):
-        if visitor.visit_BinaryExpression(self):
-            if type(self.lhs) is not str:
-                self.lhs.accept(visitor)
-            if type(self.rhs) is not str:
-                self.rhs.accept(visitor)
-
 
 class Assignment(BinaryExpression):
     pass
@@ -478,14 +406,11 @@ class Conditional(Expression):
         self.if_true = if_true
         self.if_false = if_false
 
-
 class ConditionalOr(BinaryExpression):
     pass
 
-
 class ConditionalAnd(BinaryExpression):
     pass
-
 
 class Or(BinaryExpression):
     pass
@@ -561,15 +486,8 @@ class Block(Statement):
         for s in self.statements:
             yield s
 
-    def accept(self, visitor):
-        if visitor.visit_Block(self):
-            [s.accept(visitor) for s in self.statements]
-
-
 class VariableDeclaration(Statement, FieldDeclaration):
-    def accept(self, visitor):
-        visitor.visit_VariableDeclaration(self)
-
+    pass
 
 class ArrayInitializer(SourceElement):
     def __init__(self, elements=None):
@@ -593,10 +511,6 @@ class MethodInvocation(Expression):
         self.type_arguments = type_arguments
         self.target = target
 
-    def accept(self, visitor):
-        visitor.visit_MethodInvocation(self)
-
-
 class IfThenElse(Statement):
 
     def __init__(self, predicate, if_true=None, if_false=None):
@@ -606,14 +520,6 @@ class IfThenElse(Statement):
         self.if_true = if_true
         self.if_false = if_false
 
-    def accept(self, visitor):
-        if visitor.visit_IfThenElse(self):
-            self.predicate.accept(visitor)
-            self.if_true.accept(visitor)
-            if self.if_false is not None:
-                self.if_false.accept(visitor)
-
-
 class While(Statement):
 
     def __init__(self, predicate, body=None):
@@ -621,10 +527,6 @@ class While(Statement):
         self._fields = ['predicate', 'body']
         self.predicate = predicate
         self.body = body
-
-    def accept(self, visitor):
-        visitor.visit_While(self)
-
 
 class For(Statement):
 
@@ -635,11 +537,6 @@ class For(Statement):
         self.predicate = predicate
         self.update = update
         self.body = body
-
-    def accept(self, visitor):
-        if visitor.visit_For(self):
-            self.body.accept(visitor)
-
 
 class ForEach(Statement):
 
@@ -654,10 +551,6 @@ class ForEach(Statement):
         self.body = body
         self.modifiers = modifiers
 
-    def accept(self, visitor):
-        if visitor.visit_ForEach(self):
-            self.body.accept(visitor)
-
 
 class Assert(Statement):
 
@@ -667,9 +560,6 @@ class Assert(Statement):
         self.predicate = predicate
         self.message = message
 
-    def accept(self, visitor):
-        visitor.visit_Assert(self)
-
 
 class Switch(Statement):
 
@@ -678,12 +568,6 @@ class Switch(Statement):
         self._fields = ['expression', 'switch_cases']
         self.expression = expression
         self.switch_cases = switch_cases
-
-    def accept(self, visitor):
-        if visitor.visit_Switch(self):
-            for s in self.switch_cases:
-                s.accept(visitor)
-
 
 class SwitchCase(SourceElement):
 
@@ -695,12 +579,6 @@ class SwitchCase(SourceElement):
         self.cases = cases
         self.body = body
 
-    def accept(self, visitor):
-        if visitor.visit_SwitchCase(self):
-            for s in self.body:
-                s.accept(visitor)
-
-
 class DoWhile(Statement):
 
     def __init__(self, predicate, body=None):
@@ -708,10 +586,6 @@ class DoWhile(Statement):
         self._fields = ['predicate', 'body']
         self.predicate = predicate
         self.body = body
-
-    def accept(self, visitor):
-        if visitor.visit_DoWhile(self):
-            self.body.accept(visitor)
 
 
 class Continue(Statement):
@@ -721,9 +595,6 @@ class Continue(Statement):
         self._fields = ['label']
         self.label = label
 
-    def accept(self, visitor):
-        visitor.visit_Continue(self)
-
 
 class Break(Statement):
 
@@ -732,9 +603,6 @@ class Break(Statement):
         self._fields = ['label']
         self.label = label
 
-    def accept(self, visitor):
-        visitor.visit_Break(self)
-
 
 class Return(Statement):
 
@@ -742,9 +610,6 @@ class Return(Statement):
         super(Return, self).__init__()
         self._fields = ['result']
         self.result = result
-
-    def accept(self, visitor):
-        visitor.visit_Return(self)
 
 
 class Synchronized(Statement):
@@ -755,11 +620,6 @@ class Synchronized(Statement):
         self.monitor = monitor
         self.body = body
 
-    def accept(self, visitor):
-        if visitor.visit_Synchronized(self):
-            for s in self.body:
-                s.accept(visitor)
-
 
 class Throw(Statement):
 
@@ -767,9 +627,6 @@ class Throw(Statement):
         super(Throw, self).__init__()
         self._fields = ['exception']
         self.exception = exception
-
-    def accept(self, visitor):
-        visitor.visit_Throw(self)
 
 
 class Try(Statement):
@@ -810,10 +667,6 @@ class Catch(SourceElement):
         self.types = types
         self.block = block
 
-    def accept(self, visitor):
-        if visitor.visit_Catch(self):
-            self.block.accept(visitor)
-
 
 class Resource(SourceElement):
 
@@ -846,9 +699,6 @@ class ConstructorInvocation(Statement):
         self.type_arguments = type_arguments
         self.arguments = arguments
 
-    def accept(self, visitor):
-        visitor.visit_ConstructorInvocation(self)
-
 
 class InstanceCreation(Expression):
 
@@ -869,9 +719,6 @@ class InstanceCreation(Expression):
         self.body = body
         self.enclosed_in = enclosed_in
 
-    def accept(self, visitor):
-        visitor.visit_InstanceCreation(self)
-
 
 class FieldAccess(Expression):
 
@@ -881,9 +728,6 @@ class FieldAccess(Expression):
         self.name = name
         self.target = target
 
-    def accept(self, visitor):
-        visitor.visit_FieldAccess(self)
-
 
 class ArrayAccess(Expression):
 
@@ -892,9 +736,6 @@ class ArrayAccess(Expression):
         self._fields = ['index', 'target']
         self.index = index
         self.target = target
-
-    def accept(self, visitor):
-        visitor.visit_ArrayAccess(self)
 
 
 class ArrayCreation(Expression):
@@ -908,9 +749,6 @@ class ArrayCreation(Expression):
         self.dimensions = dimensions
         self.initializer = initializer
 
-    def accept(self, visitor):
-        visitor.visit_ArrayCreation(self)
-
 
 class Literal(SourceElement):
 
@@ -918,9 +756,6 @@ class Literal(SourceElement):
         super(Literal, self).__init__()
         self._fields = ['value']
         self.value = value
-
-    def accept(self, visitor):
-        visitor.visit_Literal(self)
 
 
 class ClassLiteral(SourceElement):
@@ -944,9 +779,6 @@ class Name(SourceElement):
         except:
             self.value = self.value + '.' + name
 
-    def accept(self, visitor):
-        visitor.visit_Name(self)
-
 
 class Visitor(object):
 
@@ -954,8 +786,8 @@ class Visitor(object):
         self.verbose = verbose
 
     def __getattr__(self, name):
-        if not name.startswith('visit_'):
-            raise AttributeError('name must start with visit_ but was {}'
+        if not (name.startswith('visit_') or name.startswith('leave_')):
+            raise AttributeError('name must start with visit_ or leave_ but was {}'
                                  .format(name))
 
         def f(element):
