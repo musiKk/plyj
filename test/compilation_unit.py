@@ -114,6 +114,18 @@ class CompilationUnitTest(unittest.TestCase):
         v = model.Visitor()
         m.accept(v)
 
+    def test_visit_right_hand_this(self):
+        m = self.parser.parse_string(r'''
+        class Foo {
+            static Foo instance;
+            Foo() {
+                instance = this;
+            }
+        }
+        ''')
+        v = model.Visitor()
+        m.accept(v)
+
     def _assert_declaration(self, compilation_unit, name, index=0, type=model.ClassDeclaration):
         self.assertIsInstance(compilation_unit, model.CompilationUnit)
         self.assertTrue(len(compilation_unit.type_declarations) >= index + 1)
