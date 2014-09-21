@@ -92,7 +92,7 @@ class CompilationUnitTest(unittest.TestCase):
         //
         //\
         // line comment at last line''');
-        self._assert_declaration(m, 'Foo') 
+        self._assert_declaration(m, 'Foo')
 
     def test_visit_empty_declaration(self):
         m = self.parser.parse_string(r'''
@@ -101,7 +101,16 @@ class CompilationUnitTest(unittest.TestCase):
         }
         class Foo {
             ;
-        };''');
+        };''')
+        v = model.Visitor()
+        m.accept(v)
+
+    def test_visit_abstract_method(self):
+        m = self.parser.parse_string(r'''
+        abstract class Foo {
+            abstract void foo();
+        }
+        ''')
         v = model.Visitor()
         m.accept(v)
 
