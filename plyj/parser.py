@@ -2011,7 +2011,7 @@ class Parser(object):
 
     def tokenize_file(self, _file):
         if type(_file) == str:
-            _file = file(_file)
+            _file = open(_file)
         content = ''
         for line in _file:
             content += line
