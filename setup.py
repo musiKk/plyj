@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='plyj',
-    version='0.1',
+    version='0.2-dev',
     author='Werner Hahn',
     author_email='werner_hahn@gmx.com',
     packages=['plyj'],
