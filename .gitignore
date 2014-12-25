@@ -1,7 +1,6 @@
 *.egg-info
 
 *.py[co]
-MANIFEST
 
 lextab.py
 parsetab.py
@@ -9,3 +8,5 @@ parser.out
 
 .coverage
 cover/
+dist/
+build/
