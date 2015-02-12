@@ -122,19 +122,16 @@ class StatementTest(unittest.TestCase):
         footype = model.Type(model.Name('Foo'))
         bartype = model.Type(model.Name('Bar'))
         for call in ['super', 'this']:
-            self.assert_stmt('{}();'.format(call), model.ExpressionStatement(model.ConstructorInvocation(call)))
-            self.assert_stmt('{}(1);'.format(call),
-                             model.ExpressionStatement(model.ConstructorInvocation(call, arguments=[one])))
+            self.assert_stmt('{}();'.format(call), model.ConstructorInvocation(call))
+            self.assert_stmt('{}(1);'.format(call), model.ConstructorInvocation(call, arguments=[one]))
             self.assert_stmt('{}(1, foo, "bar");'.format(call),
-                             model.ExpressionStatement(
-                                 model.ConstructorInvocation(call, arguments=[one, foo, model.Literal('"bar"')])))
+                             model.ConstructorInvocation(call, arguments=[one, foo, model.Literal('"bar"')]))
             self.assert_stmt('<Foo> {}();'.format(call),
-                             model.ExpressionStatement(model.ConstructorInvocation(call, type_arguments=[footype])))
+                             model.ConstructorInvocation(call, type_arguments=[footype]))
             self.assert_stmt('Foo.{}();'.format(call),
-                             model.ExpressionStatement(model.ConstructorInvocation(call, target=model.Name('Foo'))))
+                             model.ConstructorInvocation(call, target=model.Name('Foo')))
             self.assert_stmt('Foo.<Bar> {}();'.format(call),
-                             model.ExpressionStatement(
-                                 model.ConstructorInvocation(call, type_arguments=[bartype], target=model.Name('Foo'))))
+                             model.ConstructorInvocation(call, type_arguments=[bartype], target=model.Name('Foo')))
 
     def test_if(self):
         self.assert_stmt('if(foo) return;', model.IfThenElse(foo, if_true=model.Return()))
