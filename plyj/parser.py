@@ -2030,9 +2030,7 @@ class Parser(object):
     def parse_file(self, _file, debug=0):
         if type(_file) == str:
             _file = open(_file)
-        content = ''
-        for line in _file:
-            content += line
+        content = _file.read()
         return self.parse_string(content, debug=debug)
 
 if __name__ == '__main__':
