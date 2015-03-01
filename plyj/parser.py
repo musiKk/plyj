@@ -560,7 +560,10 @@ class StatementParser(object):
     def p_expression_statement(self, p):
         '''expression_statement : statement_expression ';'
                                 | explicit_constructor_invocation'''
-        p[0] = p[1]
+        if isinstance(p[1], ConstructorInvocation):
+            p[0] = p[1]
+        else:
+            p[0] = ExpressionStatement(p[1])
 
     def p_statement_expression(self, p):
         '''statement_expression : assignment

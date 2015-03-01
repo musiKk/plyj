@@ -780,6 +780,13 @@ class Name(SourceElement):
             self.value = self.value + '.' + name
 
 
+class ExpressionStatement(Statement):
+    def __init__(self, expression):
+        super(ExpressionStatement, self).__init__()
+        self._fields = ['expression']
+        self.expression = expression
+
+
 class Visitor(object):
 
     def __init__(self, verbose=False):
