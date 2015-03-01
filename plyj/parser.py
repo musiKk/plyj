@@ -560,7 +560,7 @@ class StatementParser(object):
     def p_expression_statement(self, p):
         '''expression_statement : statement_expression ';'
                                 | explicit_constructor_invocation'''
-        if isinstance(p[1], ConstructorInvocation):
+        if len(p) == 2:
             p[0] = p[1]
         else:
             p[0] = ExpressionStatement(p[1])
@@ -1546,7 +1546,7 @@ class ClassParser(object):
                                  extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
                                  return_type=p[1]['type'], modifiers=p[1]['modifiers'],
                                  throws=p[1]['throws'])
- 
+
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
         p[1]['parameters'] = p[2]
