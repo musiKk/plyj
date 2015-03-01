@@ -1,5 +1,6 @@
 /.idea/*
 *.egg-info
+.eggs/
 
 *.py[co]
 
