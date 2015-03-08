@@ -10,7 +10,7 @@ setup(
     license='COPYING',
     description='A Java parser written in Python using PLY. ',
     long_description=open('README.md').read(),
-    classifiers = [
+    classifiers=[
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Intended Audience :: Education',

@@ -1,10 +1,11 @@
 #!/usr/bin/env python2
 
 import sys
-import plyj.parser
-import plyj.model as m
+from parser import Parser
+import plyj.java_parser
+import plyj.visitor as m
 
-p = plyj.parser.Parser()
+p = Parser()
 tree = p.parse_file(sys.argv[1])
 
 class MyVisitor(m.Visitor):

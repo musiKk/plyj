@@ -1,10 +1,13 @@
 #!/usr/bin/env python2
 
 import sys
-import plyj.parser
-import plyj.model as m
+from models.
+from models.method import MethodDeclaration
+from parser import Parser
+import plyj.java_parser
+import plyj.visitor as m
 
-p = plyj.parser.Parser()
+p = Parser()
 tree = p.parse_file(sys.argv[1])
 
 print('declared types:')
@@ -17,7 +20,7 @@ for type_decl in tree.type_declarations:
     print
 
     print('fields:')
-    for field_decl in [decl for decl in type_decl.body if type(decl) is m.FieldDeclaration]:
+    for field_decl in [decl for decl in type_decl.body if type(decl) is FieldDeclaration]:
         for var_decl in field_decl.variable_declarators:
             if type(field_decl.type) is str:
                 type_name = field_decl.type
@@ -27,7 +30,7 @@ for type_decl in tree.type_declarations:
 
     print
     print('methods:')
-    for method_decl in [decl for decl in type_decl.body if type(decl) is m.MethodDeclaration]:
+    for method_decl in [decl for decl in type_decl.body if type(decl) is MethodDeclaration]:
         param_strings = []
         for param in method_decl.parameters:
             if type(param.type) is str:
