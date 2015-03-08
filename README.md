@@ -64,5 +64,17 @@ A word of caution: Since plyj is pure Python, it is quite slow. Based on my lapt
 
 The timings are obviously highly dependent on the used hardware. My old laptop (Core 2 Duo @ 1 GHz) took 17 and 1.8 seconds respectively.
 
+History
+-------
+
+### 0.2 (in development)
+
+* added `ExpressionStatement`
+
+### 0.1 (2014-12-25) - The Christmas Release
+
+* initial release
+* supports complete Java 7 syntax (minus bugs)
+
 [PLY]: https://github.com/dabeaz/ply
 [Java Development Tools]: http://www.eclipse.org/jdt/
