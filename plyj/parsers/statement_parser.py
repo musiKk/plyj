@@ -1,10 +1,15 @@
 #!/usr/bin/env python2
-from plyj.model import Block, ArrayCreation, ArrayAccess, FieldAccess, \
-    InstanceCreation, ConstructorInvocation, Try, Catch, Throw, DoWhile, \
-    SwitchCase, Switch, ForEach, IfThenElse, MethodInvocation, \
-    ArrayInitializer, ExpressionStatement, VariableDeclarator, \
-    VariableDeclaration, Resource, While, For, Variable, Assert, Empty, \
-    Break, Continue, Return, Synchronized
+from plyj.model.expression import ArrayCreation, ArrayInitializer
+from plyj.model.expression import ArrayAccess
+from plyj.model.expression import FieldAccess
+from plyj.model.expression import InstanceCreation
+from plyj.model.expression import MethodInvocation
+from plyj.model.source_element import collect_tokens, AnonymousSourceElement
+from plyj.model.statement import Block, ConstructorInvocation, Try, Catch, \
+    Throw, DoWhile, SwitchCase, Switch, ForEach, IfThenElse, \
+    ExpressionStatement,  VariableDeclaration, Resource, While, For,  Assert, \
+    Empty, Break, Continue, Return, Synchronized
+from plyj.model.variable import VariableDeclarator, Variable
 
 
 class StatementParser(object):
@@ -12,6 +17,7 @@ class StatementParser(object):
     def p_block(p):
         """block : '{' block_statements_opt '}' """
         p[0] = Block(p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_block_statements_opt(p):
@@ -47,6 +53,7 @@ class StatementParser(object):
         """local_variable_declaration_statement \
                : local_variable_declaration ';' """
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_local_variable_declaration(p):
@@ -67,6 +74,7 @@ class StatementParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_variable_declarator(p):
@@ -77,11 +85,13 @@ class StatementParser(object):
             p[0] = VariableDeclarator(p[1])
         else:
             p[0] = VariableDeclarator(p[1], initializer=p[3])
+        collect_tokens(p)
 
     @staticmethod
     def p_variable_declarator_id(p):
         """variable_declarator_id : NAME dims_opt"""
         p[0] = Variable(p[1], dimensions=p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_variable_initializer(p):
@@ -126,6 +136,7 @@ class StatementParser(object):
             p[0] = p[1]
         else:
             p[0] = ExpressionStatement(p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_statement_expression(p):
@@ -148,12 +159,14 @@ class StatementParser(object):
     def p_array_initializer(p):
         """array_initializer : '{' comma_opt '}' """
         p[0] = ArrayInitializer()
+        collect_tokens(p)
 
     @staticmethod
     def p_array_initializer2(p):
         """array_initializer : '{' variable_initializers '}'
                              | '{' variable_initializers ',' '}' """
-        p[0] = ArrayInitializer(p[2])
+        p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_variable_initializers(p):
@@ -161,14 +174,17 @@ class StatementParser(object):
                : variable_initializer
                | variable_initializers ',' variable_initializer"""
         if len(p) == 2:
-            p[0] = [p[1]]
+            p[0] = ArrayInitializer([p[1]])
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].elements.append(p[3])
+            p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_method_invocation(p):
         """method_invocation : NAME '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[1], arguments=p[3])
+        collect_tokens(p)
 
     @staticmethod
     def p_method_invocation2(p):
@@ -178,6 +194,7 @@ class StatementParser(object):
                | SUPER '.' type_arguments NAME '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3],
                                 arguments=p[6])
+        collect_tokens(p)
 
     @staticmethod
     def p_method_invocation3(p):
@@ -185,34 +202,40 @@ class StatementParser(object):
                              | primary '.' NAME '(' argument_list_opt ')'
                              | SUPER '.' NAME '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_labeled_statement(p):
         """labeled_statement : label ':' statement"""
         p[3].label = p[1]
         p[0] = p[3]
+        collect_tokens(p)
 
     @staticmethod
     def p_labeled_statement_no_short_if(p):
         """labeled_statement_no_short_if : label ':' statement_no_short_if"""
         p[3].label = p[1]
         p[0] = p[3]
+        collect_tokens(p)
 
     @staticmethod
     def p_label(p):
         """label : NAME"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_if_then_statement(p):
         """if_then_statement : IF '(' expression ')' statement"""
         p[0] = IfThenElse(p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_if_then_else_statement(p):
         """if_then_else_statement \
                : IF '(' expression ')' statement_no_short_if ELSE statement"""
         p[0] = IfThenElse(p[3], p[5], p[7])
+        collect_tokens(p)
 
     @staticmethod
     def p_if_then_else_statement_no_short_if(p):
@@ -220,17 +243,20 @@ class StatementParser(object):
                : IF '(' expression ')' statement_no_short_if \
                  ELSE statement_no_short_if"""
         p[0] = IfThenElse(p[3], p[5], p[7])
+        collect_tokens(p)
 
     @staticmethod
     def p_while_statement(p):
         """while_statement : WHILE '(' expression ')' statement"""
         p[0] = While(p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_while_statement_no_short_if(p):
         """while_statement_no_short_if \
                : WHILE '(' expression ')' statement_no_short_if"""
         p[0] = While(p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_for_statement(p):
@@ -238,6 +264,7 @@ class StatementParser(object):
                : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt \
                  ')' statement"""
         p[0] = For(p[3], p[5], p[7], p[9])
+        collect_tokens(p)
 
     @staticmethod
     def p_for_statement_no_short_if(p):
@@ -245,6 +272,7 @@ class StatementParser(object):
                : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt \
                  ')' statement_no_short_if"""
         p[0] = For(p[3], p[5], p[7], p[9])
+        collect_tokens(p)
 
     @staticmethod
     def p_for_init_opt(p):
@@ -267,6 +295,7 @@ class StatementParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_expression_opt(p):
@@ -303,6 +332,7 @@ class StatementParser(object):
         """enhanced_for_statement_header \
                : enhanced_for_statement_header_init ':' expression ')' """
         p[1]['iterable'] = p[3]
+        collect_tokens(p)
         p[0] = p[1]
 
     @staticmethod
@@ -313,6 +343,7 @@ class StatementParser(object):
             'type': p[3],
             'variable': Variable(p[4], dimensions=p[5])
         }
+        collect_tokens(p)
 
     @staticmethod
     def p_enhanced_for_statement_header_init2(p):
@@ -323,6 +354,7 @@ class StatementParser(object):
             'type': p[4],
             'variable': Variable(p[5], dimensions=p[6])
         }
+        collect_tokens(p)
 
     @staticmethod
     def p_statement_no_short_if(p):
@@ -342,36 +374,43 @@ class StatementParser(object):
             p[0] = Assert(p[2])
         else:
             p[0] = Assert(p[2], message=p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_empty_statement(p):
         """empty_statement : ';' """
         p[0] = Empty()
+        collect_tokens(p)
 
     @staticmethod
     def p_switch_statement(p):
         """switch_statement : SWITCH '(' expression ')' switch_block"""
         p[0] = Switch(p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_switch_block(p):
         """switch_block : '{' '}' """
         p[0] = []
+        collect_tokens(p)
 
     @staticmethod
     def p_switch_block2(p):
         """switch_block : '{' switch_block_statements '}' """
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_switch_block3(p):
         """switch_block : '{' switch_labels '}' """
         p[0] = [SwitchCase(p[2])]
+        collect_tokens(p)
 
     @staticmethod
     def p_switch_block4(p):
         """switch_block : '{' switch_block_statements switch_labels '}' """
         p[0] = p[2] + [SwitchCase(p[3])]
+        collect_tokens(p)
 
     @staticmethod
     def p_switch_block_statements(p):
@@ -405,6 +444,7 @@ class StatementParser(object):
             p[0] = 'default'
         else:
             p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_constant_expression(p):
@@ -415,6 +455,7 @@ class StatementParser(object):
     def p_do_statement(p):
         """do_statement : DO statement WHILE '(' expression ')' ';' """
         p[0] = DoWhile(p[5], body=p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_break_statement(p):
@@ -424,6 +465,7 @@ class StatementParser(object):
             p[0] = Break()
         else:
             p[0] = Break(p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_continue_statement(p):
@@ -433,21 +475,25 @@ class StatementParser(object):
             p[0] = Continue()
         else:
             p[0] = Continue(p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_return_statement(p):
         """return_statement : RETURN expression_opt ';' """
         p[0] = Return(p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_synchronized_statement(p):
         """synchronized_statement : SYNCHRONIZED '(' expression ')' block"""
         p[0] = Synchronized(p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_throw_statement(p):
         """throw_statement : THROW expression ';' """
         p[0] = Throw(p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_try_statement(p):
@@ -457,6 +503,7 @@ class StatementParser(object):
             p[0] = Try(p[2], catches=p[3])
         else:
             p[0] = Try(p[2], catches=p[3], _finally=p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_try_block(p):
@@ -487,6 +534,7 @@ class StatementParser(object):
         """catch_clause : CATCH '(' catch_formal_parameter ')' block"""
         p[0] = Catch(p[3]['variable'], types=p[3]['types'],
                      modifiers=p[3]['modifiers'], block=p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_catch_formal_parameter(p):
@@ -507,6 +555,7 @@ class StatementParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_try_statement_with_resources(p):
@@ -517,11 +566,13 @@ class StatementParser(object):
             p[0] = Try(p[3], resources=p[2], catches=p[4])
         else:
             p[0] = Try(p[3], resources=p[2], catches=p[4], _finally=p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_resource_specification(p):
         """resource_specification : '(' resources semi_opt ')' """
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_semi_opt(p):
@@ -547,6 +598,7 @@ class StatementParser(object):
     def p_resource(p):
         """resource : type variable_declarator_id '=' variable_initializer"""
         p[0] = Resource(p[2], resource_type=p[1], initializer=p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_resource2(p):
@@ -555,11 +607,13 @@ class StatementParser(object):
         """
         p[0] = Resource(p[3], resource_type=p[2], modifiers=p[1],
                         initializer=p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_finally(p):
         """finally : FINALLY block"""
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_explicit_constructor_invocation(p):
@@ -567,6 +621,7 @@ class StatementParser(object):
                : THIS '(' argument_list_opt ')' ';'
                | SUPER '(' argument_list_opt ')' ';' """
         p[0] = ConstructorInvocation(p[1], arguments=p[3])
+        collect_tokens(p)
 
     @staticmethod
     def p_explicit_constructor_invocation2(p):
@@ -574,6 +629,7 @@ class StatementParser(object):
                : type_arguments SUPER '(' argument_list_opt ')' ';'
                | type_arguments THIS '(' argument_list_opt ')' ';' """
         p[0] = ConstructorInvocation(p[2], type_arguments=p[1], arguments=p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_explicit_constructor_invocation3(p):
@@ -583,6 +639,7 @@ class StatementParser(object):
                | primary '.' THIS '(' argument_list_opt ')' ';'
                | name '.' THIS '(' argument_list_opt ')' ';' """
         p[0] = ConstructorInvocation(p[3], target=p[1], arguments=p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_explicit_constructor_invocation4(p):
@@ -593,6 +650,7 @@ class StatementParser(object):
                | name '.' type_arguments THIS '(' argument_list_opt ')' ';' """
         p[0] = ConstructorInvocation(p[4], target=p[1], type_arguments=p[3],
                                      arguments=p[6])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression(p):
@@ -601,12 +659,14 @@ class StatementParser(object):
                  class_body_opt"""
         p[0] = InstanceCreation(p[3], type_arguments=p[3], arguments=p[5],
                                 body=p[7])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression2(p):
         """class_instance_creation_expression \
                : NEW class_type '(' argument_list_opt ')' class_body_opt"""
         p[0] = InstanceCreation(p[2], arguments=p[4], body=p[6])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression3(p):
@@ -615,6 +675,7 @@ class StatementParser(object):
                  '(' argument_list_opt ')' class_body_opt"""
         p[0] = InstanceCreation(p[5], enclosed_in=p[1], type_arguments=p[4],
                                 arguments=p[7], body=p[9])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression4(p):
@@ -623,6 +684,7 @@ class StatementParser(object):
                  class_body_opt"""
         p[0] = InstanceCreation(p[4], enclosed_in=p[1], arguments=p[6],
                                 body=p[8])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression5(p):
@@ -631,6 +693,7 @@ class StatementParser(object):
                  '(' argument_list_opt ')' class_body_opt"""
         p[0] = InstanceCreation(p[3], enclosed_in=p[1], arguments=p[5],
                                 body=p[7])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression6(p):
@@ -640,11 +703,13 @@ class StatementParser(object):
                  class_body_opt"""
         p[0] = InstanceCreation(p[4], enclosed_in=p[1], type_arguments=p[3],
                                 arguments=p[6], body=p[8])
+        collect_tokens(p)
 
     @staticmethod
     def p_class_instance_creation_expression_name(p):
         """class_instance_creation_expression_name : name '.' """
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_class_body_opt(p):
@@ -657,6 +722,7 @@ class StatementParser(object):
         """field_access : primary '.' NAME
                         | SUPER '.' NAME"""
         p[0] = FieldAccess(p[3], p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_array_access(p):
@@ -665,6 +731,7 @@ class StatementParser(object):
                | primary_no_new_array '[' expression ']'
                | array_creation_with_array_initializer '[' expression ']' """
         p[0] = ArrayAccess(p[3], p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_array_creation_with_array_initializer(p):
@@ -673,6 +740,7 @@ class StatementParser(object):
                | NEW class_or_interface_type dim_with_or_without_exprs \
                  array_initializer"""
         p[0] = ArrayCreation(p[2], dimensions=p[3], initializer=p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_dim_with_or_without_exprs(p):
@@ -689,9 +757,10 @@ class StatementParser(object):
         """dim_with_or_without_expr : '[' expression ']'
                                     | '[' ']' """
         if len(p) == 3:
-            p[0] = None
+            p[0] = AnonymousSourceElement(None)
         else:
             p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_array_creation_without_array_initializer(p):
@@ -699,3 +768,4 @@ class StatementParser(object):
                : NEW primitive_type dim_with_or_without_exprs
                | NEW class_or_interface_type dim_with_or_without_exprs"""
         p[0] = ArrayCreation(p[2], dimensions=p[3])
+        collect_tokens(p)

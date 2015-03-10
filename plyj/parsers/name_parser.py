@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
-from plyj.model import Name
+from plyj.model.name import Name
+from plyj.model.source_element import collect_tokens
 
 
 class NameParser(object):
@@ -13,9 +14,11 @@ class NameParser(object):
     def p_simple_name(p):
         """simple_name : NAME"""
         p[0] = Name(p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_qualified_name(p):
         """qualified_name : name '.' simple_name"""
         p[1].append_name(p[3])
         p[0] = p[1]
+        collect_tokens(p)

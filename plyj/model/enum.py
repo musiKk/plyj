@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
-from plyj.model.source_element import SourceElement
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, ensure_se, \
+    AnonymousSourceElement
 
 
 class EnumDeclaration(SourceElement):
@@ -16,6 +18,16 @@ class EnumDeclaration(SourceElement):
             type_parameters = []
         if body is None:
             body = []
+
+        name = ensure_se(name)
+
+        assert (isinstance(name, Name) or
+                isinstance(name, AnonymousSourceElement))
+        assert isinstance(implements, list)
+        assert isinstance(modifiers, list)
+        assert isinstance(type_parameters, list)
+        assert isinstance(body, list)
+
         self.name = name
         self.implements = implements
         self.modifiers = modifiers
@@ -33,6 +45,15 @@ class EnumConstant(SourceElement):
             modifiers = []
         if body is None:
             body = []
+
+        name = ensure_se(name)
+
+        assert (isinstance(name, Name) or
+                isinstance(name, AnonymousSourceElement))
+        assert isinstance(arguments, list)
+        assert isinstance(modifiers, list)
+        assert isinstance(body, list)
+
         self.name = name
         self.arguments = arguments
         self.modifiers = modifiers

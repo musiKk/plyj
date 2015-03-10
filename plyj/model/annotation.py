@@ -1,5 +1,9 @@
 #!/usr/bin/env python2
-from plyj.model.source_element import SourceElement
+from plyj.model.expression import Expression
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
+    ensure_se, extract_tokens, Expression
+from plyj.model.type import Type
 
 
 class Annotation(SourceElement):
@@ -8,6 +12,15 @@ class Annotation(SourceElement):
         self._fields = ['name', 'members', 'single_member']
         if members is None:
             members = []
+
+        name = ensure_se(name)
+        members = extract_tokens(self, members)
+
+        assert isinstance(name, (Name, AnonymousSourceElement))
+        assert isinstance(members, list)
+        assert (single_member is None or
+                isinstance(single_member, AnnotationMember))
+
         self.name = name
         self.members = members
         self.single_member = single_member
@@ -25,6 +38,19 @@ class AnnotationMethodDeclaration(SourceElement):
             modifiers = []
         if type_parameters is None:
             type_parameters = []
+
+        name = ensure_se(name)
+        extended_dims = ensure_se(extended_dims)
+
+        assert (isinstance(name, Name) or
+                isinstance(name, AnonymousSourceElement))
+        assert isinstance(return_type, Type)
+        assert isinstance(parameters, list)
+        assert isinstance(default, Expression)
+        assert isinstance(modifiers, list)
+        assert isinstance(type_parameters, list)
+        assert isinstance(extended_dims, AnonymousSourceElement)
+
         self.name = name
         self.type = return_type
         self.parameters = parameters
@@ -36,8 +62,12 @@ class AnnotationMethodDeclaration(SourceElement):
 
 class AnnotationMember(SourceElement):
     def __init__(self, name, value):
-        super(SourceElement, self).__init__()
+        super(AnnotationMember, self).__init__()
         self._fields = ['name', 'value']
+
+        name = ensure_se(name)
+        assert isinstance(value, SourceElement)
+
         self.name = name
         self.value = value
 
@@ -57,6 +87,17 @@ class AnnotationDeclaration(SourceElement):
             implements = []
         if body is None:
             body = []
+
+        name = ensure_se(name)
+
+        assert (isinstance(name, Name) or
+                isinstance(name, AnonymousSourceElement))
+        assert extends is None or isinstance(extends, Type)
+        assert isinstance(implements, list)
+        assert isinstance(body, list)
+        assert isinstance(modifiers, list)
+        assert isinstance(type_parameters, list)
+
         self.name = name
         self.modifiers = modifiers
         self.type_parameters = type_parameters

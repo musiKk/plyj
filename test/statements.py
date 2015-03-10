@@ -1,10 +1,11 @@
 import unittest
+
 from plyj.model.expression import *
-from plyj.model.literal import Literal, Name
 from plyj.model.statement import *
 from plyj.model.type import Type
 from plyj.model.variable import Variable, VariableDeclarator
 from plyj.parser import Parser
+
 
 foo = Name('foo')
 bar = Name('bar')

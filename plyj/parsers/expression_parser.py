@@ -1,7 +1,10 @@
 #!/usr/bin/env python2
-from plyj.model import Assignment, Cast, ClassLiteral, Unary, Multiplicative, \
+from plyj.model.expression import Assignment, Cast, Unary, Multiplicative, \
     Additive, Shift, Relational, InstanceOf, Equality, ConditionalAnd, \
-    ConditionalOr, Conditional, Or, Xor, And, Type
+    ConditionalOr, Conditional, Or, Xor, And
+from plyj.model.literal import ClassLiteral
+from plyj.model.source_element import collect_tokens, ensure_se, AnonymousSourceElement
+from plyj.model.type import Type
 
 
 class ExpressionParser(object):
@@ -48,6 +51,7 @@ class ExpressionParser(object):
                                | OR_ASSIGN
                                | XOR_ASSIGN"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_conditional_expression(p):
@@ -60,6 +64,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = Conditional(p[1], p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_conditional_expression_not_name(p):
@@ -73,6 +78,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = Conditional(p[1], p[3], p[5])
+        collect_tokens(p)
 
     @staticmethod
     def binary_operator(p, ctor):
@@ -80,6 +86,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = ctor(p[2], p[1], p[3])
+        collect_tokens(p)
 
     @staticmethod
     def p_conditional_or_expression(p):
@@ -285,6 +292,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = Unary(p[1], p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_unary_expression_not_name(p):
@@ -298,16 +306,19 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = Unary(p[1], p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_pre_increment_expression(p):
         """pre_increment_expression : PLUSPLUS unary_expression"""
         p[0] = Unary('++x', p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_pre_decrement_expression(p):
         """pre_decrement_expression : MINUSMINUS unary_expression"""
         p[0] = Unary('--x', p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_unary_expression_not_plus_minus(p):
@@ -319,6 +330,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = Unary(p[1], p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_unary_expression_not_plus_minus_not_name(p):
@@ -331,6 +343,7 @@ class ExpressionParser(object):
             p[0] = p[1]
         else:
             p[0] = Unary(p[1], p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_postfix_expression(p):
@@ -351,11 +364,13 @@ class ExpressionParser(object):
     def p_post_increment_expression(p):
         """post_increment_expression : postfix_expression PLUSPLUS"""
         p[0] = Unary('x++', p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_post_decrement_expression(p):
         """post_decrement_expression : postfix_expression MINUSMINUS"""
         p[0] = Unary('x--', p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_primary(p):
@@ -373,12 +388,14 @@ class ExpressionParser(object):
                                 | method_invocation
                                 | array_access"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_primary_no_new_array2(p):
         """primary_no_new_array : '(' name ')'
                                 | '(' expression_not_name ')' """
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_primary_no_new_array3(p):
@@ -386,6 +403,7 @@ class ExpressionParser(object):
                                 | name '.' SUPER"""
         p[1].append_name(p[3])
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_primary_no_new_array4(p):
@@ -397,6 +415,7 @@ class ExpressionParser(object):
             p[0] = ClassLiteral(Type(p[1]))
         else:
             p[0] = ClassLiteral(Type(p[1], dimensions=p[2]))
+        collect_tokens(p)
 
     @staticmethod
     def p_dims_opt(p):
@@ -418,20 +437,24 @@ class ExpressionParser(object):
         """dims_loop : one_dim_loop
                      | dims_loop one_dim_loop"""
         if len(p) == 2:
-            p[0] = 1
+            p[0] = p[1]
         else:
-            p[0] = 1 + p[1]
+            p[1].add_tokens_right(p[2])
+            p[1].value += p[2].value
+            p[0] = p[1]
 
     @staticmethod
     def p_one_dim_loop(p):
         """one_dim_loop : '[' ']' """
-        # ignore
+        p[0] = AnonymousSourceElement(1)
+        collect_tokens(p)
 
     @staticmethod
     def p_cast_expression(p):
         """cast_expression : '(' primitive_type dims_opt ')' unary_expression
         """
         p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        collect_tokens(p)
 
     @staticmethod
     def p_cast_expression2(p):
@@ -439,6 +462,7 @@ class ExpressionParser(object):
                : '(' name type_arguments dims_opt ')' \
                  unary_expression_not_plus_minus"""
         p[0] = Cast(Type(p[2], type_arguments=p[3], dimensions=p[4]), p[6])
+        collect_tokens(p)
 
     @staticmethod
     def p_cast_expression3(p):
@@ -446,15 +470,17 @@ class ExpressionParser(object):
                : '(' name type_arguments \
                  '.' class_or_interface_type dims_opt \
                  ')' unary_expression_not_plus_minus"""
-        p[5].dimensions = p[6]
+        p[5].dimensions = ensure_se(p[6])
         p[5].enclosed_in = Type(p[2], type_arguments=p[3])
         p[0] = Cast(p[5], p[8])
+        collect_tokens(p)
 
     @staticmethod
     def p_cast_expression4(p):
         """cast_expression : '(' name ')' unary_expression_not_plus_minus"""
         # technically it's not necessarily a type but could be a type parameter
         p[0] = Cast(Type(p[2]), p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_cast_expression5(p):
@@ -462,3 +488,4 @@ class ExpressionParser(object):
         """
         # technically it's not necessarily a type but could be a type parameter
         p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        collect_tokens(p)

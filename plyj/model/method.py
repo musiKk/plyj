@@ -1,5 +1,8 @@
 #!/usr/bin/env python2
-from plyj.model.source_element import SourceElement
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
+    ensure_se
+from plyj.model.type import Type
 
 
 class MethodDeclaration(SourceElement):
@@ -17,6 +20,24 @@ class MethodDeclaration(SourceElement):
             type_parameters = []
         if parameters is None:
             parameters = []
+        if body is None:
+            body = []
+
+        return_type = ensure_se(return_type)
+        abstract = ensure_se(abstract)
+        extended_dims = ensure_se(extended_dims)
+
+        if not isinstance(name, Name):
+            assert isinstance(name, Name)
+        assert isinstance(modifiers, list)
+        assert isinstance(type_parameters, list)
+        assert isinstance(parameters, list)
+        assert isinstance(return_type, (Type, AnonymousSourceElement))
+        assert isinstance(body, list)
+        assert isinstance(abstract, AnonymousSourceElement)
+        assert isinstance(extended_dims, AnonymousSourceElement)
+        assert isinstance(throws, Throws)
+
         self.name = name
         self.modifiers = modifiers
         self.type_parameters = type_parameters
@@ -29,11 +50,21 @@ class MethodDeclaration(SourceElement):
 
 
 class FormalParameter(SourceElement):
-    def __init__(self, variable, parameter_type, modifiers=None, vararg=False):
+    def __init__(self, variable, parameter_type, modifiers=None, vararg=None):
         super(FormalParameter, self).__init__()
         self._fields = ['variable', 'type', 'modifiers', 'vararg']
         if modifiers is None:
             modifiers = []
+
+        variable = ensure_se(variable)
+        parameter_type = ensure_se(parameter_type)
+        vararg = ensure_se(vararg)
+
+        assert isinstance(variable, (Name, AnonymousSourceElement))
+        assert isinstance(parameter_type, (Type, AnonymousSourceElement))
+        assert isinstance(modifiers, list)
+        assert vararg is None or isinstance(vararg, AnonymousSourceElement)
+
         self.variable = variable
         self.type = parameter_type
         self.modifiers = modifiers
@@ -44,4 +75,5 @@ class Throws(SourceElement):
     def __init__(self, types):
         super(Throws, self).__init__()
         self._fields = ['types']
+        assert isinstance(types, list)
         self.types = types

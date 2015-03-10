@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
-from plyj.model import Literal
+from plyj.model.literal import Literal
+from plyj.model.source_element import collect_tokens
 
 
 class LiteralParser(object):
@@ -12,3 +13,4 @@ class LiteralParser(object):
                    | FALSE
                    | NULL"""
         p[0] = Literal(p[1])
+        collect_tokens(p)

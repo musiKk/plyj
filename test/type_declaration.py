@@ -1,9 +1,10 @@
 import unittest
-from plyj.model import Name, Type
 from plyj.model.classes import ClassDeclaration
 from plyj.model.file import CompilationUnit
 from plyj.model.interface import InterfaceDeclaration
+from plyj.model.name import Name
 from plyj.model.method import MethodDeclaration
+from plyj.model.type import Type
 from plyj.parser import Parser
 
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
-from plyj.model import CompilationUnit, PackageDeclaration, ImportDeclaration
+from plyj.model.file import CompilationUnit, PackageDeclaration, \
+    ImportDeclaration
+from plyj.model.source_element import collect_tokens
 
 
 class CompilationUnitParser(object):
@@ -53,10 +55,13 @@ class CompilationUnitParser(object):
     @staticmethod
     def p_package_declaration(p):
         """package_declaration : package_declaration_name ';' """
-        if p[1][0]:
-            p[0] = PackageDeclaration(p[1][1], modifiers=p[1][0])
+        if p[1].value[0]:
+            p[0] = PackageDeclaration(p[1].value[1], modifiers=p[1].value[0])
+            p[0].add_tokens_right(p[1])
         else:
-            p[0] = PackageDeclaration(p[1][1])
+            p[0] = PackageDeclaration(p[1].value[1])
+            p[0].add_tokens_right(p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_package_declaration_name(p):
@@ -66,6 +71,7 @@ class CompilationUnitParser(object):
             p[0] = (None, p[2])
         else:
             p[0] = (p[1], p[3])
+        collect_tokens(p)
 
     @staticmethod
     def p_import_declarations(p):
@@ -88,23 +94,26 @@ class CompilationUnitParser(object):
     def p_single_type_import_declaration(p):
         """single_type_import_declaration : IMPORT name ';' """
         p[0] = ImportDeclaration(p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_type_import_on_demand_declaration(p):
         """type_import_on_demand_declaration : IMPORT name '.' '*' ';' """
         p[0] = ImportDeclaration(p[2], on_demand=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_single_static_import_declaration(p):
         """single_static_import_declaration : IMPORT STATIC name ';' """
         p[0] = ImportDeclaration(p[3], static=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_static_import_on_demand_declaration(p):
         """static_import_on_demand_declaration \
                : IMPORT STATIC name '.' '*' ';' """
-
         p[0] = ImportDeclaration(p[3], static=True, on_demand=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_type_declarations(p):

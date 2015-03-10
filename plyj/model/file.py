@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
-from plyj.model.source_element import SourceElement
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, ensure_se, \
+    AnonymousSourceElement
 
 
 class CompilationUnit(SourceElement):
@@ -12,6 +14,12 @@ class CompilationUnit(SourceElement):
             import_declarations = []
         if type_declarations is None:
             type_declarations = []
+
+        assert (package_declaration is None or
+                isinstance(package_declaration, PackageDeclaration))
+        assert isinstance(import_declarations, list)
+        assert isinstance(type_declarations, list)
+
         self.package_declaration = package_declaration
         self.import_declarations = import_declarations
         self.type_declarations = type_declarations
@@ -21,6 +29,12 @@ class ImportDeclaration(SourceElement):
     def __init__(self, name, static=False, on_demand=False):
         super(ImportDeclaration, self).__init__()
         self._fields = ['name', 'static', 'on_demand']
+
+        name = ensure_se(name)
+        assert isinstance(name, (Name, AnonymousSourceElement))
+        assert isinstance(static, bool)
+        assert isinstance(on_demand, bool)
+
         self.name = name
         self.static = static
         self.on_demand = on_demand
@@ -32,5 +46,10 @@ class PackageDeclaration(SourceElement):
         self._fields = ['name', 'modifiers']
         if modifiers is None:
             modifiers = []
+
+        name = ensure_se(name)
+        assert isinstance(name, (Name, AnonymousSourceElement))
+        assert isinstance(modifiers, list)
+
         self.name = name
         self.modifiers = modifiers

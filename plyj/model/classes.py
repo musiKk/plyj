@@ -1,33 +1,56 @@
 #!/usr/bin/env python2
-from plyj.model.source_element import SourceElement
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
+    ensure_se
+from plyj.model.type import Type
 
 
 class ClassInitializer(SourceElement):
-    def __init__(self, block, static=False, tokens=None):
-        super(ClassInitializer, self).__init__(tokens)
+    def __init__(self, block, static=False):
+        super(ClassInitializer, self).__init__()
         self._fields = ['block', 'static']
+
+        assert isinstance(static, bool)
+        assert isinstance(block, list)
+
         self.block = block
         self.static = static
 
 
 class ClassDeclaration(SourceElement):
     def __init__(self, name, body, modifiers=None, type_parameters=None,
-                 extends=None, implements=None, tokens=None):
-        super(ClassDeclaration, self).__init__(tokens)
+                 extends=None, implements=None):
+        super(ClassDeclaration, self).__init__()
         self._fields = ['name', 'body', 'modifiers',
                         'type_parameters', 'extends', 'implements']
+
+        implements = [] if implements is None else implements
+        modifiers = [] if modifiers is None else modifiers
+        type_parameters = [] if type_parameters is None else type_parameters
+
+        name = ensure_se(name)
+        body = ensure_se(body)
+
+        assert (isinstance(name, Name) or
+                isinstance(name, AnonymousSourceElement))
+        assert isinstance(body, AnonymousSourceElement)
+        assert isinstance(modifiers, list)
+        assert isinstance(type_parameters, list)
+        assert extends is None or isinstance(extends, Type)
+        assert isinstance(implements, list)
+
         self.name = name
         self.body = body
-        self.modifiers = modifiers or []
-        self.type_parameters = type_parameters or []
+        self.modifiers = modifiers
+        self.type_parameters = type_parameters
         self.extends = extends
-        self.implements = implements or []
+        self.implements = implements
 
 
 class ConstructorDeclaration(SourceElement):
     def __init__(self, name, block, modifiers=None, type_parameters=None,
-                 parameters=None, throws=None, tokens=None):
-        super(ConstructorDeclaration, self).__init__(tokens)
+                 parameters=None, throws=None):
+        super(ConstructorDeclaration, self).__init__()
         self._fields = ['name', 'block', 'modifiers',
                         'type_parameters', 'parameters', 'throws']
         if modifiers is None:
@@ -36,6 +59,17 @@ class ConstructorDeclaration(SourceElement):
             type_parameters = []
         if parameters is None:
             parameters = []
+
+        name = ensure_se(name)
+
+        assert (isinstance(name, Name) or
+                isinstance(name, AnonymousSourceElement))
+        assert isinstance(block, list)
+        assert isinstance(modifiers, list)
+        assert isinstance(type_parameters, list)
+        assert isinstance(parameters, list)
+        assert isinstance(throws, SourceElement)
+
         self.name = name
         self.block = block
         self.modifiers = modifiers
@@ -53,43 +87,44 @@ class EmptyDeclaration(SourceElement):
 
 class FieldDeclaration(SourceElement):
     def __init__(self, field_type, variable_declarators,
-                 modifiers=None, tokens=None):
-        super(FieldDeclaration, self).__init__(tokens)
+                 modifiers=None):
+        super(FieldDeclaration, self).__init__()
         self._fields = ['type', 'variable_declarators', 'modifiers']
         if modifiers is None:
             modifiers = []
+
+        variable_declarators = ensure_se(variable_declarators)
+
+        assert isinstance(field_type, Type)
+        assert isinstance(modifiers, list)
+        assert isinstance(variable_declarators, AnonymousSourceElement)
+
         self.type = field_type
         self.variable_declarators = variable_declarators
         self.modifiers = modifiers
 
 
 class Wildcard(SourceElement):
-    def __init__(self, bounds=None, tokens=None):
-        super(Wildcard, self).__init__(tokens)
+    def __init__(self, bounds=None):
+        super(Wildcard, self).__init__()
         self._fields = ['bounds']
         if bounds is None:
             bounds = []
+        assert isinstance(bounds, list)
         self.bounds = bounds
 
 
 class WildcardBound(SourceElement):
-    def __init__(self, bound_type, extends=False, _super=False, tokens=None):
-        super(WildcardBound, self).__init__(tokens)
+    def __init__(self, bound_type, extends=False, _super=False):
+        super(WildcardBound, self).__init__()
         self._fields = ['type', 'extends', '_super']
+
+        assert isinstance(bound_type, Type)
+        assert isinstance(extends, list)
+        assert isinstance(_super, bool)
+
         self.type = bound_type
         self.extends = extends
         self._super = _super
 
 
-class TypeParameter(SourceElement):
-    """
-    Represents a type parameter in the definition of a class.
-    """
-
-    def __init__(self, name, extends=None, tokens=None):
-        super(TypeParameter, self).__init__(tokens)
-        self._fields = ['name', 'extends']
-        if extends is None:
-            extends = []
-        self.name = name
-        self.extends = extends

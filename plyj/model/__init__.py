@@ -1,3 +1,4 @@
+"""
 from plyj.model.annotation import *
 from plyj.model.classes import *
 from plyj.model.enum import *
@@ -10,3 +11,4 @@ from plyj.model.source_element import *
 from plyj.model.statement import *
 from plyj.model.type import *
 from plyj.model.variable import *
+"""

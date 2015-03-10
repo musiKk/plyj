@@ -1,6 +1,7 @@
 import unittest
 from plyj.model.expression import *
-from plyj.model.literal import Literal, ClassLiteral, Name
+from plyj.model.literal import Literal, ClassLiteral
+from plyj.model.name import Name
 from plyj.model.type import Type
 from plyj.parser import Parser
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python2
-from plyj.model import Type, TypeParameter, WildcardBound, Wildcard
+from plyj.model.classes import WildcardBound, Wildcard
+from plyj.model.source_element import collect_tokens
+from plyj.model.type import Type, TypeParameter
 
 
 class TypeParser(object):
@@ -36,6 +38,7 @@ class TypeParser(object):
                     | VOLATILE
                     | STRICTFP"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_modifier2(p):
@@ -60,6 +63,7 @@ class TypeParser(object):
                           | FLOAT
                           | DOUBLE"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_reference_type(p):
@@ -85,7 +89,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = Type(p[1])
         else:
-            p[0] = Type(p[3], enclosed_in=p[1], tokens=[p.slice[2]])
+            p[0] = Type(p[3], enclosed_in=p[1])
+        collect_tokens(p)
 
     @staticmethod
     def p_generic_type(p):
@@ -96,8 +101,8 @@ class TypeParser(object):
     @staticmethod
     def p_generic_type2(p):
         """generic_type : class_or_interface '<' '>' """
-        p[0] = Type(p[1], type_arguments='diamond',
-                    tokens=[p.slice[2], p.slice[3]])
+        p[0] = Type(p[1], type_arguments='diamond')
+        collect_tokens(p)
 
     @staticmethod
     def p_array_type(p):
@@ -114,13 +119,14 @@ class TypeParser(object):
     @staticmethod
     def p_array_type3(p):
         """array_type : generic_type '.' name dims"""
-        p[0] = Type(p[3], enclosed_in=p[1], dimensions=p[4],
-                    tokens=[p.slice[2]])
+        p[0] = Type(p[3], enclosed_in=p[1], dimensions=p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_type_arguments(p):
         """type_arguments : '<' type_argument_list1"""
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument_list1(p):
@@ -130,6 +136,7 @@ class TypeParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument_list(p):
@@ -139,6 +146,7 @@ class TypeParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument(p):
@@ -161,6 +169,7 @@ class TypeParser(object):
         else:
             p[1].type_arguments = p[3]
             p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument_list2(p):
@@ -170,6 +179,7 @@ class TypeParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument2(p):
@@ -186,6 +196,7 @@ class TypeParser(object):
         else:
             p[1].type_arguments = p[3]
             p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument_list3(p):
@@ -195,6 +206,7 @@ class TypeParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_argument3(p):
@@ -206,6 +218,7 @@ class TypeParser(object):
     def p_reference_type3(p):
         """reference_type3 : reference_type RRSHIFT"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard(p):
@@ -215,6 +228,7 @@ class TypeParser(object):
             p[0] = Wildcard()
         else:
             p[0] = Wildcard(bounds=p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard_bounds(p):
@@ -224,6 +238,7 @@ class TypeParser(object):
             p[0] = WildcardBound(p[2], extends=True)
         else:
             p[0] = WildcardBound(p[2], _super=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard1(p):
@@ -233,6 +248,7 @@ class TypeParser(object):
             p[0] = Wildcard()
         else:
             p[0] = Wildcard(bounds=p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard_bounds1(p):
@@ -242,6 +258,7 @@ class TypeParser(object):
             p[0] = WildcardBound(p[2], extends=True)
         else:
             p[0] = WildcardBound(p[2], _super=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard2(p):
@@ -251,6 +268,7 @@ class TypeParser(object):
             p[0] = Wildcard()
         else:
             p[0] = Wildcard(bounds=p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard_bounds2(p):
@@ -260,6 +278,7 @@ class TypeParser(object):
             p[0] = WildcardBound(p[2], extends=True)
         else:
             p[0] = WildcardBound(p[2], _super=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard3(p):
@@ -269,6 +288,7 @@ class TypeParser(object):
             p[0] = Wildcard()
         else:
             p[0] = Wildcard(bounds=p[2])
+        collect_tokens(p)
 
     @staticmethod
     def p_wildcard_bounds3(p):
@@ -278,16 +298,19 @@ class TypeParser(object):
             p[0] = WildcardBound(p[2], extends=True)
         else:
             p[0] = WildcardBound(p[2], _super=True)
+        collect_tokens(p)
 
     @staticmethod
     def p_type_parameter_header(p):
         """type_parameter_header : NAME"""
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_parameters(p):
         """type_parameters : '<' type_parameter_list1"""
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_parameter_list(p):
@@ -297,6 +320,7 @@ class TypeParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_parameter(p):
@@ -311,6 +335,7 @@ class TypeParser(object):
             p[0] = TypeParameter(p[1], extends=[p[3]])
         else:
             p[0] = TypeParameter(p[1], extends=[p[3]] + p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_additional_bound_list(p):
@@ -325,6 +350,7 @@ class TypeParser(object):
     def p_additional_bound(p):
         """additional_bound : '&' reference_type"""
         p[0] = p[2]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_parameter_list1(p):
@@ -334,6 +360,7 @@ class TypeParser(object):
             p[0] = [p[1]]
         else:
             p[0] = p[1] + [p[3]]
+        collect_tokens(p)
 
     @staticmethod
     def p_type_parameter1(p):
@@ -348,6 +375,7 @@ class TypeParser(object):
             p[0] = TypeParameter(p[1], extends=[p[3]])
         else:
             p[0] = TypeParameter(p[1], extends=[p[3]] + p[4])
+        collect_tokens(p)
 
     @staticmethod
     def p_additional_bound_list1(p):
@@ -362,3 +390,4 @@ class TypeParser(object):
     def p_additional_bound1(p):
         """additional_bound1 : '&' reference_type1"""
         p[0] = p[2]
+        collect_tokens(p)

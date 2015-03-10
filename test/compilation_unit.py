@@ -2,7 +2,8 @@ import unittest
 from plyj.model.annotation import Annotation, AnnotationMember
 from plyj.model.classes import ClassDeclaration
 from plyj.model.file import CompilationUnit, ImportDeclaration, PackageDeclaration
-from plyj.model.literal import Literal, Name
+from plyj.model.literal import Literal
+from plyj.model.name import Name
 from plyj.parser import Parser
 from plyj.visitor import Visitor
 
@@ -23,7 +24,10 @@ class CompilationUnitTest(unittest.TestCase):
         public static final class Foo {}
         ''')
         cls = self._assert_declaration(m, 'Foo')
-        self.assertEqual(cls.modifiers, ['public', 'static', 'final'])
+        expected_modifiers = ['public', 'static', 'final']
+        self.assertEqual(len(cls.modifiers), len(expected_modifiers))
+        for a, e in zip(cls.modifiers, expected_modifiers):
+            self.assertEqual(a.value, e)
 
     def test_default_package(self):
         m = self.parser.parse_string('''
@@ -141,6 +145,6 @@ class CompilationUnitTest(unittest.TestCase):
         declaration = compilation_unit.type_declarations[index]
         self.assertIsInstance(declaration, declaration_type)
 
-        self.assertEqual(declaration.name, name)
+        self.assertEqual(declaration.name.value, name)
 
         return declaration
