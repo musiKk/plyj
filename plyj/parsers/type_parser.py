@@ -302,7 +302,7 @@ class TypeParser(object):
 
     @staticmethod
     def p_type_parameter_header(p):
-        """type_parameter_header : NAME"""
+        """type_parameter_header : strictly_simple_name"""
         p[0] = p[1]
         collect_tokens(p)
 

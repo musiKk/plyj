@@ -89,7 +89,7 @@ class StatementParser(object):
 
     @staticmethod
     def p_variable_declarator_id(p):
-        """variable_declarator_id : NAME dims_opt"""
+        """variable_declarator_id : strictly_simple_name dims_opt"""
         p[0] = Variable(p[1], dimensions=p[2])
         collect_tokens(p)
 
@@ -182,25 +182,30 @@ class StatementParser(object):
 
     @staticmethod
     def p_method_invocation(p):
-        """method_invocation : NAME '(' argument_list_opt ')' """
+        """method_invocation \
+               : strictly_simple_name '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[1], arguments=p[3])
         collect_tokens(p)
 
     @staticmethod
     def p_method_invocation2(p):
         """method_invocation \
-               : name '.' type_arguments NAME '(' argument_list_opt ')'
-               | primary '.' type_arguments NAME '(' argument_list_opt ')'
-               | SUPER '.' type_arguments NAME '(' argument_list_opt ')' """
+               : name '.' type_arguments strictly_simple_name \
+                '(' argument_list_opt ')'
+               | primary '.' type_arguments strictly_simple_name \
+                '(' argument_list_opt ')'
+               | SUPER '.' type_arguments strictly_simple_name \
+                '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3],
                                 arguments=p[6])
         collect_tokens(p)
 
     @staticmethod
     def p_method_invocation3(p):
-        """method_invocation : name '.' NAME '(' argument_list_opt ')'
-                             | primary '.' NAME '(' argument_list_opt ')'
-                             | SUPER '.' NAME '(' argument_list_opt ')' """
+        """method_invocation \
+               : name '.' strictly_simple_name '(' argument_list_opt ')'
+               | primary '.' strictly_simple_name '(' argument_list_opt ')'
+               | SUPER '.' strictly_simple_name '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
         collect_tokens(p)
 
@@ -220,7 +225,7 @@ class StatementParser(object):
 
     @staticmethod
     def p_label(p):
-        """label : NAME"""
+        """label : strictly_simple_name"""
         p[0] = p[1]
         collect_tokens(p)
 
@@ -337,7 +342,8 @@ class StatementParser(object):
 
     @staticmethod
     def p_enhanced_for_statement_header_init(p):
-        """enhanced_for_statement_header_init : FOR '(' type NAME dims_opt"""
+        """enhanced_for_statement_header_init \
+               : FOR '(' type strictly_simple_name dims_opt"""
         p[0] = {
             'modifiers': [],
             'type': p[3],
@@ -348,7 +354,7 @@ class StatementParser(object):
     @staticmethod
     def p_enhanced_for_statement_header_init2(p):
         """enhanced_for_statement_header_init \
-               : FOR '(' modifiers type NAME dims_opt"""
+               : FOR '(' modifiers type strictly_simple_name dims_opt"""
         p[0] = {
             'modifiers': p[3],
             'type': p[4],
@@ -460,7 +466,7 @@ class StatementParser(object):
     @staticmethod
     def p_break_statement(p):
         """break_statement : BREAK ';'
-                           | BREAK NAME ';' """
+                           | BREAK strictly_simple_name ';' """
         if len(p) == 3:
             p[0] = Break()
         else:
@@ -470,7 +476,7 @@ class StatementParser(object):
     @staticmethod
     def p_continue_statement(p):
         """continue_statement : CONTINUE ';'
-                              | CONTINUE NAME ';' """
+                              | CONTINUE strictly_simple_name ';' """
         if len(p) == 3:
             p[0] = Continue()
         else:
@@ -719,8 +725,8 @@ class StatementParser(object):
 
     @staticmethod
     def p_field_access(p):
-        """field_access : primary '.' NAME
-                        | SUPER '.' NAME"""
+        """field_access : primary '.' strictly_simple_name
+                        | SUPER '.' strictly_simple_name"""
         p[0] = FieldAccess(p[3], p[1])
         collect_tokens(p)
 

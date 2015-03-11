@@ -36,7 +36,7 @@ class MethodDeclaration(SourceElement):
         assert isinstance(body, list)
         assert isinstance(abstract, AnonymousSourceElement)
         assert isinstance(extended_dims, AnonymousSourceElement)
-        assert isinstance(throws, Throws)
+        assert throws is None or isinstance(throws, Throws)
 
         self.name = name
         self.modifiers = modifiers

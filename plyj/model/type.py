@@ -24,7 +24,7 @@ class Type(SourceElement):
         assert isinstance(dimensions, AnonymousSourceElement)
 
         for x in type_arguments:
-            assert isinstance(x, TypeParameter)
+            assert isinstance(x, Type)
 
         self.name = name
         self.type_arguments = type_arguments

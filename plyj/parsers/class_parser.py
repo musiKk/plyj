@@ -61,7 +61,7 @@ class ClassParser(object):
 
     @staticmethod
     def p_class_header_name1(p):
-        """class_header_name1 : modifiers_opt CLASS NAME"""
+        """class_header_name1 : modifiers_opt CLASS strictly_simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[3]}
         collect_tokens(p)
 
@@ -190,8 +190,9 @@ class ClassParser(object):
 
     @staticmethod
     def p_constructor_header_name(p):
-        """constructor_header_name : modifiers_opt type_parameters NAME '('
-                                   | modifiers_opt NAME '(' """
+        """constructor_header_name \
+               : modifiers_opt type_parameters strictly_simple_name '('
+               | modifiers_opt strictly_simple_name '(' """
         if len(p) == 4:
             p[0] = ConstructorDeclaration(p[2], None,
                                           modifiers=p[1],
@@ -310,8 +311,9 @@ class ClassParser(object):
 
     @staticmethod
     def p_method_header_name(p):
-        """method_header_name : modifiers_opt type_parameters type NAME '('
-                              | modifiers_opt type NAME '(' """
+        """method_header_name \
+               : modifiers_opt type_parameters type strictly_simple_name '('
+               | modifiers_opt type strictly_simple_name '(' """
         if len(p) == 5:
             p[0] = AnonymousSourceElement({
                 'modifiers': p[1],
@@ -335,17 +337,19 @@ class ClassParser(object):
     @staticmethod
     def p_interface_declaration(p):
         """interface_declaration : interface_header interface_body"""
-        p[0] = InterfaceDeclaration(p[1]['name'],
-                                    modifiers=p[1]['modifiers'],
-                                    type_parameters=p[1]['type_parameters'],
-                                    extends=p[1]['extends'],
+        header = p[1].value
+        p[0] = InterfaceDeclaration(header['name'],
+                                    modifiers=header['modifiers'],
+                                    type_parameters=header['type_parameters'],
+                                    extends=header['extends'],
                                     body=p[2])
+        p[0].add_tokens_left(p[1])
 
     @staticmethod
     def p_interface_header(p):
         """interface_header \
                : interface_header_name interface_header_extends_opt"""
-        p[1]['extends'] = p[2]
+        p[1].value['extends'] = p[2]
         p[0] = p[1]
 
     @staticmethod
@@ -353,14 +357,15 @@ class ClassParser(object):
         """interface_header_name : interface_header_name1 type_parameters
                                  | interface_header_name1"""
         if len(p) == 2:
-            p[1]['type_parameters'] = []
+            p[1].value['type_parameters'] = []
         else:
-            p[1]['type_parameters'] = p[2]
+            p[1].value['type_parameters'] = p[2]
         p[0] = p[1]
 
     @staticmethod
     def p_interface_header_name1(p):
-        """interface_header_name1 : modifiers_opt INTERFACE NAME"""
+        """interface_header_name1 \
+               : modifiers_opt INTERFACE strictly_simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[3]}
         collect_tokens(p)
 
@@ -372,12 +377,11 @@ class ClassParser(object):
     @staticmethod
     def p_interface_header_extends_opt2(p):
         """interface_header_extends_opt : empty"""
-        p[0] = {'list': [], 'tokens': []}
+        p[0] = AnonymousSourceElement([])
 
     @staticmethod
     def p_interface_header_extends(p):
         """interface_header_extends : EXTENDS interface_type_list"""
-        p[2]['tokens'].insert(0, p.slice[1])
         p[0] = p[2]
         collect_tokens(p)
 
@@ -431,23 +435,25 @@ class ClassParser(object):
     @staticmethod
     def p_enum_declaration(p):
         """enum_declaration : enum_header enum_body"""
-        p[0] = EnumDeclaration(p[1]['name'],
-                               implements=p[1]['implements'],
-                               modifiers=p[1]['modifiers'],
-                               type_parameters=p[1]['type_parameters'],
+        p[0] = EnumDeclaration(p[1].value['name'],
+                               implements=p[1].value['implements'],
+                               modifiers=p[1].value['modifiers'],
+                               type_parameters=p[1].value['type_parameters'],
                                body=p[2])
 
     @staticmethod
     def p_enum_header(p):
         """enum_header : enum_header_name class_header_implements_opt"""
-        p[1]['implements'] = p[2]['interfaces']
-        p[1]['tokens'] += p[2]['tokens']
+        p[1].value['implements'] = p[2].value['interfaces']
+        p[1].value['tokens'] += p[2].value['tokens']
+        p[1].add_tokens_right(p[2])
         p[0] = p[1]
 
     @staticmethod
     def p_enum_header_name(p):
-        """enum_header_name : modifiers_opt ENUM NAME
-                            | modifiers_opt ENUM NAME type_parameters"""
+        """enum_header_name \
+               : modifiers_opt ENUM strictly_simple_name
+               | modifiers_opt ENUM strictly_simple_name type_parameters"""
         if len(p) == 4:
             p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': []}
         else:
@@ -510,7 +516,7 @@ class ClassParser(object):
 
     @staticmethod
     def p_enum_constant_header_name(p):
-        """enum_constant_header_name : modifiers_opt NAME"""
+        """enum_constant_header_name : modifiers_opt strictly_simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[2]}
         collect_tokens(p)
 
@@ -590,28 +596,29 @@ class ClassParser(object):
     @staticmethod
     def p_annotation_type_declaration_header_name(p):
         """annotation_type_declaration_header_name \
-               : modifiers '@' INTERFACE NAME"""
+               : modifiers '@' INTERFACE strictly_simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': []}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name2(p):
         """annotation_type_declaration_header_name \
-               : modifiers '@' INTERFACE NAME type_parameters"""
+               : modifiers '@' INTERFACE strictly_simple_name \
+                 type_parameters"""
         p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': p[5]}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name3(p):
         """annotation_type_declaration_header_name \
-               : '@' INTERFACE NAME type_parameters"""
+               : '@' INTERFACE strictly_simple_name type_parameters"""
         p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': p[4]}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name4(p):
         """annotation_type_declaration_header_name \
-               : '@' INTERFACE NAME"""
+               : '@' INTERFACE strictly_simple_name"""
         p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': []}
         collect_tokens(p)
 
@@ -668,8 +675,8 @@ class ClassParser(object):
     @staticmethod
     def p_annotation_method_header_name(p):
         """annotation_method_header_name \
-               : modifiers_opt type_parameters type NAME '('
-               | modifiers_opt type NAME '(' """
+               : modifiers_opt type_parameters type strictly_simple_name '('
+               | modifiers_opt type strictly_simple_name '(' """
         if len(p) == 5:
             p[0] = {
                 'modifiers': p[1],
