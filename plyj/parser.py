@@ -35,7 +35,9 @@ class MyLexer(object):
 
         'PLUSPLUS', 'MINUSMINUS',
 
-        'ELLIPSIS'
+        'ELLIPSIS',
+
+        'COLON_COLON', 'ARROW', 'BeginTypeArguments'
     ] + [k.upper() for k in keywords]
     literals = '()+-*/=?:,.^|&~!=[]{};<>@%'
 
@@ -77,6 +79,9 @@ class MyLexer(object):
     t_MINUSMINUS = r'\-\-'
 
     t_ELLIPSIS = r'\.\.\.'
+
+    t_COLON_COLON = r'::'
+    t_ARROW = '->'
 
     t_ignore = ' \t\f'
 
@@ -391,7 +396,9 @@ class ExpressionParser(object):
                                 | class_instance_creation_expression
                                 | field_access
                                 | method_invocation
-                                | array_access'''
+                                | array_access
+                                | lambda_expression
+                                | reference_expression'''
         p[0] = p[1]
 
     def p_primary_no_new_array2(self, p):
@@ -463,6 +470,62 @@ class ExpressionParser(object):
         # technically it's not necessarily a type but could be a type parameter
         p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
 
+    def p_reference_expression_type_arguments_and_trunk(self, p):
+        '''reference_expression_type_arguments_and_trunk : reference_expression_type_arguments_and_trunk0'''
+        pass
+
+    def p_reference_expression_type_arguments_and_trunk0(self, p):
+        '''reference_expression_type_arguments_and_trunk0 : type_arguments dims_opt
+                                                          | type_arguments '.' class_or_interface_type dims_opt'''
+        pass
+
+    def p_reference_expression(self, p):
+        '''reference_expression : primitive_type dims COLON_COLON non_wild_type_arguments_opt identifier_or_new
+                                | name dims_opt COLON_COLON non_wild_type_arguments_opt identifier_or_new
+                                | name BeginTypeArguments reference_expression_type_arguments_and_trunk COLON_COLON non_wild_type_arguments_opt identifier_or_new
+                                | primary COLON_COLON non_wild_type_arguments_opt NAME
+                                | SUPER COLON_COLON non_wild_type_arguments_opt NAME'''
+        # TODO inject BeginTypeArguments during tokenization
+        pass
+
+    def p_non_wild_type_arguments_opt(self, p):
+        '''non_wild_type_arguments_opt : type_arguments
+                                       | empty'''
+        pass
+
+    def p_identifier_or_new(self, p):
+        '''identifier_or_new : NAME
+                             | NEW'''
+        pass
+
+    def p_lambda_expression(self, p):
+        '''lambda_expression : lambda_parameters ARROW lambda_body'''
+        pass
+
+    def p_lambda_parameters(self, p):
+        '''lambda_parameters : NAME
+                             | lambda_parameter_list'''
+        pass
+
+    def p_lambda_parameter_list(self, p):
+        '''lambda_parameter_list : '(' formal_parameter_list_opt ')'
+                                 | '(' type_elided_formal_parameter_list ')' '''
+        pass
+
+    def p_type_elided_formal_parameter_list(self, p):
+        '''type_elided_formal_parameter_list : type_elided_formal_parameter
+                                             | type_elided_formal_parameter_list ',' type_elided_formal_parameter'''
+        pass
+
+    def p_type_elided_formal_parameter(self, p):
+        '''type_elided_formal_parameter : modifiers_opt name'''
+        pass
+
+    def p_lambda_body(self, p):
+        '''lambda_body : expression
+                       | block'''
+        pass
+
 class StatementParser(object):
 
     def p_block(self, p):
@@ -525,6 +588,12 @@ class StatementParser(object):
     def p_variable_declarator_id(self, p):
         '''variable_declarator_id : NAME dims_opt'''
         p[0] = Variable(p[1], dimensions=p[2])
+
+    def p_variable_declarator_id_or_this(self, p):
+        '''variable_declarator_id_or_this : THIS
+                                          | variable_declarator_id
+                                          | unannotatable_name '.' THIS'''
+        pass
 
     def p_variable_initializer(self, p):
         '''variable_initializer : expression
@@ -1012,6 +1081,11 @@ class NameParser(object):
         p[1].append_name(p[3])
         p[0] = p[1]
 
+    def p_unannotatable_name(self, p):
+        '''unannotatable_name : simple_name
+                              | unannotatable_name '.' simple_name'''
+        pass
+
 class LiteralParser(object):
 
     def p_literal(self, p):
@@ -1024,6 +1098,51 @@ class LiteralParser(object):
         p[0] = Literal(p[1])
 
 class TypeParser(object):
+
+    def p_type_annotations_opt(self, p):
+        '''type_annotations_opt : empty'''
+        pass
+
+    def p_type_annotations_opt2(self, p):
+        '''type_annotations_opt : type_annotations'''
+        pass
+
+    def p_type_annotations(self, p):
+        '''type_annotations : type_annotations0'''
+        pass
+
+    def p_type_annotations0(self, p):
+        '''type_annotations0 : type_annotation
+                             | type_annotations0 type_annotation'''
+        pass
+
+    def p_type_annotation(self, p):
+        '''type_annotation : normal_type_annotation'''
+        pass
+
+    def p_type_annotation2(self, p):
+        '''type_annotation : marker_type_annotation'''
+        pass
+
+    def p_type_annotation3(self, p):
+        '''type_annotation : single_member_type_annotation'''
+        pass
+
+    def p_type_annotation_name(self, p):
+        '''type_annotation_name : unannotatable_name'''
+        pass
+
+    def p_normal_type_annotation(self, p):
+        '''normal_type_annotation : type_annotation_name '(' member_value_pairs_opt ')' '''
+        pass
+
+    def p_marker_type_annotation(self, p):
+        '''marker_type_annotation : type_annotation_name'''
+        pass
+
+    def p_single_member_type_annotation(self, p):
+        '''single_member_type_annotation : type_annotation_name '(' single_member_annotation_member_value ')' '''
+        pass
 
     def p_modifiers_opt(self, p):
         '''modifiers_opt : modifiers'''
@@ -1497,12 +1616,16 @@ class ClassParser(object):
             p[0] = p[1] + [p[3]]
 
     def p_formal_parameter(self, p):
-        '''formal_parameter : modifiers_opt type variable_declarator_id
-                            | modifiers_opt type ELLIPSIS variable_declarator_id'''
+        '''formal_parameter : modifiers_opt type variable_declarator_id_or_this
+                            | modifiers_opt type ELLIPSIS variable_declarator_id_or_this
+                            | modifiers_opt type type_annotations ELLIPSIS variable_declarator_id_or_this'''
         if len(p) == 4:
             p[0] = FormalParameter(p[3], p[2], modifiers=p[1])
-        else:
+        elif len(p) == 5:
             p[0] = FormalParameter(p[4], p[2], modifiers=p[1], vararg=True)
+        else:
+            # TODO @ after type?
+            pass
 
     def p_method_header_throws_clause_opt(self, p):
         '''method_header_throws_clause_opt : method_header_throws_clause
@@ -1554,6 +1677,10 @@ class ClassParser(object):
         p[1]['throws'] = p[5]
         p[0] = p[1]
 
+    def p_default_method_header(self, p):
+        '''default_method_header : default_method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
+        pass
+
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
@@ -1561,6 +1688,14 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+
+    def p_default_method_header_name(self, p):
+        '''default_method_header_name : modifiers_with_default type_parameters type NAME '(' '''
+        pass
+
+    def p_modifiers_with_default(self, p):
+        '''modifiers_with_default : modifiers_opt DEFAULT modifiers_opt'''
+        pass
 
     def p_method_header_extended_dims(self, p):
         '''method_header_extended_dims : dims_opt'''
@@ -1629,8 +1764,12 @@ class ClassParser(object):
                                         | class_declaration
                                         | interface_declaration
                                         | enum_declaration
-                                        | annotation_type_declaration'''
-        p[0] = p[1]
+                                        | annotation_type_declaration
+                                        | default_method_header method_body'''
+        if len(p) == 2:
+            p[0] = p[1]
+        else:
+            pass
 
     def p_interface_member_declaration2(self, p):
         '''interface_member_declaration : ';' '''
