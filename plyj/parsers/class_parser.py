@@ -8,8 +8,7 @@ from plyj.model.enum import EnumConstant, EnumDeclaration
 from plyj.model.interface import InterfaceDeclaration
 from plyj.model.method import MethodDeclaration, Throws, FormalParameter
 from plyj.model.name import Name
-from plyj.model.source_element import collect_tokens, extract_tokens, \
-    AnonymousSourceElement
+from plyj.model.source_element import collect_tokens, AnonymousSE
 from plyj.model.expression import ArrayInitializer
 
 
@@ -36,7 +35,7 @@ class ClassParser(object):
                                 extends=p[1].value['extends'],
                                 implements=p[1].value['implements'],
                                 type_parameters=p[1].value['type_parameters'])
-        # Take tokens out of AnonymousSourceElement of class_header and move
+        # Take tokens out of AnonymousSE of class_header and move
         # them into the new ClassDeclaration.
         p[0].add_tokens_left(p[1])
 
@@ -61,7 +60,7 @@ class ClassParser(object):
 
     @staticmethod
     def p_class_header_name1(p):
-        """class_header_name1 : modifiers_opt CLASS strictly_simple_name"""
+        """class_header_name1 : modifiers_opt CLASS simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[3]}
         collect_tokens(p)
 
@@ -129,7 +128,8 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1].value.append(p[2])
+            p[1].value.append(p[2])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -191,8 +191,8 @@ class ClassParser(object):
     @staticmethod
     def p_constructor_header_name(p):
         """constructor_header_name \
-               : modifiers_opt type_parameters strictly_simple_name '('
-               | modifiers_opt strictly_simple_name '(' """
+               : modifiers_opt type_parameters simple_name '('
+               | modifiers_opt simple_name '(' """
         if len(p) == 4:
             p[0] = ConstructorDeclaration(p[2], None,
                                           modifiers=p[1],
@@ -312,10 +312,10 @@ class ClassParser(object):
     @staticmethod
     def p_method_header_name(p):
         """method_header_name \
-               : modifiers_opt type_parameters type strictly_simple_name '('
-               | modifiers_opt type strictly_simple_name '(' """
+               : modifiers_opt type_parameters type simple_name '('
+               | modifiers_opt type simple_name '(' """
         if len(p) == 5:
-            p[0] = AnonymousSourceElement({
+            p[0] = AnonymousSE({
                 'modifiers': p[1],
                 'type_parameters': [],
                 'type': p[2],
@@ -365,7 +365,7 @@ class ClassParser(object):
     @staticmethod
     def p_interface_header_name1(p):
         """interface_header_name1 \
-               : modifiers_opt INTERFACE strictly_simple_name"""
+               : modifiers_opt INTERFACE simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[3]}
         collect_tokens(p)
 
@@ -377,7 +377,7 @@ class ClassParser(object):
     @staticmethod
     def p_interface_header_extends_opt2(p):
         """interface_header_extends_opt : empty"""
-        p[0] = AnonymousSourceElement([])
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_interface_header_extends(p):
@@ -452,8 +452,8 @@ class ClassParser(object):
     @staticmethod
     def p_enum_header_name(p):
         """enum_header_name \
-               : modifiers_opt ENUM strictly_simple_name
-               | modifiers_opt ENUM strictly_simple_name type_parameters"""
+               : modifiers_opt ENUM simple_name
+               | modifiers_opt ENUM simple_name type_parameters"""
         if len(p) == 4:
             p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': []}
         else:
@@ -516,7 +516,7 @@ class ClassParser(object):
 
     @staticmethod
     def p_enum_constant_header_name(p):
-        """enum_constant_header_name : modifiers_opt strictly_simple_name"""
+        """enum_constant_header_name : modifiers_opt simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[2]}
         collect_tokens(p)
 
@@ -596,14 +596,14 @@ class ClassParser(object):
     @staticmethod
     def p_annotation_type_declaration_header_name(p):
         """annotation_type_declaration_header_name \
-               : modifiers '@' INTERFACE strictly_simple_name"""
+               : modifiers '@' INTERFACE simple_name"""
         p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': []}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name2(p):
         """annotation_type_declaration_header_name \
-               : modifiers '@' INTERFACE strictly_simple_name \
+               : modifiers '@' INTERFACE simple_name \
                  type_parameters"""
         p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': p[5]}
         collect_tokens(p)
@@ -611,14 +611,14 @@ class ClassParser(object):
     @staticmethod
     def p_annotation_type_declaration_header_name3(p):
         """annotation_type_declaration_header_name \
-               : '@' INTERFACE strictly_simple_name type_parameters"""
+               : '@' INTERFACE simple_name type_parameters"""
         p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': p[4]}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name4(p):
         """annotation_type_declaration_header_name \
-               : '@' INTERFACE strictly_simple_name"""
+               : '@' INTERFACE simple_name"""
         p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': []}
         collect_tokens(p)
 
@@ -675,8 +675,8 @@ class ClassParser(object):
     @staticmethod
     def p_annotation_method_header_name(p):
         """annotation_method_header_name \
-               : modifiers_opt type_parameters type strictly_simple_name '('
-               | modifiers_opt type strictly_simple_name '(' """
+               : modifiers_opt type_parameters type simple_name '('
+               | modifiers_opt type simple_name '(' """
         if len(p) == 5:
             p[0] = {
                 'modifiers': p[1],

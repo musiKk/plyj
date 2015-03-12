@@ -1,7 +1,6 @@
 #!/usr/bin/env python2
-from plyj.model.name import Name, ensure_name
-from plyj.model.source_element import SourceElement, ensure_se, \
-    AnonymousSourceElement
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSE
 
 
 class CompilationUnit(SourceElement):
@@ -30,7 +29,7 @@ class ImportDeclaration(SourceElement):
         super(ImportDeclaration, self).__init__()
         self._fields = ['name', 'static', 'on_demand']
 
-        name = ensure_name(name, False)
+        name = Name.ensure(name, False)
         assert isinstance(static, bool)
         assert isinstance(on_demand, bool)
 
@@ -46,7 +45,7 @@ class PackageDeclaration(SourceElement):
         if modifiers is None:
             modifiers = []
 
-        name = ensure_name(name, False)
+        name = Name.ensure(name, False)
         assert isinstance(modifiers, list)
 
         self.name = name

@@ -1,9 +1,9 @@
 #!/usr/bin/env python2
 from plyj.model.literal import Literal, ClassLiteral
-from plyj.model.name import Name, ensure_name
-from plyj.model.source_element import SourceElement, ensure_se, \
-    AnonymousSourceElement, Expression, Statement
-from plyj.model.statement import VariableDeclaration
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
+    Statement
+from plyj.model.statement import VariableDeclarationStatement
 from plyj.model.type import Type, TypeParameter
 
 
@@ -12,7 +12,7 @@ class BinaryExpression(Expression):
         super(BinaryExpression, self).__init__()
         self._fields = ['operator', 'lhs', 'rhs']
 
-        operator = ensure_se(operator)
+        operator = AnonymousSE.ensure(operator)
         assert isinstance(lhs, SourceElement)
         assert isinstance(rhs, SourceElement)
 
@@ -85,7 +85,7 @@ class Unary(Expression):
     def __init__(self, sign, expression):
         super(Unary, self).__init__()
         self._fields = ['sign', 'expression']
-        sign = ensure_se(sign)
+        sign = AnonymousSE.ensure(sign)
         assert isinstance(expression, (Expression, Name))
         self.sign = sign
         self.expression = expression
@@ -95,7 +95,7 @@ class Cast(Expression):
     def __init__(self, target, expression):
         super(Cast, self).__init__()
         self._fields = ['target', 'expression']
-        target = ensure_se(target)
+        target = AnonymousSE.ensure(target)
         assert isinstance(expression, (Expression, Name))
         self.target = target
         self.expression = expression
@@ -110,9 +110,9 @@ class MethodInvocation(Expression):
         if type_arguments is None:
             type_arguments = []
 
-        name = ensure_name(name, True)
+        name = Name.ensure(name, True)
         if not isinstance(target, ClassLiteral):
-            target = ensure_name(target, False)
+            target = Name.ensure(target, False)
         assert isinstance(arguments, list)
         assert isinstance(type_arguments, list)
 
@@ -136,17 +136,17 @@ class InstanceCreation(Expression):
         if body is None:
             body = []
 
-        instance_type = ensure_se(instance_type)
-        enclosed_in = ensure_se(enclosed_in)
+        instance_type = AnonymousSE.ensure(instance_type)
+        enclosed_in = AnonymousSE.ensure(enclosed_in)
 
-        assert isinstance(instance_type, (Type, AnonymousSourceElement))
+        assert isinstance(instance_type, (Type, AnonymousSE))
         assert isinstance(arguments, list)
         assert isinstance(type_arguments, list)
         assert isinstance(body, list)
-        assert isinstance(enclosed_in, (Name, AnonymousSourceElement))
+        assert isinstance(enclosed_in, (Name, AnonymousSE))
 
         for x in arguments:
-            assert isinstance(x, VariableDeclaration)
+            assert isinstance(x, VariableDeclarationStatement)
         for x in type_arguments:
             assert isinstance(x, TypeParameter)
         for x in body:
@@ -163,8 +163,8 @@ class FieldAccess(Expression):
     def __init__(self, name, target):
         super(FieldAccess, self).__init__()
 
-        name = ensure_name(name, False)
-        target = ensure_name(target, True)
+        name = Name.ensure(name, False)
+        target = Name.ensure(target, True)
 
         self._fields = ['name', 'target']
         self.name = name
@@ -176,8 +176,8 @@ class ArrayAccess(Expression):
         super(ArrayAccess, self).__init__()
         self._fields = ['index', 'target']
 
-        index = ensure_se(index)
-        target = ensure_name(target, False)
+        index = AnonymousSE.ensure(index)
+        target = Name.ensure(target, False)
 
         self.index = index
         self.target = target
@@ -191,14 +191,14 @@ class ArrayCreation(Expression):
         if dimensions is None:
             dimensions = []
 
-        array_type = ensure_se(array_type)
+        array_type = AnonymousSE.ensure(array_type)
 
-        assert isinstance(array_type, (Type, AnonymousSourceElement))
+        assert isinstance(array_type, (Type, AnonymousSE))
         assert isinstance(dimensions, list)
         assert isinstance(initializer, ArrayInitializer)
 
         for i in range(len(dimensions)):
-            dimensions[i] = ensure_se(dimensions[i])
+            dimensions[i] = AnonymousSE.ensure(dimensions[i])
 
         self.type = array_type
         self.dimensions = dimensions
@@ -215,6 +215,6 @@ class ArrayInitializer(SourceElement):
         assert isinstance(elements, list)
 
         for e in elements:
-            assert isinstance(e, (Literal, Expression, AnonymousSourceElement))
+            assert isinstance(e, (Literal, Expression, AnonymousSE))
 
         self.elements = elements

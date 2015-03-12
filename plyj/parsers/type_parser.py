@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 from plyj.model.classes import WildcardBound, Wildcard
-from plyj.model.name import PrimitiveType
 from plyj.model.source_element import collect_tokens
 from plyj.model.type import Type, TypeParameter
 
@@ -63,7 +62,7 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE"""
-        p[0] = PrimitiveType(p[1])
+        p[0] = Type(p[1])
         collect_tokens(p)
 
     @staticmethod
@@ -109,7 +108,7 @@ class TypeParser(object):
     def p_array_type(p):
         """array_type : primitive_type dims
                       | name dims"""
-        p[0] = Type(p[1], dimensions=p[2])
+        p[0] = Type(p[1].name, dimensions=p[2])
 
     @staticmethod
     def p_array_type2(p):
@@ -303,7 +302,7 @@ class TypeParser(object):
 
     @staticmethod
     def p_type_parameter_header(p):
-        """type_parameter_header : strictly_simple_name"""
+        """type_parameter_header : simple_name"""
         p[0] = p[1]
         collect_tokens(p)
 

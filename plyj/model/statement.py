@@ -1,16 +1,15 @@
 #!/usr/bin/env python2
 from plyj.model.literal import Literal
-from plyj.model.name import Name, ensure_name
-from plyj.model.source_element import SourceElement, ensure_se, \
-    AnonymousSourceElement, Statement, Expression
-from plyj.model.classes import FieldDeclaration
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSE, Statement, \
+    Expression
 from plyj.model.type import Type, TypeParameter
 
 
 def _assert_ensure_ase(modifiers):
     for i in range(len(modifiers)):
-        modifiers[i] = ensure_se(modifiers[i])
-        assert isinstance(modifiers[i], AnonymousSourceElement)
+        modifiers[i] = AnonymousSE.ensure(modifiers[i])
+        assert isinstance(modifiers[i], AnonymousSE)
 
 
 class Empty(Statement):
@@ -35,7 +34,26 @@ class Block(Statement):
             yield s
 
 
-class VariableDeclaration(Statement, FieldDeclaration):
+class VariableDeclaration(SourceElement):
+    def __init__(self, field_type, variable_declarators,
+                 modifiers=None):
+        super(VariableDeclaration, self).__init__()
+        self._fields = ['type', 'variable_declarators', 'modifiers']
+        if modifiers is None:
+            modifiers = []
+
+        variable_declarators = AnonymousSE.ensure(variable_declarators)
+
+        assert isinstance(field_type, Type)
+        assert isinstance(modifiers, list)
+        assert isinstance(variable_declarators, AnonymousSE)
+
+        self.type = field_type
+        self.variable_declarators = variable_declarators
+        self.modifiers = modifiers
+
+
+class VariableDeclarationStatement(Statement, VariableDeclaration):
     pass
 
 
@@ -89,10 +107,10 @@ class ForEach(Statement):
         if modifiers is None:
             modifiers = []
 
-        foreach_type = ensure_se(foreach_type)
+        foreach_type = AnonymousSE.ensure(foreach_type)
 
-        assert isinstance(foreach_type, (Type, AnonymousSourceElement))
-        assert isinstance(variable, VariableDeclaration)
+        assert isinstance(foreach_type, (Type, AnonymousSE))
+        assert isinstance(variable, VariableDeclarationStatement)
         assert isinstance(iterable, Expression)
         assert isinstance(body, Statement)
         assert isinstance(modifiers, list)
@@ -164,7 +182,7 @@ class Continue(Statement):
         self._fields = ['label']
 
         if label is not None:
-            label = ensure_name(label, True)
+            label = Name.ensure(label, True)
 
         self.label = label
 
@@ -175,7 +193,7 @@ class Break(Statement):
         self._fields = ['label']
 
         if label is not None:
-            label = ensure_name(label, True)
+            label = Name.ensure(label, True)
 
         self.label = label
 
@@ -255,7 +273,7 @@ class Catch(SourceElement):
         if types is None:
             types = []
 
-        assert isinstance(variable, VariableDeclaration)
+        assert isinstance(variable, VariableDeclarationStatement)
         assert isinstance(modifiers, list)
         assert isinstance(types, list)
         assert isinstance(block, Block)
@@ -289,7 +307,7 @@ class Resource(SourceElement):
         if modifiers is None:
             modifiers = []
 
-        assert isinstance(variable, VariableDeclaration)
+        assert isinstance(variable, VariableDeclarationStatement)
         assert isinstance(modifiers, list)
         assert isinstance(resource_type, Type)
         assert isinstance(initializer, Expression)
@@ -317,16 +335,16 @@ class ConstructorInvocation(Statement):
         if arguments is None:
             arguments = []
 
-        name = ensure_name(name, True)
+        name = Name.ensure(name, True)
         if target is not None:
-            target = ensure_name(target, True)
+            target = Name.ensure(target, True)
         assert isinstance(type_arguments, list)
         assert isinstance(arguments, list)
 
         for x in type_arguments:
             assert isinstance(x, TypeParameter)
         for x in arguments:
-            assert isinstance(x, VariableDeclaration)
+            assert isinstance(x, VariableDeclarationStatement)
 
         self.name = name
         self.target = target

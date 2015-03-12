@@ -4,10 +4,10 @@ from plyj.model.expression import ArrayAccess
 from plyj.model.expression import FieldAccess
 from plyj.model.expression import InstanceCreation
 from plyj.model.expression import MethodInvocation
-from plyj.model.source_element import collect_tokens, AnonymousSourceElement
+from plyj.model.source_element import collect_tokens, AnonymousSE
 from plyj.model.statement import Block, ConstructorInvocation, Try, Catch, \
     Throw, DoWhile, SwitchCase, Switch, ForEach, IfThenElse, \
-    ExpressionStatement,  VariableDeclaration, Resource, While, For,  Assert, \
+    ExpressionStatement,  VariableDeclarationStatement, Resource, While, For,  Assert, \
     Empty, Break, Continue, Return, Synchronized
 from plyj.model.variable import VariableDeclarator, Variable
 
@@ -58,12 +58,12 @@ class StatementParser(object):
     @staticmethod
     def p_local_variable_declaration(p):
         """local_variable_declaration : type variable_declarators"""
-        p[0] = VariableDeclaration(p[1], p[2])
+        p[0] = VariableDeclarationStatement(p[1], p[2])
 
     @staticmethod
     def p_local_variable_declaration2(p):
         """local_variable_declaration : modifiers type variable_declarators"""
-        p[0] = VariableDeclaration(p[2], p[3], modifiers=p[1])
+        p[0] = VariableDeclarationStatement(p[2], p[3], modifiers=p[1])
 
     @staticmethod
     def p_variable_declarators(p):
@@ -89,7 +89,7 @@ class StatementParser(object):
 
     @staticmethod
     def p_variable_declarator_id(p):
-        """variable_declarator_id : strictly_simple_name dims_opt"""
+        """variable_declarator_id : simple_name dims_opt"""
         p[0] = Variable(p[1], dimensions=p[2])
         collect_tokens(p)
 
@@ -183,18 +183,18 @@ class StatementParser(object):
     @staticmethod
     def p_method_invocation(p):
         """method_invocation \
-               : strictly_simple_name '(' argument_list_opt ')' """
+               : simple_name '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[1], arguments=p[3])
         collect_tokens(p)
 
     @staticmethod
     def p_method_invocation2(p):
         """method_invocation \
-               : name '.' type_arguments strictly_simple_name \
+               : name '.' type_arguments simple_name \
                 '(' argument_list_opt ')'
-               | primary '.' type_arguments strictly_simple_name \
+               | primary '.' type_arguments simple_name \
                 '(' argument_list_opt ')'
-               | SUPER '.' type_arguments strictly_simple_name \
+               | SUPER '.' type_arguments simple_name \
                 '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3],
                                 arguments=p[6])
@@ -203,9 +203,9 @@ class StatementParser(object):
     @staticmethod
     def p_method_invocation3(p):
         """method_invocation \
-               : name '.' strictly_simple_name '(' argument_list_opt ')'
-               | primary '.' strictly_simple_name '(' argument_list_opt ')'
-               | SUPER '.' strictly_simple_name '(' argument_list_opt ')' """
+               : name '.' simple_name '(' argument_list_opt ')'
+               | primary '.' simple_name '(' argument_list_opt ')'
+               | SUPER '.' simple_name '(' argument_list_opt ')' """
         p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
         collect_tokens(p)
 
@@ -225,7 +225,7 @@ class StatementParser(object):
 
     @staticmethod
     def p_label(p):
-        """label : strictly_simple_name"""
+        """label : simple_name"""
         p[0] = p[1]
         collect_tokens(p)
 
@@ -343,7 +343,7 @@ class StatementParser(object):
     @staticmethod
     def p_enhanced_for_statement_header_init(p):
         """enhanced_for_statement_header_init \
-               : FOR '(' type strictly_simple_name dims_opt"""
+               : FOR '(' type simple_name dims_opt"""
         p[0] = {
             'modifiers': [],
             'type': p[3],
@@ -354,7 +354,7 @@ class StatementParser(object):
     @staticmethod
     def p_enhanced_for_statement_header_init2(p):
         """enhanced_for_statement_header_init \
-               : FOR '(' modifiers type strictly_simple_name dims_opt"""
+               : FOR '(' modifiers type simple_name dims_opt"""
         p[0] = {
             'modifiers': p[3],
             'type': p[4],
@@ -466,7 +466,7 @@ class StatementParser(object):
     @staticmethod
     def p_break_statement(p):
         """break_statement : BREAK ';'
-                           | BREAK strictly_simple_name ';' """
+                           | BREAK simple_name ';' """
         if len(p) == 3:
             p[0] = Break()
         else:
@@ -476,7 +476,7 @@ class StatementParser(object):
     @staticmethod
     def p_continue_statement(p):
         """continue_statement : CONTINUE ';'
-                              | CONTINUE strictly_simple_name ';' """
+                              | CONTINUE simple_name ';' """
         if len(p) == 3:
             p[0] = Continue()
         else:
@@ -725,8 +725,8 @@ class StatementParser(object):
 
     @staticmethod
     def p_field_access(p):
-        """field_access : primary '.' strictly_simple_name
-                        | SUPER '.' strictly_simple_name"""
+        """field_access : primary '.' simple_name
+                        | SUPER '.' simple_name"""
         p[0] = FieldAccess(p[3], p[1])
         collect_tokens(p)
 
@@ -763,7 +763,7 @@ class StatementParser(object):
         """dim_with_or_without_expr : '[' expression ']'
                                     | '[' ']' """
         if len(p) == 3:
-            p[0] = AnonymousSourceElement(None)
+            p[0] = AnonymousSE(None)
         else:
             p[0] = p[2]
         collect_tokens(p)

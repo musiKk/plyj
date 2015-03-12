@@ -11,12 +11,6 @@ class NameParser(object):
         p[0] = p[1]
 
     @staticmethod
-    def p_strict_simple_name(p):
-        """strictly_simple_name : NAME"""
-        p[0] = Name(p[1], simple=True)
-        collect_tokens(p)
-
-    @staticmethod
     def p_simple_name(p):
         """simple_name : NAME"""
         p[0] = Name(p[1])

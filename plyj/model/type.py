@@ -1,10 +1,15 @@
 #!/usr/bin/env python2
-from plyj.model.name import Name, ensure_name, is_primitive_type, PrimitiveType
-from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
-    ensure_se, extract_tokens
+from operator import attrgetter
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSE
 
 
 class Type(SourceElement):
+    name = property(attrgetter("_name"))
+    type_arguments = property(attrgetter("_type_arguments"))
+    enclosed_in = property(attrgetter("_enclosed_in"))
+    dimensions = property(attrgetter("_dimensions"))
+
     def __init__(self, name, type_arguments=None, enclosed_in=None,
                  dimensions=0):
         super(Type, self).__init__()
@@ -13,46 +18,38 @@ class Type(SourceElement):
         if type_arguments is None:
             type_arguments = []
 
-        # Deal with primitive types passed as a string
-        if isinstance(name, str) and is_primitive_type(name):
-            name = PrimitiveType(name)
-
-        name = ensure_name(name, False)
-        dimensions = ensure_se(dimensions)
-        type_arguments = extract_tokens(self, type_arguments)
+        type_arguments = self._absorb_ase_tokens(type_arguments)
+        name = Name.ensure(name, False)
+        dimensions = AnonymousSE.ensure(dimensions)
 
         # Primitive types (int, byte, etc.) are strings, not names.
         assert enclosed_in is None or isinstance(enclosed_in, Type)
         assert isinstance(type_arguments, list)
-        assert isinstance(dimensions, AnonymousSourceElement)
+        assert isinstance(dimensions, AnonymousSE)
 
         for x in type_arguments:
             assert isinstance(x, Type)
 
-        self.name = name
-        self.type_arguments = type_arguments
-        self.enclosed_in = enclosed_in
-        self.dimensions = dimensions
+        self._name = name
+        self._type_arguments = type_arguments
+        self._enclosed_in = enclosed_in
+        self._dimensions = dimensions
 
+    @staticmethod
+    def ensure(type_name):
+        if isinstance(type_name, str):
+            return Type(type_name)
+        if not isinstance(type_name, Type):
+            assert False
+        return type_name
 
-def is_primitive_type(type_str):
-    return type_str in ["boolean", "void", "byte",
-                        "short", "int", "long",
-                        "char", "float", "double"]
-
-
-class PrimitiveType(Type):
-    def __init__(self, value):
-        super(PrimitiveType, self).__init__(value, True)
-        assert is_primitive_type(value)
-
-
-def ensure_type(type_name):
-    if isinstance(type_name, str):
-        return Type(type_name)
-    if not isinstance(type_name, Type):
-        assert False
-    return type_name
+    @staticmethod
+    def is_primitive(type_):
+        if isinstance(type_, Type):
+            type_ = type_.name
+        assert isinstance(type_, (str, unicode))
+        return type_ in ["boolean", "void", "byte", "short", "int", "long",
+                         "char", "float", "double"]
 
 
 class TypeParameter(SourceElement):
@@ -66,7 +63,7 @@ class TypeParameter(SourceElement):
         if extends is None:
             extends = []
 
-        name = ensure_name(name, True)
+        name = Name.ensure(name, True)
         assert isinstance(extends, list)
 
         self.name = name

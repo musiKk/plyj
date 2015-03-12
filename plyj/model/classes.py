@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
-from plyj.model.name import Name, ensure_name
-from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
-    ensure_se, Statement
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSE, Statement
+from plyj.model.statement import Block, VariableDeclaration
 from plyj.model.type import Type
 
 
@@ -11,10 +11,7 @@ class ClassInitializer(SourceElement):
         self._fields = ['block', 'static']
 
         assert isinstance(static, bool)
-        assert isinstance(block, list)
-
-        for x in block:
-            assert isinstance(x, Statement)
+        assert isinstance(block, Block)
 
         self.block = block
         self.static = static
@@ -31,10 +28,10 @@ class ClassDeclaration(SourceElement):
         modifiers = [] if modifiers is None else modifiers
         type_parameters = [] if type_parameters is None else type_parameters
 
-        name = ensure_name(name, True)
-        body = ensure_se(body)
+        name = Name.ensure(name, True)
+        body = AnonymousSE.ensure(body)
 
-        assert isinstance(body, AnonymousSourceElement)
+        assert isinstance(body, AnonymousSE)
         assert isinstance(modifiers, list)
         assert isinstance(type_parameters, list)
         assert extends is None or isinstance(extends, Type)
@@ -61,12 +58,12 @@ class ConstructorDeclaration(SourceElement):
         if parameters is None:
             parameters = []
 
-        name = ensure_name(name, True)
-        assert isinstance(block, list)
+        name = Name.ensure(name, True)
+        assert block is None or isinstance(block, Block)
         assert isinstance(modifiers, list)
         assert isinstance(type_parameters, list)
         assert isinstance(parameters, list)
-        assert isinstance(throws, SourceElement)
+        assert throws is None or isinstance(throws, SourceElement)
 
         self.name = name
         self.block = block
@@ -83,23 +80,8 @@ class EmptyDeclaration(SourceElement):
     pass
 
 
-class FieldDeclaration(SourceElement):
-    def __init__(self, field_type, variable_declarators,
-                 modifiers=None):
-        super(FieldDeclaration, self).__init__()
-        self._fields = ['type', 'variable_declarators', 'modifiers']
-        if modifiers is None:
-            modifiers = []
-
-        variable_declarators = ensure_se(variable_declarators)
-
-        assert isinstance(field_type, Type)
-        assert isinstance(modifiers, list)
-        assert isinstance(variable_declarators, AnonymousSourceElement)
-
-        self.type = field_type
-        self.variable_declarators = variable_declarators
-        self.modifiers = modifiers
+class FieldDeclaration(VariableDeclaration):
+    pass
 
 
 class Wildcard(SourceElement):

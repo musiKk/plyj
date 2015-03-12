@@ -40,6 +40,18 @@ class SourceElement(object):
     def __ne__(self, other):
         return not self == other
 
+    def _absorb_ase_tokens(self, ase):
+        """
+        Absorbs all the tokens in the passed AnonymousSE. If it isn't an
+        AnonymousSE, ignore it and return ase. If it is actually an
+        AnonymousSE, move the tokens into this SourceElement and return
+        ase.value
+        """
+        if isinstance(ase, AnonymousSE):
+            self.add_tokens_right(ase)
+            return ase.value
+        return ase
+
     def add_tokens_right(self, other):
         assert isinstance(other, SourceElement)
         self.tokens.extend(other.tokens)
@@ -53,8 +65,8 @@ class SourceElement(object):
 
     def accept(self, visitor):
         """
-        default implementation that visit the subnodes in the order
-        they are stored in self_field
+        Default implementation that visits the sub-nodes in the order they are
+        stored in self._field
         """
         class_name = self.__class__.__name__
         visit = getattr(visitor, 'visit_' + class_name)
@@ -71,39 +83,32 @@ class SourceElement(object):
         getattr(visitor, 'leave_' + class_name)(self)
 
 
-class AnonymousSourceElement(SourceElement):
+class AnonymousSE(SourceElement):
     """
     This is a SourceElement that does not warrant its own class. Before it was
     added, values would be passed around as strings, integers, dicts or other
     primitive types when there was no real need to add another class to wrap
     them. These primitive types have no room to store the tokens from the
-    Java source, so AnonymousSourceElement was added to wrap these values and
+    Java source, so AnonymousSE was added to wrap these values and
     provide room to store the tokens that created them.
     """
     def __init__(self, value):
-        super(AnonymousSourceElement, self).__init__()
+        super(AnonymousSE, self).__init__()
         self._fields = ['value']
         self.value = value
 
-
-def extract_tokens(source_element, from_element):
-    if isinstance(from_element, AnonymousSourceElement):
-        source_element.add_tokens_right(from_element)
-        return from_element.value
-    return from_element
-
-
-def ensure_se(value):
-    """
-    Used in many model classes to ensure that a particular parameter is a
-    SourceElement (for consistency)
-    :param value: The value to make into an AnonymousSourceElement if it isn't
-                  a SourceElement
-    :return: A SourceElement
-    """
-    if not isinstance(value, SourceElement):
-        return AnonymousSourceElement(value)
-    return value
+    @staticmethod
+    def ensure(value):
+        """
+        Used in many model classes to ensure that a particular parameter is a
+        SourceElement (for consistency)
+        :param value: The value to make into an AnonymousSE if it isn't
+                      a SourceElement
+        :return: A SourceElement
+        """
+        if not isinstance(value, SourceElement):
+            return AnonymousSE(value)
+        return value
 
 
 def collect_tokens(p):
@@ -116,7 +121,7 @@ def collect_tokens(p):
     if p[0] is None:
         raise ValueError("The result of the rule is probably not None. "
                          "Explicitly specify p[0] = "
-                         "AnonymousSourceElement(None) to silence this"
+                         "AnonymousSE(None) to silence this"
                          "warning")
     # in_after is True if we have passed p[0] and are now appending to
     # tokens_after. In many production rules, p[0] is set to p[n]. So we should
@@ -134,7 +139,7 @@ def collect_tokens(p):
             else:
                 tokens_before.append(t)
 
-    # Turn the parser result into an AnonymousSourceElement or if it already is
+    # Turn the parser result into an AnonymousSE or if it already is
     # a SourceElement, add the tokens to the current element.
     if isinstance(p[0], SourceElement):
         tokens_before.extend(p[0].tokens)
@@ -142,7 +147,7 @@ def collect_tokens(p):
         p[0].tokens = tokens_before
     else:
         tokens_before.extend(tokens_after)
-        p[0] = AnonymousSourceElement(p[0])
+        p[0] = AnonymousSE(p[0])
         p[0].tokens = tokens_before
 
 

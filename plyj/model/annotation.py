@@ -1,9 +1,8 @@
 #!/usr/bin/env python2
-from plyj.model.expression import Expression
-from plyj.model.name import Name, ensure_name
-from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
-    ensure_se, extract_tokens, Expression
+from plyj.model.name import Name
+from plyj.model.source_element import SourceElement, AnonymousSE, Expression
 from plyj.model.type import Type
+from plyj.utility import assert_list
 
 
 class Annotation(SourceElement):
@@ -13,10 +12,10 @@ class Annotation(SourceElement):
         if members is None:
             members = []
 
-        name = ensure_name(name, True)
-        members = extract_tokens(self, members)
+        name = Name.ensure(name, True)
+        members = self._absorb_ase_tokens(members)
 
-        assert isinstance(members, list)
+        assert_list(members, AnnotationMember)
         assert (single_member is None or
                 isinstance(single_member, AnnotationMember))
 
@@ -38,15 +37,15 @@ class AnnotationMethodDeclaration(SourceElement):
         if type_parameters is None:
             type_parameters = []
 
-        name = ensure_name(name, True)
-        extended_dims = ensure_se(extended_dims)
+        name = Name.ensure(name, True)
+        extended_dims = AnonymousSE.ensure(extended_dims)
 
         assert isinstance(return_type, Type)
         assert isinstance(parameters, list)
         assert isinstance(default, Expression)
         assert isinstance(modifiers, list)
         assert isinstance(type_parameters, list)
-        assert isinstance(extended_dims, AnonymousSourceElement)
+        assert isinstance(extended_dims, AnonymousSE)
 
         self.name = name
         self.type = return_type
@@ -62,7 +61,7 @@ class AnnotationMember(SourceElement):
         super(AnnotationMember, self).__init__()
         self._fields = ['name', 'value']
 
-        name = ensure_name(name)
+        name = Name.ensure(name, True)
         assert isinstance(value, SourceElement)
 
         self.name = name
@@ -85,7 +84,7 @@ class AnnotationDeclaration(SourceElement):
         if body is None:
             body = []
 
-        name = ensure_name(name, True)
+        name = Name.ensure(name, True)
         assert extends is None or isinstance(extends, Type)
         assert isinstance(implements, list)
         assert isinstance(body, list)

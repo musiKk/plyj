@@ -3,7 +3,7 @@ from plyj.model.expression import Assignment, Cast, Unary, Multiplicative, \
     Additive, Shift, Relational, InstanceOf, Equality, ConditionalAnd, \
     ConditionalOr, Conditional, Or, Xor, And
 from plyj.model.literal import ClassLiteral
-from plyj.model.source_element import collect_tokens, ensure_se, AnonymousSourceElement
+from plyj.model.source_element import collect_tokens, AnonymousSE
 from plyj.model.type import Type
 
 
@@ -414,6 +414,8 @@ class ExpressionParser(object):
         if len(p) == 4:
             p[0] = ClassLiteral(Type(p[1]))
         else:
+            if isinstance(p[1], Type):
+                p[1] = p[1].name
             p[0] = ClassLiteral(Type(p[1], dimensions=p[2]))
         collect_tokens(p)
 
@@ -446,14 +448,14 @@ class ExpressionParser(object):
     @staticmethod
     def p_one_dim_loop(p):
         """one_dim_loop : '[' ']' """
-        p[0] = AnonymousSourceElement(1)
+        p[0] = AnonymousSE(1)
         collect_tokens(p)
 
     @staticmethod
     def p_cast_expression(p):
         """cast_expression : '(' primitive_type dims_opt ')' unary_expression
         """
-        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        p[0] = Cast(Type(p[2].name, dimensions=p[3]), p[5])
         collect_tokens(p)
 
     @staticmethod
@@ -470,7 +472,7 @@ class ExpressionParser(object):
                : '(' name type_arguments \
                  '.' class_or_interface_type dims_opt \
                  ')' unary_expression_not_plus_minus"""
-        p[5].dimensions = ensure_se(p[6])
+        p[5].dimensions = p[6]
         p[5].enclosed_in = Type(p[2], type_arguments=p[3])
         p[0] = Cast(p[5], p[8])
         collect_tokens(p)

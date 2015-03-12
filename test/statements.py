@@ -32,7 +32,7 @@ class StatementTest(unittest.TestCase):
         })
 
     def test_for(self):
-        initializer = VariableDeclaration('int', [
+        initializer = VariableDeclarationStatement('int', [
             VariableDeclarator(Variable('i'), initializer=zero)
         ])
         predicate = BinaryExpression('<', i, ten)
@@ -212,21 +212,21 @@ class StatementTest(unittest.TestCase):
         # i, j declarator array
         ijda = [var_i_declarator, var_j_declarator]
 
-        self.assert_statement('int i;', VariableDeclaration('int', ida))
-        self.assert_statement('int i, j;', VariableDeclaration('int', ijda))
+        self.assert_statement('int i;', VariableDeclarationStatement('int', ida))
+        self.assert_statement('int i, j;', VariableDeclarationStatement('int', ijda))
 
         var_i_declarator.initializer = one
-        self.assert_statement('int i = 1;', VariableDeclaration('int', ida))
+        self.assert_statement('int i = 1;', VariableDeclarationStatement('int', ida))
         self.assert_statement('int i = 1, j;',
-                              VariableDeclaration('int', ijda))
+                              VariableDeclarationStatement('int', ijda))
 
         var_j_declarator.initializer = i
         self.assert_statement('int i = 1, j = i;',
-                              VariableDeclaration('int', ijda))
+                              VariableDeclarationStatement('int', ijda))
 
         int_ar = Type('int', dimensions=1)
         var_i_declarator.initializer = None
-        self.assert_statement('int[] i;', VariableDeclaration(int_ar, ida))
+        self.assert_statement('int[] i;', VariableDeclarationStatement(int_ar, ida))
 
     def test_array(self):
         var_i = Variable('i')
@@ -237,17 +237,17 @@ class StatementTest(unittest.TestCase):
         arr_init = ArrayInitializer([one, three])
         var_i_declarator.initializer = arr_init
         self.assert_statement('int[] i = {1, 3};',
-                              VariableDeclaration(int_ar, [var_i_declarator]))
+                              VariableDeclarationStatement(int_ar, [var_i_declarator]))
 
         arr_creation = ArrayCreation('int', dimensions=[None],
                                      initializer=arr_init)
         var_i_declarator.initializer = arr_creation
         self.assert_statement('int[] i = new int[] {1, 3};',
-                              VariableDeclaration(int_ar, [var_i_declarator]))
+                              VariableDeclarationStatement(int_ar, [var_i_declarator]))
 
         arr_creation.dimensions = [two]
         self.assert_statement('int[] i = new int[2] {1, 3};',
-                              VariableDeclaration(int_ar, [var_i_declarator]))
+                              VariableDeclarationStatement(int_ar, [var_i_declarator]))
 
     def test_empty(self):
         self.assert_statement(';', Empty())
