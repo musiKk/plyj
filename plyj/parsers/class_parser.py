@@ -319,7 +319,7 @@ class ClassParser(object):
                 'modifiers': p[1],
                 'type_parameters': [],
                 'type': p[2],
-                'name': Name(p[3])
+                'name': p[3]
             })
         else:
             p[0] = {

@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 from plyj.model.expression import Expression
-from plyj.model.name import Name
+from plyj.model.name import Name, ensure_name
 from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
     ensure_se, extract_tokens, Expression
 from plyj.model.type import Type
@@ -13,10 +13,9 @@ class Annotation(SourceElement):
         if members is None:
             members = []
 
-        name = ensure_se(name)
+        name = ensure_name(name, True)
         members = extract_tokens(self, members)
 
-        assert isinstance(name, (Name, AnonymousSourceElement))
         assert isinstance(members, list)
         assert (single_member is None or
                 isinstance(single_member, AnnotationMember))
@@ -39,11 +38,9 @@ class AnnotationMethodDeclaration(SourceElement):
         if type_parameters is None:
             type_parameters = []
 
-        name = ensure_se(name)
+        name = ensure_name(name, True)
         extended_dims = ensure_se(extended_dims)
 
-        assert (isinstance(name, Name) or
-                isinstance(name, AnonymousSourceElement))
         assert isinstance(return_type, Type)
         assert isinstance(parameters, list)
         assert isinstance(default, Expression)
@@ -65,7 +62,7 @@ class AnnotationMember(SourceElement):
         super(AnnotationMember, self).__init__()
         self._fields = ['name', 'value']
 
-        name = ensure_se(name)
+        name = ensure_name(name)
         assert isinstance(value, SourceElement)
 
         self.name = name
@@ -88,10 +85,7 @@ class AnnotationDeclaration(SourceElement):
         if body is None:
             body = []
 
-        name = ensure_se(name)
-
-        assert (isinstance(name, Name) or
-                isinstance(name, AnonymousSourceElement))
+        name = ensure_name(name, True)
         assert extends is None or isinstance(extends, Type)
         assert isinstance(implements, list)
         assert isinstance(body, list)

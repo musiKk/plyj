@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from plyj.model.classes import WildcardBound, Wildcard
+from plyj.model.name import PrimitiveType
 from plyj.model.source_element import collect_tokens
 from plyj.model.type import Type, TypeParameter
 
@@ -62,7 +63,7 @@ class TypeParser(object):
                           | CHAR
                           | FLOAT
                           | DOUBLE"""
-        p[0] = p[1]
+        p[0] = PrimitiveType(p[1])
         collect_tokens(p)
 
     @staticmethod

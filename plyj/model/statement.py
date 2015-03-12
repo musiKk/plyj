@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 from plyj.model.literal import Literal
-from plyj.model.name import Name
+from plyj.model.name import Name, ensure_name
 from plyj.model.source_element import SourceElement, ensure_se, \
     AnonymousSourceElement, Statement, Expression
 from plyj.model.classes import FieldDeclaration
@@ -163,7 +163,8 @@ class Continue(Statement):
         super(Continue, self).__init__()
         self._fields = ['label']
 
-        assert label is None or isinstance(label, Name)
+        if label is not None:
+            label = ensure_name(label, True)
 
         self.label = label
 
@@ -173,7 +174,8 @@ class Break(Statement):
         super(Break, self).__init__()
         self._fields = ['label']
 
-        assert label is None or isinstance(label, Name)
+        if label is not None:
+            label = ensure_name(label, True)
 
         self.label = label
 
@@ -193,7 +195,7 @@ class Synchronized(Statement):
         super(Synchronized, self).__init__()
         self._fields = ['monitor', 'body']
 
-        assert isinstance(monitor, Name)
+        assert isinstance(monitor, Expression)
         assert isinstance(body, Statement)
 
         self.monitor = monitor
@@ -315,8 +317,9 @@ class ConstructorInvocation(Statement):
         if arguments is None:
             arguments = []
 
-        assert isinstance(name, Name)
-        assert isinstance(target, Name)
+        name = ensure_name(name, True)
+        if target is not None:
+            target = ensure_name(target, True)
         assert isinstance(type_arguments, list)
         assert isinstance(arguments, list)
 

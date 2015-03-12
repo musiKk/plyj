@@ -1,7 +1,5 @@
 from plyj.model.source_element import SourceElement
 
-__author__ = 'matthew'
-
 
 class Name(SourceElement):
     def __init__(self, value, simple=False):
@@ -27,3 +25,13 @@ class Name(SourceElement):
             self.value = self.value + '.' + name.value
         else:
             self.value = self.value + '.' + name
+
+
+def ensure_name(se, simple):
+    if isinstance(se, str):
+        return Name(se, simple)
+    if not isinstance(se, Name):
+        assert False
+    if simple:
+        assert se.simple
+    return se

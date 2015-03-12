@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
-from plyj.model.name import Name
+from plyj.model.name import Name, ensure_name
 from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
-    ensure_se
+    ensure_se, Statement
 from plyj.model.type import Type
 
 
@@ -12,6 +12,9 @@ class ClassInitializer(SourceElement):
 
         assert isinstance(static, bool)
         assert isinstance(block, list)
+
+        for x in block:
+            assert isinstance(x, Statement)
 
         self.block = block
         self.static = static
@@ -28,11 +31,9 @@ class ClassDeclaration(SourceElement):
         modifiers = [] if modifiers is None else modifiers
         type_parameters = [] if type_parameters is None else type_parameters
 
-        name = ensure_se(name)
+        name = ensure_name(name, True)
         body = ensure_se(body)
 
-        assert (isinstance(name, Name) or
-                isinstance(name, AnonymousSourceElement))
         assert isinstance(body, AnonymousSourceElement)
         assert isinstance(modifiers, list)
         assert isinstance(type_parameters, list)
@@ -60,10 +61,7 @@ class ConstructorDeclaration(SourceElement):
         if parameters is None:
             parameters = []
 
-        name = ensure_se(name)
-
-        assert (isinstance(name, Name) or
-                isinstance(name, AnonymousSourceElement))
+        name = ensure_name(name, True)
         assert isinstance(block, list)
         assert isinstance(modifiers, list)
         assert isinstance(type_parameters, list)

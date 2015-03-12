@@ -1,5 +1,5 @@
 #!/usr/bin/env python2
-from plyj.model.name import Name
+from plyj.model.name import Name, ensure_name
 from plyj.model.source_element import SourceElement
 
 
@@ -19,7 +19,7 @@ class InterfaceDeclaration(SourceElement):
         if body is None:
             body = []
 
-        assert isinstance(name, Name)
+        name = ensure_name(name, True)
         assert isinstance(modifiers, list)
         assert isinstance(extends, list)
         assert isinstance(type_parameters, list)

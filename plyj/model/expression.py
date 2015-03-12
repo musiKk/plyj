@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
-from plyj.model.literal import Literal
-from plyj.model.name import Name
+from plyj.model.literal import Literal, ClassLiteral
+from plyj.model.name import Name, ensure_name
 from plyj.model.source_element import SourceElement, ensure_se, \
     AnonymousSourceElement, Expression, Statement
 from plyj.model.statement import VariableDeclaration
@@ -110,9 +110,9 @@ class MethodInvocation(Expression):
         if type_arguments is None:
             type_arguments = []
 
-        name = ensure_se(name)
-        target = ensure_se(target)
-        assert isinstance(name, (Name, AnonymousSourceElement))
+        name = ensure_name(name, True)
+        if not isinstance(target, ClassLiteral):
+            target = ensure_name(target, False)
         assert isinstance(arguments, list)
         assert isinstance(type_arguments, list)
 
@@ -162,11 +162,9 @@ class InstanceCreation(Expression):
 class FieldAccess(Expression):
     def __init__(self, name, target):
         super(FieldAccess, self).__init__()
-        name = ensure_se(name)
-        target = ensure_se(target)
 
-        assert isinstance(name, (Name, AnonymousSourceElement))
-        assert isinstance(target, (Name, AnonymousSourceElement))
+        name = ensure_name(name, False)
+        target = ensure_name(target, True)
 
         self._fields = ['name', 'target']
         self.name = name
@@ -179,8 +177,7 @@ class ArrayAccess(Expression):
         self._fields = ['index', 'target']
 
         index = ensure_se(index)
-        target = ensure_se(target)
-        assert isinstance(target, (Name, AnonymousSourceElement))
+        target = ensure_name(target, False)
 
         self.index = index
         self.target = target

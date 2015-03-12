@@ -151,6 +151,4 @@ class Statement(SourceElement):
 
 
 class Expression(SourceElement):
-    def __init__(self):
-        super(Expression, self).__init__()
-        self._fields = []
+    pass

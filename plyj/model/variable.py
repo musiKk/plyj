@@ -1,6 +1,6 @@
 #!/usr/bin/env python2
 from plyj.model.expression import ArrayInitializer
-from plyj.model.name import Name
+from plyj.model.name import Name, ensure_name
 from plyj.model.source_element import SourceElement, ensure_se, \
     AnonymousSourceElement, Expression
 
@@ -17,10 +17,9 @@ class Variable(SourceElement):
         super(Variable, self).__init__()
         self._fields = ['name', 'dimensions']
 
-        name = ensure_se(name)
         dimensions = ensure_se(dimensions)
 
-        assert isinstance(name, (Name, AnonymousSourceElement))
+        name = ensure_name(name, True)
         assert isinstance(dimensions, AnonymousSourceElement)
 
         self.name = name

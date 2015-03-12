@@ -1,8 +1,9 @@
 #!/usr/bin/env python2
-from plyj.model.name import Name
+from plyj.model.name import Name, ensure_name, PrimitiveType
 from plyj.model.source_element import SourceElement, AnonymousSourceElement, \
     ensure_se
-from plyj.model.type import Type
+from plyj.model.type import Type, ensure_type
+from plyj.model.variable import Variable
 
 
 class MethodDeclaration(SourceElement):
@@ -23,16 +24,15 @@ class MethodDeclaration(SourceElement):
         if body is None:
             body = []
 
-        return_type = ensure_se(return_type)
+        return_type = ensure_type(return_type)
         abstract = ensure_se(abstract)
         extended_dims = ensure_se(extended_dims)
 
-        if not isinstance(name, Name):
-            assert isinstance(name, Name)
+        name = ensure_name(name, True)
         assert isinstance(modifiers, list)
         assert isinstance(type_parameters, list)
         assert isinstance(parameters, list)
-        assert isinstance(return_type, (Type, AnonymousSourceElement))
+        assert isinstance(return_type, (Type, PrimitiveType))
         assert isinstance(body, list)
         assert isinstance(abstract, AnonymousSourceElement)
         assert isinstance(extended_dims, AnonymousSourceElement)
@@ -56,11 +56,10 @@ class FormalParameter(SourceElement):
         if modifiers is None:
             modifiers = []
 
-        variable = ensure_se(variable)
         parameter_type = ensure_se(parameter_type)
         vararg = ensure_se(vararg)
 
-        assert isinstance(variable, (Name, AnonymousSourceElement))
+        assert isinstance(variable, Variable)
         assert isinstance(parameter_type, (Type, AnonymousSourceElement))
         assert isinstance(modifiers, list)
         assert vararg is None or isinstance(vararg, AnonymousSourceElement)
