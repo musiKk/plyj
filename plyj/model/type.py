@@ -20,19 +20,28 @@ class Type(SourceElement):
 
         type_arguments = self._absorb_ase_tokens(type_arguments)
         name = Name.ensure(name, False)
-        dimensions = AnonymousSE.ensure(dimensions)
 
         # Primitive types (int, byte, etc.) are strings, not names.
-        assert enclosed_in is None or isinstance(enclosed_in, Type)
         assert isinstance(type_arguments, list)
-        assert isinstance(dimensions, AnonymousSE)
 
         for x in type_arguments:
             assert isinstance(x, Type)
 
         self._name = name
         self._type_arguments = type_arguments
+        self._dimensions = None
+        self._enclosed_in = None
+
+        self.set_enclosed_in(enclosed_in)
+        self.set_dimensions(dimensions)
+
+    def set_enclosed_in(self, enclosed_in):
+        assert enclosed_in is None or isinstance(enclosed_in, Type)
         self._enclosed_in = enclosed_in
+
+    def set_dimensions(self, dimensions):
+        dimensions = AnonymousSE.ensure(dimensions)
+        assert isinstance(dimensions, AnonymousSE)
         self._dimensions = dimensions
 
     @staticmethod

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from plyj.model.expression import ArrayInitializer
+from plyj.model.literal import Literal
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression
 
@@ -32,7 +33,7 @@ class VariableDeclarator(SourceElement):
 
         assert isinstance(variable, Variable)
         assert (initializer is None
-                or isinstance(initializer, (AnonymousSE,
+                or isinstance(initializer, (AnonymousSE, Literal,
                                             Expression, ArrayInitializer)))
 
         self.variable = variable

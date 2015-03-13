@@ -1,8 +1,9 @@
 #!/usr/bin/env python2
 from plyj.model.name import Name
-from plyj.model.source_element import SourceElement, AnonymousSE
-from plyj.model.type import Type
+from plyj.model.source_element import SourceElement, AnonymousSE, Statement
+from plyj.model.type import Type, TypeParameter
 from plyj.model.variable import Variable
+from plyj.utility import map_inplace, assert_list
 
 
 class MethodDeclaration(SourceElement):
@@ -28,11 +29,11 @@ class MethodDeclaration(SourceElement):
         extended_dims = AnonymousSE.ensure(extended_dims)
 
         name = Name.ensure(name, True)
-        assert isinstance(modifiers, list)
-        assert isinstance(type_parameters, list)
-        assert isinstance(parameters, list)
+        map_inplace(AnonymousSE.ensure, modifiers)
+        assert_list(type_parameters, TypeParameter)
+        assert_list(parameters, FormalParameter)
+        assert_list(body, Statement)
         assert isinstance(return_type, Type)
-        assert isinstance(body, list)
         assert isinstance(abstract, AnonymousSE)
         assert isinstance(extended_dims, AnonymousSE)
         assert throws is None or isinstance(throws, Throws)
