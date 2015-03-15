@@ -35,7 +35,9 @@ class MyLexer(object):
 
         'PLUSPLUS', 'MINUSMINUS',
 
-        'ELLIPSIS'
+        'ELLIPSIS',
+
+        'COLON_COLON'
     ] + [k.upper() for k in keywords]
     literals = '()+-*/=?:,.^|&~!=[]{};<>@%'
 
@@ -77,6 +79,8 @@ class MyLexer(object):
     t_MINUSMINUS = r'\-\-'
 
     t_ELLIPSIS = r'\.\.\.'
+
+    t_COLON_COLON = '::'
 
     t_ignore = ' \t\f'
 
@@ -391,7 +395,8 @@ class ExpressionParser(object):
                                 | class_instance_creation_expression
                                 | field_access
                                 | method_invocation
-                                | array_access'''
+                                | array_access
+                                | reference_expression'''
         p[0] = p[1]
 
     def p_primary_no_new_array2(self, p):
@@ -462,6 +467,30 @@ class ExpressionParser(object):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
         # technically it's not necessarily a type but could be a type parameter
         p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+
+    def p_reference_expression(self, p):
+        '''reference_expression : primitive_type dims COLON_COLON type_arguments identifier_or_new
+                                | primitive_type dims COLON_COLON identifier_or_new
+                                | name dims_opt COLON_COLON type_arguments identifier_or_new
+                                | name dims_opt COLON_COLON identifier_or_new
+                                | primary COLON_COLON type_arguments NAME
+                                | primary COLON_COLON NAME
+                                | SUPER COLON_COLON type_arguments NAME
+                                | SUPER COLON_COLON NAME'''
+        # TODO following case is missing but I cannot resolve the
+        # resulting conflicts
+        # | name reference_expression_type_arguments_and_trunk COLON_COLON type_arguments identifier_or_new
+        pass
+
+    def p_identifier_or_new(self, p):
+        '''identifier_or_new : NAME
+                             | NEW'''
+        pass
+
+    def p_reference_expression_type_arguments_and_trunk(self, p):
+        '''reference_expression_type_arguments_and_trunk : type_arguments dims_opt
+                                                         | type_arguments '.' class_or_interface_type dims_opt'''
+        pass
 
 class StatementParser(object):
 
