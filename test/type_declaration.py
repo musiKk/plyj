@@ -27,6 +27,15 @@ class TypeDeclarationTest(unittest.TestCase):
         cls = self._assert_declaration(m, 'Foo', type=model.InterfaceDeclaration)
         self.assertEquals(cls.body, [MethodDeclaration('foo', abstract=True)])
 
+    def test_interface_default_method(self):
+        m = self.parser.parse_string('''
+        interface Foo {
+            default void foo() {}
+        }
+        ''')
+        cls = self._assert_declaration(m, 'Foo', type=model.InterfaceDeclaration)
+        self.assertEquals(cls.body, [MethodDeclaration('foo', abstract=False, modifiers=['default'], body=[])])
+
     def test_class_abstract_method(self):
         m = self.parser.parse_string('''
         abstract class Foo {

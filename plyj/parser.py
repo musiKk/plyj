@@ -1531,7 +1531,8 @@ class ClassParser(object):
 
     def p_method_declaration(self, p):
         '''method_declaration : abstract_method_declaration
-                              | method_header method_body'''
+                              | method_header method_body
+                              | default_method_header method_body'''
         if len(p) == 2:
             p[0] = p[1]
         else:
@@ -1554,6 +1555,13 @@ class ClassParser(object):
         p[1]['throws'] = p[5]
         p[0] = p[1]
 
+    def p_default_method_header(self, p):
+        '''default_method_header : default_method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
+        p[1]['parameters'] = p[2]
+        p[1]['extended_dims'] = p[4]
+        p[1]['throws'] = p[5]
+        p[0] = p[1]
+
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
@@ -1561,6 +1569,18 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+
+    def p_default_method_header_name(self, p):
+        '''default_method_header_name : modifiers_with_default type_parameters type NAME '('
+                                      | modifiers_with_default type NAME '(' '''
+        if len(p) == 5:
+            p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
+        else:
+            p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+
+    def p_modifiers_with_default(self, p):
+        '''modifiers_with_default : modifiers_opt DEFAULT modifiers_opt'''
+        p[0] = p[1] + [p[2]] + p[3]
 
     def p_method_header_extended_dims(self, p):
         '''method_header_extended_dims : dims_opt'''
@@ -1625,7 +1645,7 @@ class ClassParser(object):
 
     def p_interface_member_declaration(self, p):
         '''interface_member_declaration : constant_declaration
-                                        | abstract_method_declaration
+                                        | method_declaration
                                         | class_declaration
                                         | interface_declaration
                                         | enum_declaration
