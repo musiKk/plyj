@@ -1,6 +1,7 @@
 #!/usr/bin/env python2
 from plyj.model.classes import WildcardBound, Wildcard
 from plyj.model.modifier import BasicModifier
+from plyj.model.name import Name
 from plyj.model.source_element import collect_tokens
 from plyj.model.type import Type, TypeParameter
 
@@ -96,20 +97,25 @@ class TypeParser(object):
     @staticmethod
     def p_generic_type(p):
         """generic_type : class_or_interface type_arguments"""
-        p[1].type_arguments = p[2]
+        p[1].set_type_arguments(p[2])
         p[0] = p[1]
 
     @staticmethod
     def p_generic_type2(p):
         """generic_type : class_or_interface '<' '>' """
-        p[0] = Type(p[1], type_arguments='diamond')
+        p[1].set_type_arguments('diamond')
+        p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
     def p_array_type(p):
         """array_type : primitive_type dims
                       | name dims"""
-        p[0] = Type(p[1].name, dimensions=p[2])
+        if isinstance(p[1], Type):
+            p[1].set_dimensions(p[2])
+            p[0] = p[1]
+        else:
+            p[0] = Type(p[1], dimensions=p[2])
 
     @staticmethod
     def p_array_type2(p):
@@ -136,7 +142,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -146,7 +153,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -168,7 +176,7 @@ class TypeParser(object):
         if len(p) == 3:
             p[0] = p[1]
         else:
-            p[1].type_arguments = p[3]
+            p[1].set_type_arguments(p[3])
             p[0] = p[1]
         collect_tokens(p)
 
@@ -179,7 +187,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -195,7 +204,7 @@ class TypeParser(object):
         if len(p) == 3:
             p[0] = p[1]
         else:
-            p[1].type_arguments = p[3]
+            p[1].set_type_arguments(p[3])
             p[0] = p[1]
         collect_tokens(p)
 
@@ -206,7 +215,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -320,7 +330,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -360,7 +371,8 @@ class TypeParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod

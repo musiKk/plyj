@@ -4,7 +4,7 @@ from plyj.model.method import FormalParameter
 from plyj.model.modifier import BasicModifier
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, Declaration, Statement, \
-    Modifier
+    Modifier, Expression
 from plyj.model.type import Type, TypeParameter
 
 
@@ -43,7 +43,7 @@ class EnumConstant(SourceElement):
         self._fields = ['name', 'arguments', 'modifiers', 'body']
 
         self._name = Name.ensure(name, True)
-        self._arguments = self._assert_list(arguments, FormalParameter)
+        self._arguments = self._assert_list(arguments, Expression)
         self._modifiers = self._assert_list(modifiers, Modifier,
                                             BasicModifier.ensure_modifier)
-        self._body = self._assert_list(body, Statement)
+        self._body = self._assert_list(body, Declaration)

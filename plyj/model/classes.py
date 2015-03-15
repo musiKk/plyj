@@ -101,7 +101,7 @@ class WildcardBound(SourceElement):
         self._fields = ['type', 'extends', 'super']
 
         self._type = Type.ensure(type_)
-        self._extends = self._assert_list_ensure(extends, Type)
+        self._extends = assert_type(extends, bool)
         self._super = assert_none_or(super_, bool)
 
 

@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 import abc
+from operator import attrgetter
 from ply.lex import LexToken
 
 
@@ -41,6 +42,18 @@ class SourceElement(object):
     def __ne__(self, other):
         return not self == other
 
+    def _assert_body(self, body):
+        from plyj.model.annotation import AnnotationDeclaration
+        from plyj.model.classes import ClassDeclaration
+        from plyj.model.enum import EnumDeclaration
+        from plyj.model.interface import InterfaceDeclaration
+
+        return self._assert_list(body, (Statement,
+                                        ClassDeclaration,
+                                        InterfaceDeclaration,
+                                        AnnotationDeclaration,
+                                        EnumDeclaration))
+
     def _absorb_ase_tokens(self, ase):
         """
         Absorbs all the tokens in the passed AnonymousSE. If it isn't an
@@ -63,32 +76,33 @@ class SourceElement(object):
         """
         Runs various assertions on a list.
         :param list_: The list of objects. If None, [] is assumed instead.
-        :param class_or_type_or_tuple: A tuple of types. If any item in this list
-                                       is not one of these types, an AssertionError
-                                       is raised. This argument is passed directly
-                                       to isinstance
-        :param map_func: If this is not None, every item in the list becomes the
-                         return value of this function when each item is passed to
-                         the function as its first and only argument.
+        :param class_or_type_or_tuple: A tuple of types. If any item in this
+                                       list is not one of these types, an
+                                       TypeError is raised. This argument is
+                                       passed directly to isinstance
+        :param map_func: If this is not None, every item in the list becomes
+                         the return value of this function when each item is
+                         passed to the function as its first and only argument.
         :return: A list of objects that are only of the types in
                  class_or_type_or_tuple. If list_ is None, [] is returned.
         """
-        try:
-            if list_ is None:
-                # Default argument to new list fallback.
-                return []
-            list_ = self._absorb_ase_tokens(list_)
-            if isinstance(list_, class_or_type_or_tuple):
-                # Mistake: Needed a list of X, but got X instead.
-                return [list_]
-            assert isinstance(list_, list)
-            for i in range(len(list_)):
-                if map_func is not None:
-                    list_[i] = map_func(list_[i])
-                assert isinstance(list_[i], class_or_type_or_tuple)
-            return list_
-        except:
-            raise  # Put a breakpoint here ;)
+        if list_ is None:
+            # Default argument to new list fallback.
+            return []
+        list_ = self._absorb_ase_tokens(list_)
+        if isinstance(list_, class_or_type_or_tuple):
+            # Mistake: Needed a list of X, but got X instead.
+            return [list_]
+        if not isinstance(list_, list):
+            raise TypeError("list_ is not a list")
+        for i in range(len(list_)):
+            if map_func is not None:
+                list_[i] = map_func(list_[i])
+            if not isinstance(list_[i], class_or_type_or_tuple):
+                raise TypeError("list_[i] is a {}, not a {} as required."
+                                .format(str(type(list_[i])),
+                                        str(class_or_type_or_tuple)))
+        return list_
 
     def add_tokens_right(self, other):
         assert isinstance(other, SourceElement)
@@ -195,7 +209,15 @@ def collect_tokens(p):
 
 class Statement(SourceElement):
     __metaclass__ = abc.ABCMeta
-    pass
+    label = property(attrgetter("_label"))
+
+    def __init__(self):
+        super(Statement, self).__init__()
+        self._label = None
+
+    def set_label(self, label):
+        from plyj.model.name import Name
+        self._label = Name.ensure(label, True)
 
 
 class Expression(SourceElement):

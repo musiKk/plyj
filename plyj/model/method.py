@@ -35,7 +35,7 @@ class MethodDeclaration(Declaration):
                                                   TypeParameter)
         self._parameters = self._assert_list(parameters, FormalParameter)
         self._return_type = Type.ensure(return_type)
-        self._body = self._assert_list(body, Statement)
+        self._body = self._assert_body(body)
         self._abstract = AnonymousSE.ensure(abstract)
         self._extended_dims = AnonymousSE.ensure(extended_dims)
         self._throws = assert_none_or(throws, Throws)

@@ -16,15 +16,38 @@ class Type(SourceElement):
         super(Type, self).__init__()
         self._fields = ['name', 'type_arguments', 'enclosed_in', 'dimensions']
 
-        type_arguments = self._absorb_ase_tokens(type_arguments)
-
         self._name = Name.ensure(name, False)
-        self._type_arguments = self._assert_list_ensure(type_arguments, Type)
+        self._type_arguments = None
+        self._type_arguments_tokens = []
         self._dimensions = None
         self._enclosed_in = None
 
         self.set_enclosed_in(enclosed_in)
         self.set_dimensions(dimensions)
+        self.set_type_arguments(type_arguments)
+
+    def set_type_arguments(self, type_arguments):
+        # First, remove all tokens from the previous value of type_arguments
+        for x in self._type_arguments_tokens:
+            self.tokens.remove(x)
+        # Collect any new tokens if required
+        if type_arguments is AnonymousSE:
+            self._type_arguments_tokens = type_arguments.tokens
+            self.tokens.extend(self._type_arguments_tokens)
+            type_arguments = type_arguments.value
+        if type_arguments == 'diamond':
+            # "Diamond" is an acceptable value for type arguments. I.E "<>"
+            self._type_arguments = type_arguments
+        else:
+            # Ensure Type on all of the elements in the list, if it is one.
+            if isinstance(type_arguments, list):
+                for i in range(len(type_arguments)):
+                    if isinstance(type_arguments[i], str):
+                        type_arguments[i] = Type.ensure(type_arguments[i])
+
+            from plyj.model.classes import Wildcard
+            self._type_arguments = self._assert_list(type_arguments,
+                                                     (Type, Wildcard))
 
     def set_enclosed_in(self, enclosed_in):
         self._enclosed_in = assert_none_or_ensure(enclosed_in, Type)

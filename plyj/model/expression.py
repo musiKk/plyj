@@ -1,11 +1,10 @@
 #!/usr/bin/env python2
 from operator import attrgetter
 from types import NoneType
-from plyj.model.literal import ClassLiteral
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Declaration
-from plyj.model.type import Type, TypeParameter
+from plyj.model.type import Type
 from plyj.utility import assert_type, assert_none_or
 
 
@@ -20,7 +19,10 @@ class BinaryExpression(Expression):
 
         self._operator = AnonymousSE.ensure(operator)
         self._lhs = assert_type(lhs, Expression)
-        self._rhs = assert_type(rhs, Expression)
+        if self._operator.value == "instanceof":
+            self._rhs = Type.ensure(rhs)
+        else:
+            self._rhs = assert_type(rhs, Expression)
 
 
 class Assignment(BinaryExpression):
@@ -110,7 +112,9 @@ class Cast(Expression):
 
 
 def assert_target(target):
-    if isinstance(target, ClassLiteral):
+    if target is None:
+        return None
+    elif isinstance(target, Expression):
         return target
     else:
         return Name.ensure(target, False)
@@ -128,7 +132,7 @@ class MethodInvocation(Expression):
 
         self._name = Name.ensure(name, True)
         self._arguments = self._assert_list(arguments, Expression)
-        self._type_arguments = self._assert_list(type_arguments, TypeParameter)
+        self._type_arguments = self._assert_list_ensure(type_arguments, Type)
         self._target = assert_target(target)
 
 
@@ -149,7 +153,7 @@ class InstanceCreation(Expression):
         self._type_arguments = self._assert_list_ensure(type_arguments, Type)
         self._arguments = self._assert_list(arguments, Expression)
         self._body = self._assert_list(body, Declaration)
-        self._enclosed_in = assert_none_or(enclosed_in, Type)
+        self._enclosed_in = assert_none_or(enclosed_in, Expression)
 
 
 class FieldAccess(Expression):
@@ -207,4 +211,9 @@ class ArrayInitializer(SourceElement):
         super(ArrayInitializer, self).__init__()
         self._fields = ['elements']
 
-        self._elements = self._assert_list(elements, Expression)
+        # Multi-dimensional arrays force the ArrayInitalizer to also be
+        # accepted
+        from plyj.model.annotation import Annotation
+        self._elements = self._assert_list(elements, (ArrayInitializer,
+                                                      Expression,
+                                                      Annotation))

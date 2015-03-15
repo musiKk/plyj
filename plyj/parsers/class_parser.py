@@ -117,7 +117,7 @@ class ClassParser(object):
     @staticmethod
     def p_class_body_declarations_opt2(p):
         """class_body_declarations_opt : empty"""
-        p[0] = []
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_class_body_declarations(p):
@@ -210,7 +210,7 @@ class ClassParser(object):
     @staticmethod
     def p_formal_parameter_list_opt2(p):
         """formal_parameter_list_opt : empty"""
-        p[0] = []
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_formal_parameter_list(p):
@@ -220,7 +220,8 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -253,7 +254,8 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -317,12 +319,12 @@ class ClassParser(object):
                : modifiers_opt type_parameters type simple_name '('
                | modifiers_opt type simple_name '(' """
         if len(p) == 5:
-            p[0] = AnonymousSE({
+            p[0] = {
                 'modifiers': p[1],
                 'type_parameters': [],
                 'type': p[2],
                 'name': p[3]
-            })
+            }
         else:
             p[0] = {
                 'modifiers': p[1],
@@ -330,6 +332,7 @@ class ClassParser(object):
                 'type': p[3],
                 'name': p[4]
             }
+        collect_tokens(p)
 
     @staticmethod
     def p_method_header_extended_dims(p):
@@ -446,9 +449,11 @@ class ClassParser(object):
     @staticmethod
     def p_enum_header(p):
         """enum_header : enum_header_name class_header_implements_opt"""
-        p[1].value['implements'] = p[2].value['interfaces']
-        p[1].value['tokens'] += p[2].value['tokens']
-        p[1].add_tokens_right(p[2])
+        if p[2] is not None:
+            p[1].value['implements'] = p[2].value
+            p[1].add_tokens_right(p[2])
+        else:
+            p[1].value['implements'] = []
         p[0] = p[1]
 
     @staticmethod
@@ -460,6 +465,7 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': []}
         else:
             p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': p[4]}
+        collect_tokens(p)
 
     @staticmethod
     def p_enum_body(p):
@@ -477,13 +483,20 @@ class ClassParser(object):
     def p_enum_body3(p):
         """enum_body : '{' enum_constants ',' enum_body_declarations_opt '}'
         """
-        p[0] = p[2] + p[4]
+        p[2].value.extend(p[4].value)
+        p[2].add_tokens_right(p[4])
+        p[0] = p[2]
         collect_tokens(p)
 
     @staticmethod
     def p_enum_body4(p):
         """enum_body : '{' enum_constants enum_body_declarations_opt '}' """
-        p[0] = p[2] + p[3]
+        if p[3] is None:
+            p[0] = p[2]
+        else:
+            p[2].value.extend(p[3].value)
+            p[2].add_tokens_right(p[3])
+            p[0] = p[2]
         collect_tokens(p)
 
     @staticmethod
@@ -493,27 +506,30 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
     def p_enum_constant(p):
         """enum_constant : enum_constant_header class_body
                          | enum_constant_header"""
+        p1 = p[1].value
         if len(p) == 2:
-            p[0] = EnumConstant(p[1]['name'],
-                                arguments=p[1]['arguments'],
-                                modifiers=p[1]['modifiers'])
+            p[0] = EnumConstant(p1['name'],
+                                arguments=p1['arguments'],
+                                modifiers=p1['modifiers'])
         else:
-            p[0] = EnumConstant(p[1]['name'],
-                                arguments=p[1]['arguments'],
-                                modifiers=p[1]['modifiers'],
+            p[0] = EnumConstant(p1['name'],
+                                arguments=p1['arguments'],
+                                modifiers=p1['modifiers'],
                                 body=p[2])
+        p[0].add_tokens_left(p[1])
 
     @staticmethod
     def p_enum_constant_header(p):
         """enum_constant_header : enum_constant_header_name arguments_opt"""
-        p[1]['arguments'] = p[2]
+        p[1].value['arguments'] = p[2]
         p[0] = p[1]
 
     @staticmethod
@@ -530,7 +546,7 @@ class ClassParser(object):
     @staticmethod
     def p_arguments_opt2(p):
         """arguments_opt : empty"""
-        p[0] = []
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_arguments(p):
@@ -546,7 +562,7 @@ class ClassParser(object):
     @staticmethod
     def p_argument_list_opt2(p):
         """argument_list_opt : empty"""
-        p[0] = []
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_argument_list(p):
@@ -567,7 +583,7 @@ class ClassParser(object):
     @staticmethod
     def p_enum_body_declarations_opt2(p):
         """enum_body_declarations_opt : empty"""
-        p[0] = []
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_enum_body_declarations(p):
@@ -579,28 +595,33 @@ class ClassParser(object):
     def p_annotation_type_declaration(p):
         """annotation_type_declaration \
                : annotation_type_declaration_header annotation_type_body"""
-        p[0] = AnnotationDeclaration(p[1]['name'],
-                                     modifiers=p[1]['modifiers'],
-                                     type_parameters=p[1]['type_parameters'],
-                                     extends=p[1]['extends'],
-                                     implements=p[1]['implements'],
+        p1 = p[1].value
+        p[0] = AnnotationDeclaration(p1['name'],
+                                     modifiers=p1['modifiers'],
+                                     type_parameters=p1['type_parameters'],
+                                     extends=p1['extends'],
+                                     implements=p1['implements'],
                                      body=p[2])
+        p[0].add_tokens_left(p[1])
 
     @staticmethod
     def p_annotation_type_declaration_header(p):
         """annotation_type_declaration_header \
                : annotation_type_declaration_header_name \
                  class_header_extends_opt class_header_implements_opt"""
-        p[1]['extends'] = p[2]['class']
-        p[1]['implements'] = p[3]['interfaces']
-        p[1]['tokens'] += p[2]['tokens'] + p[3]['tokens']
+        if p[2] is not None:
+            p[1].value['extends'] = p[2]
+        if p[3] is not None:
+            p[1].value['implements'] = p[3].value
+            p[1].add_tokens_right(p[3])
         p[0] = p[1]
 
     @staticmethod
     def p_annotation_type_declaration_header_name(p):
         """annotation_type_declaration_header_name \
                : modifiers '@' INTERFACE simple_name"""
-        p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': []}
+        p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': [],
+                'extends': None, 'implements': None}
         collect_tokens(p)
 
     @staticmethod
@@ -608,21 +629,24 @@ class ClassParser(object):
         """annotation_type_declaration_header_name \
                : modifiers '@' INTERFACE simple_name \
                  type_parameters"""
-        p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': p[5]}
+        p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': p[5],
+                'extends': None, 'implements': None}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name3(p):
         """annotation_type_declaration_header_name \
                : '@' INTERFACE simple_name type_parameters"""
-        p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': p[4]}
+        p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': p[4],
+                'extends': None, 'implements': None}
         collect_tokens(p)
 
     @staticmethod
     def p_annotation_type_declaration_header_name4(p):
         """annotation_type_declaration_header_name \
                : '@' INTERFACE simple_name"""
-        p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': []}
+        p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': [],
+                'extends': None, 'implements': None}
         collect_tokens(p)
 
     @staticmethod
@@ -670,9 +694,11 @@ class ClassParser(object):
                  method_header_extended_dims \
                  annotation_method_header_default_value_opt"""
         p[0] = AnnotationMethodDeclaration(
-            p[1]['name'], p[1]['type'], parameters=p[2], default=p[5],
-            extended_dims=p[4], type_parameters=p[1]['type_parameters'],
-            modifiers=p[1]['modifiers'])
+            p[1].value['name'], p[1].value['type'], parameters=p[2],
+            default=p[5], extended_dims=p[4],
+            type_parameters=p[1].value['type_parameters'],
+            modifiers=p[1].value['modifiers'])
+        p[0].add_tokens_right(p[1])
         collect_tokens(p)
 
     @staticmethod
@@ -727,7 +753,8 @@ class ClassParser(object):
     def p_member_value_array_initializer2(p):
         """member_value_array_initializer : '{' ',' '}'
                                           | '{' '}' """
-        # ignore
+        p[0] = ArrayInitializer()
+        collect_tokens(p)
 
     @staticmethod
     def p_member_values(p):
@@ -736,7 +763,8 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -767,7 +795,7 @@ class ClassParser(object):
     @staticmethod
     def p_member_value_pairs_opt2(p):
         """member_value_pairs_opt : empty"""
-        p[0] = []
+        p[0] = AnonymousSE([])
 
     @staticmethod
     def p_member_value_pairs(p):
@@ -776,7 +804,8 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod

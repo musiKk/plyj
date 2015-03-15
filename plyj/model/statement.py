@@ -20,7 +20,7 @@ class Block(Statement):
         super(Statement, self).__init__()
         self._fields = ['statements']
 
-        self._statements = self._assert_list(statements, Statement)
+        self._statements = self._assert_body(statements)
 
     def __iter__(self):
         for s in self._statements:
@@ -45,7 +45,7 @@ class VariableDeclaration(Declaration):
                                             BasicModifier.ensure_modifier)
 
 
-class VariableDeclarationStatement(Statement, VariableDeclaration):
+class VariableDeclarationStatement(VariableDeclaration, Statement):
     pass
 
 
@@ -154,7 +154,7 @@ class SwitchCase(SourceElement):
                 break
 
         self._cases = self._assert_list(cases, Expression)
-        self._body = self._assert_list(body, Statement)
+        self._body = self._assert_body(body)
         self._default = default
 
 

@@ -416,7 +416,10 @@ class ExpressionParser(object):
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS"""
         if len(p) == 4:
-            p[0] = ClassLiteral(Type(p[1]))
+            if isinstance(p[1], Type):
+                p[0] = ClassLiteral(p[1])  # primitive_type
+            else:
+                p[0] = ClassLiteral(Type(p[1]))
         else:
             if isinstance(p[1], Type):
                 p[1] = p[1].name

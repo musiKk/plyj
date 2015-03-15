@@ -30,7 +30,7 @@ class Name(Expression):
         if isinstance(se, str):
             return Name(se)
         if not isinstance(se, Name):
-            assert False
+            raise TypeError("Required Name, got \"{}\"".format(str(type(se))))
         if simple and not se.simple:
-            assert se.simple
+            raise TypeError("Required simple Name, got complex Name")
         return se

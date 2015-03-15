@@ -23,11 +23,9 @@ def assert_none_or(x, class_or_type_or_tuple):
     :param class_or_type_or_tuple: Second argument to isinstance
     :return: x
     """
-    try:
-        assert x is None or isinstance(x, class_or_type_or_tuple)
+    if x is None:
         return x
-    except:
-        raise  # Put a breakpoint here ;)
+    return assert_type(x, class_or_type_or_tuple)
 
 
 def assert_type(x, class_or_type_or_tuple):
@@ -39,7 +37,10 @@ def assert_type(x, class_or_type_or_tuple):
     :return: x
     """
     try:
-        assert isinstance(x, class_or_type_or_tuple)
+        if not isinstance(x, class_or_type_or_tuple):
+                raise TypeError("x is a {}, not a {} as required."
+                                .format(str(type(x)),
+                                        str(class_or_type_or_tuple)))
         return x
     except:
         raise  # Put a breakpoint here ;)

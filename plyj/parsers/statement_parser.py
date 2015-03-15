@@ -154,19 +154,22 @@ class StatementParser(object):
     def p_comma_opt(p):
         """comma_opt : ','
                      | empty"""
-        # ignore
+        p[0] = AnonymousSE(None)
+        collect_tokens(p)
 
     @staticmethod
     def p_array_initializer(p):
         """array_initializer : '{' comma_opt '}' """
         p[0] = ArrayInitializer()
+        p[0].add_tokens_right(p[2])
         collect_tokens(p)
 
     @staticmethod
     def p_array_initializer2(p):
         """array_initializer : '{' variable_initializers '}'
                              | '{' variable_initializers ',' '}' """
-        p[0] = p[2]
+        p[0] = ArrayInitializer(p[2].value)
+        p[0].add_tokens_right(p[2])
         collect_tokens(p)
 
     @staticmethod
@@ -175,9 +178,9 @@ class StatementParser(object):
                : variable_initializer
                | variable_initializers ',' variable_initializer"""
         if len(p) == 2:
-            p[0] = ArrayInitializer([p[1]])
+            p[0] = [p[1]]
         else:
-            p[1].elements.append(p[3])
+            p[1].value.append(p[3])
             p[0] = p[1]
         collect_tokens(p)
 
@@ -213,14 +216,14 @@ class StatementParser(object):
     @staticmethod
     def p_labeled_statement(p):
         """labeled_statement : label ':' statement"""
-        p[3].label = p[1]
+        p[3].set_label(p[1])
         p[0] = p[3]
         collect_tokens(p)
 
     @staticmethod
     def p_labeled_statement_no_short_if(p):
         """labeled_statement_no_short_if : label ':' statement_no_short_if"""
-        p[3].label = p[1]
+        p[3].set_label(p[1])
         p[0] = p[3]
         collect_tokens(p)
 
@@ -333,8 +336,10 @@ class StatementParser(object):
     def p_enhanced_for_statement_no_short_if(p):
         """enhanced_for_statement_no_short_if \
                : enhanced_for_statement_header statement_no_short_if"""
-        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2],
-                       modifiers=p[1]['modifiers'])
+        p1 = p[1].value
+        p[0] = ForEach(p1['type'], p1['variable'], p1['iterable'], p[2],
+                       modifiers=p1['modifiers'])
+        p[0].add_tokens_left(p[0])
 
     @staticmethod
     def p_enhanced_for_statement_header(p):
@@ -583,27 +588,26 @@ class StatementParser(object):
     def p_resource_specification(p):
         """resource_specification : '(' resources semi_opt ')' """
         p[0] = p[2]
+        p[2].add_tokens_right(p[3])
         collect_tokens(p)
 
     @staticmethod
     def p_semi_opt(p):
         """semi_opt : ';'
                     | empty"""
-        # ignore
+        p[0] = AnonymousSE(None)
+        collect_tokens(p)
 
     @staticmethod
     def p_resources(p):
         """resources : resource
-                     | resources trailing_semicolon resource"""
+                     | resources ';' resource"""
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
-
-    @staticmethod
-    def p_trailing_semicolon(p):
-        """trailing_semicolon : ';' """
-        # ignore
+            p[1].value.append(p[3])
+            p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_resource(p):

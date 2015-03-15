@@ -109,6 +109,7 @@ class ExpressionTest(unittest.TestCase):
         self.parser = Parser()
 
     def test_expressions(self):
+        print 'apple'
         for expr, result in expression_tests:
             t = self.parser.parse_expression(expr)
             message = 'for {} got: {}, expected: {}'.format(expr, t, result)
