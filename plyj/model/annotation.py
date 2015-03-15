@@ -7,7 +7,8 @@ from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Modifier, Declaration
 from plyj.model.type import Type, TypeParameter
-from plyj.utility import assert_none_or, assert_type
+from plyj.utility import assert_none_or, assert_type, serialize_type_parameters, serialize_extends, serialize_implements, \
+    serialize_body
 
 
 class Annotation(Modifier):
@@ -60,6 +61,17 @@ class AnnotationMethodDeclaration(Declaration):
         method_header_extended_dims
         annotation_method_header_default_value_opt
         """
+        type_parameters = serialize_type_parameters(self.type_parameters)
+        dimensions = "[]" * self.extended_dims.value
+        default = "" if self.default is None else " default " + self.default.serialize()
+        return "{} {} {}{}({}){}{};".format(
+            " ".join([x.value for x in self.modifiers]),
+            self.type.serialize(),
+            self.name.serialize(),
+            type_parameters,
+            ", ".join([x.serialize() for x in self.parameters]),
+            dimensions,
+            default)
 
     def __init__(self, name, return_type, parameters=None, default=None,
                  modifiers=None, type_parameters=None, extended_dims=0):
@@ -76,11 +88,15 @@ class AnnotationMethodDeclaration(Declaration):
         self._type_parameters = self._assert_list(type_parameters,
                                                   TypeParameter)
         self._extended_dims = AnonymousSE.ensure(extended_dims)
+        assert_type(self._extended_dims.value, int)
 
 
 class AnnotationMember(SourceElement):
     name = property(attrgetter("_name"))
     value = property(attrgetter("_value"))
+
+    def serialize(self):
+        return self.name.serialize() + "=" + self.value.serialize()
 
     def __init__(self, name, value):
         super(AnnotationMember, self).__init__()
@@ -97,6 +113,16 @@ class AnnotationDeclaration(Declaration):
     extends = property(attrgetter("_extends"))
     implements = property(attrgetter("_implements"))
     body = property(attrgetter("_body"))
+
+    def serialize(self):
+        return "{}@interface {}{}{}{}{}".format(
+            "".join([x.serialize() + " " for x in self.modifiers]),
+            self.name.serialize(),
+            serialize_type_parameters(self.type_parameters),
+            serialize_extends(self.extends),
+            serialize_implements(self.implements),
+            serialize_body(self.body)
+        )
 
     def __init__(self, name, modifiers=None, type_parameters=None,
                  extends=None, implements=None, body=None):
