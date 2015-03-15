@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from plyj.model.classes import WildcardBound, Wildcard
+from plyj.model.modifier import BasicModifier
 from plyj.model.source_element import collect_tokens
 from plyj.model.type import Type, TypeParameter
 
@@ -37,7 +38,7 @@ class TypeParser(object):
                     | TRANSIENT
                     | VOLATILE
                     | STRICTFP"""
-        p[0] = p[1]
+        p[0] = BasicModifier(p[1])
         collect_tokens(p)
 
     @staticmethod
@@ -237,7 +238,7 @@ class TypeParser(object):
         if p[1] == 'extends':
             p[0] = WildcardBound(p[2], extends=True)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], super_=True)
         collect_tokens(p)
 
     @staticmethod
@@ -257,7 +258,7 @@ class TypeParser(object):
         if p[1] == 'extends':
             p[0] = WildcardBound(p[2], extends=True)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], super_=True)
         collect_tokens(p)
 
     @staticmethod
@@ -277,7 +278,7 @@ class TypeParser(object):
         if p[1] == 'extends':
             p[0] = WildcardBound(p[2], extends=True)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], super_=True)
         collect_tokens(p)
 
     @staticmethod
@@ -297,7 +298,7 @@ class TypeParser(object):
         if p[1] == 'extends':
             p[0] = WildcardBound(p[2], extends=True)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], super_=True)
         collect_tokens(p)
 
     @staticmethod

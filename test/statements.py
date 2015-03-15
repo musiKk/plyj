@@ -1,6 +1,7 @@
 import unittest
 
 from plyj.model.expression import *
+from plyj.model.literal import Literal
 from plyj.model.statement import *
 from plyj.model.type import Type
 from plyj.model.variable import Variable, VariableDeclarator
@@ -108,10 +109,10 @@ class StatementTest(unittest.TestCase):
         c2 = Catch(Variable('e'), types=[Type(Name('Exception1')), Type(
             Name('Exception2'))], block=r3)
         res1 = Resource(Variable('r'),
-                        resource_type=Type(Name('Resource')),
+                        type_=Type(Name('Resource')),
                         initializer=Name('foo'))
         res2 = Resource(Variable('r2'),
-                        resource_type=Type(Name('Resource2')),
+                        type_=Type(Name('Resource2')),
                         initializer=Name('bar'))
 
         # Try
@@ -131,24 +132,24 @@ class StatementTest(unittest.TestCase):
 
         self.assert_statements({
             t + c:            Try(r1, catches=[c1]),
-            t + c + f:        Try(r1, catches=[c1], _finally=r3),
-            t + f:            Try(r1, _finally=r3),
+            t + c + f:        Try(r1, catches=[c1], finally_=r3),
+            t + f:            Try(r1, finally_=r3),
             t + dc:           Try(r1, catches=[c2]),
             t + c + dc:       Try(r1, catches=[c1, c2]),
-            t + c + dc + f:   Try(r1, catches=[c1, c2], _finally=r3),
+            t + c + dc + f:   Try(r1, catches=[c1, c2], finally_=r3),
             twr:              Try(r1, resources=[res1]),
             tw2r:             Try(r1, resources=[res1, res2]),
             tw2rb:            Try(r1, resources=[res1, res2]),
             twr + c:          Try(r1, resources=[res1], catches=[c1]),
             twr + dc:         Try(r1, resources=[res1], catches=[c2]),
-            twr + f:          Try(r1, resources=[res1], _finally=r3),
+            twr + f:          Try(r1, resources=[res1], finally_=r3),
             twr + c + dc:     Try(r1, resources=[res1], catches=[c1, c2]),
 
             twr + c + f:      Try(r1, resources=[res1], catches=[c1],
-                                  _finally=r3),
+                                  finally_=r3),
 
             twr + c + dc + f: Try(r1, resources=[res1], catches=[c1, c2],
-                                  _finally=r3),
+                                  finally_=r3),
         })
 
     def test_constructor_invocation(self):
@@ -215,17 +216,17 @@ class StatementTest(unittest.TestCase):
         self.assert_statement('int i;', VariableDeclarationStatement('int', ida))
         self.assert_statement('int i, j;', VariableDeclarationStatement('int', ijda))
 
-        var_i_declarator.initializer = one
+        var_i_declarator.set_initializer(one)
         self.assert_statement('int i = 1;', VariableDeclarationStatement('int', ida))
         self.assert_statement('int i = 1, j;',
                               VariableDeclarationStatement('int', ijda))
 
-        var_j_declarator.initializer = i
+        var_j_declarator.set_initializer(i)
         self.assert_statement('int i = 1, j = i;',
                               VariableDeclarationStatement('int', ijda))
 
         int_ar = Type('int', dimensions=1)
-        var_i_declarator.initializer = None
+        var_i_declarator.set_initializer(None)
         self.assert_statement('int[] i;', VariableDeclarationStatement(int_ar, ida))
 
     def test_array(self):
@@ -235,17 +236,17 @@ class StatementTest(unittest.TestCase):
         int_ar = Type('int', dimensions=1)
 
         arr_init = ArrayInitializer([one, three])
-        var_i_declarator.initializer = arr_init
+        var_i_declarator.set_initializer(arr_init)
         self.assert_statement('int[] i = {1, 3};',
                               VariableDeclarationStatement(int_ar, [var_i_declarator]))
 
         arr_creation = ArrayCreation('int', dimensions=[None],
                                      initializer=arr_init)
-        var_i_declarator.initializer = arr_creation
+        var_i_declarator.set_initializer(arr_creation)
         self.assert_statement('int[] i = new int[] {1, 3};',
                               VariableDeclarationStatement(int_ar, [var_i_declarator]))
 
-        arr_creation.dimensions = [two]
+        arr_creation.set_dimensions([two])
         self.assert_statement('int[] i = new int[2] {1, 3};',
                               VariableDeclarationStatement(int_ar, [var_i_declarator]))
 

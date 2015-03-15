@@ -1,40 +1,30 @@
 #!/usr/bin/env python2
-from plyj.model.literal import Literal, ClassLiteral
+from operator import attrgetter
+from types import NoneType
+from plyj.model.literal import ClassLiteral
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
-    Statement
-from plyj.model.statement import VariableDeclarationStatement
+    Declaration
 from plyj.model.type import Type, TypeParameter
+from plyj.utility import assert_type, assert_none_or
 
 
 class BinaryExpression(Expression):
+    operator = property(attrgetter("_operator"))
+    lhs = property(attrgetter("_lhs"))
+    rhs = property(attrgetter("_rhs"))
+
     def __init__(self, operator, lhs, rhs):
         super(BinaryExpression, self).__init__()
         self._fields = ['operator', 'lhs', 'rhs']
 
-        operator = AnonymousSE.ensure(operator)
-        assert isinstance(lhs, SourceElement)
-        assert isinstance(rhs, SourceElement)
-
-        self.operator = operator
-        self.lhs = lhs
-        self.rhs = rhs
+        self._operator = AnonymousSE.ensure(operator)
+        self._lhs = assert_type(lhs, Expression)
+        self._rhs = assert_type(rhs, Expression)
 
 
 class Assignment(BinaryExpression):
     pass
-
-
-class Conditional(Expression):
-    def __init__(self, predicate, if_true, if_false):
-        super(self.__class__, self).__init__()
-        self._fields = ['predicate', 'if_true', 'if_false']
-        assert isinstance(predicate, SourceElement)
-        assert isinstance(if_true, SourceElement)
-        assert isinstance(if_false, SourceElement)
-        self.predicate = predicate
-        self.if_true = if_true
-        self.if_false = if_false
 
 
 class ConditionalOr(BinaryExpression):
@@ -81,140 +71,140 @@ class Multiplicative(BinaryExpression):
     pass
 
 
+class Conditional(Expression):
+    predicate = property(attrgetter("_predicate"))
+    if_true = property(attrgetter("_if_true"))
+    if_false = property(attrgetter("_if_false"))
+
+    def __init__(self, predicate, if_true, if_false):
+        super(self.__class__, self).__init__()
+        self._fields = ['predicate', 'if_true', 'if_false']
+
+        self._predicate = assert_type(predicate, Expression)
+        self._if_true = assert_type(if_true, Expression)
+        self._if_false = assert_type(if_false, Expression)
+
+
 class Unary(Expression):
+    sign = property(attrgetter("_sign"))
+    expression = property(attrgetter("_expression"))
+
     def __init__(self, sign, expression):
         super(Unary, self).__init__()
         self._fields = ['sign', 'expression']
-        sign = AnonymousSE.ensure(sign)
-        assert isinstance(expression, (Expression, Name))
-        self.sign = sign
-        self.expression = expression
+
+        self._sign = AnonymousSE.ensure(sign)
+        self._expression = assert_type(expression, Expression)
 
 
 class Cast(Expression):
+    target = property(attrgetter("_target"))
+    expression = property(attrgetter("_expression"))
+
     def __init__(self, target, expression):
         super(Cast, self).__init__()
         self._fields = ['target', 'expression']
-        target = AnonymousSE.ensure(target)
-        assert isinstance(expression, (Expression, Name))
-        self.target = target
-        self.expression = expression
+
+        self._target = Type.ensure(target)
+        self._expression = assert_type(expression, Expression)
+
+
+def assert_target(target):
+    if isinstance(target, ClassLiteral):
+        return target
+    else:
+        return Name.ensure(target, False)
 
 
 class MethodInvocation(Expression):
+    name = property(attrgetter("_name"))
+    arguments = property(attrgetter("_arguments"))
+    type_arguments = property(attrgetter("_type_arguments"))
+    target = property(attrgetter("_target"))
+
     def __init__(self, name, arguments=None, type_arguments=None, target=None):
         super(MethodInvocation, self).__init__()
         self._fields = ['name', 'arguments', 'type_arguments', 'target']
-        if arguments is None:
-            arguments = []
-        if type_arguments is None:
-            type_arguments = []
 
-        name = Name.ensure(name, True)
-        if not isinstance(target, ClassLiteral):
-            target = Name.ensure(target, False)
-        assert isinstance(arguments, list)
-        assert isinstance(type_arguments, list)
-
-        self.name = name
-        self.arguments = arguments
-        self.type_arguments = type_arguments
-        self.target = target
+        self._name = Name.ensure(name, True)
+        self._arguments = self._assert_list(arguments, Expression)
+        self._type_arguments = self._assert_list(type_arguments, TypeParameter)
+        self._target = assert_target(target)
 
 
 class InstanceCreation(Expression):
+    instance_type = property(attrgetter("_instance_type"))
+    type_arguments = property(attrgetter("_type_arguments"))
+    arguments = property(attrgetter("_arguments"))
+    body = property(attrgetter("_body"))
+    enclosed_in = property(attrgetter("_enclosed_in"))
 
     def __init__(self, instance_type, type_arguments=None, arguments=None,
                  body=None, enclosed_in=None):
         super(InstanceCreation, self).__init__()
-        self._fields = [
-            'type', 'type_arguments', 'arguments', 'body', 'enclosed_in']
-        if type_arguments is None:
-            type_arguments = []
-        if arguments is None:
-            arguments = []
-        if body is None:
-            body = []
+        self._fields = ['type', 'type_arguments', 'arguments', 'body',
+                        'enclosed_in']
 
-        instance_type = AnonymousSE.ensure(instance_type)
-        enclosed_in = AnonymousSE.ensure(enclosed_in)
-
-        assert isinstance(instance_type, (Type, AnonymousSE))
-        assert isinstance(arguments, list)
-        assert isinstance(type_arguments, list)
-        assert isinstance(body, list)
-        assert isinstance(enclosed_in, (Name, AnonymousSE))
-
-        for x in arguments:
-            assert isinstance(x, VariableDeclarationStatement)
-        for x in type_arguments:
-            assert isinstance(x, TypeParameter)
-        for x in body:
-            assert isinstance(x, Statement)
-
-        self.type = instance_type
-        self.type_arguments = type_arguments
-        self.arguments = arguments
-        self.body = body
-        self.enclosed_in = enclosed_in
+        self._instance_type = Type.ensure(instance_type)
+        self._type_arguments = self._assert_list_ensure(type_arguments, Type)
+        self._arguments = self._assert_list(arguments, Expression)
+        self._body = self._assert_list(body, Declaration)
+        self._enclosed_in = assert_none_or(enclosed_in, Type)
 
 
 class FieldAccess(Expression):
+    name = property(attrgetter("_name"))
+    target = property(attrgetter("_target"))
+
     def __init__(self, name, target):
         super(FieldAccess, self).__init__()
-
-        name = Name.ensure(name, False)
-        target = Name.ensure(target, True)
-
         self._fields = ['name', 'target']
-        self.name = name
-        self.target = target
+
+        self._name = Name.ensure(name, True)
+        self._target = assert_target(target)
 
 
 class ArrayAccess(Expression):
+    index = property(attrgetter("_index"))
+    target = property(attrgetter("_target"))
+
     def __init__(self, index, target):
         super(ArrayAccess, self).__init__()
         self._fields = ['index', 'target']
 
-        index = AnonymousSE.ensure(index)
-        target = Name.ensure(target, False)
-
-        self.index = index
-        self.target = target
+        self._name = assert_type(index, Expression)
+        self._target = assert_target(target)
 
 
 class ArrayCreation(Expression):
-    def __init__(self, array_type, dimensions=None, initializer=None):
+    type = property(attrgetter("_type"))
+    dimensions = property(attrgetter("_dimensions"))
+    initializer = property(attrgetter("_initializer"))
+
+    def __init__(self, type_, dimensions=None, initializer=None):
         super(ArrayCreation, self).__init__()
         self._fields = ['type', 'dimensions', 'initializer']
 
-        if dimensions is None:
-            dimensions = []
+        if isinstance(dimensions, list):
+            for i, d in enumerate(dimensions):
+                dimensions[i] = self._absorb_ase_tokens(d)
 
-        array_type = AnonymousSE.ensure(array_type)
+        self._type = Type.ensure(type_)
+        self._dimensions = None
+        self._initializer = assert_none_or(initializer, ArrayInitializer)
 
-        assert isinstance(array_type, (Type, AnonymousSE))
-        assert isinstance(dimensions, list)
-        assert isinstance(initializer, ArrayInitializer)
+        self.set_dimensions(dimensions)
 
-        for i in range(len(dimensions)):
-            dimensions[i] = AnonymousSE.ensure(dimensions[i])
-
-        self.type = array_type
-        self.dimensions = dimensions
-        self.initializer = initializer
+    def set_dimensions(self, dimensions):
+        self._dimensions = self._assert_list(dimensions,
+                                             (NoneType, Expression))
 
 
 class ArrayInitializer(SourceElement):
+    elements = property(attrgetter("_elements"))
+
     def __init__(self, elements=None):
         super(ArrayInitializer, self).__init__()
         self._fields = ['elements']
-        if elements is None:
-            elements = []
 
-        assert isinstance(elements, list)
-
-        for e in elements:
-            assert isinstance(e, (Literal, Expression, AnonymousSE))
-
-        self.elements = elements
+        self._elements = self._assert_list(elements, Expression)

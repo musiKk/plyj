@@ -2,6 +2,7 @@
 from operator import attrgetter
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE
+from plyj.utility import assert_none_or_ensure
 
 
 class Type(SourceElement):
@@ -15,20 +16,10 @@ class Type(SourceElement):
         super(Type, self).__init__()
         self._fields = ['name', 'type_arguments', 'enclosed_in', 'dimensions']
 
-        if type_arguments is None:
-            type_arguments = []
-
         type_arguments = self._absorb_ase_tokens(type_arguments)
-        name = Name.ensure(name, False)
 
-        # Primitive types (int, byte, etc.) are strings, not names.
-        assert isinstance(type_arguments, list)
-
-        for x in type_arguments:
-            assert isinstance(x, Type)
-
-        self._name = name
-        self._type_arguments = type_arguments
+        self._name = Name.ensure(name, False)
+        self._type_arguments = self._assert_list_ensure(type_arguments, Type)
         self._dimensions = None
         self._enclosed_in = None
 
@@ -36,13 +27,10 @@ class Type(SourceElement):
         self.set_dimensions(dimensions)
 
     def set_enclosed_in(self, enclosed_in):
-        assert enclosed_in is None or isinstance(enclosed_in, Type)
-        self._enclosed_in = enclosed_in
+        self._enclosed_in = assert_none_or_ensure(enclosed_in, Type)
 
     def set_dimensions(self, dimensions):
-        dimensions = AnonymousSE.ensure(dimensions)
-        assert isinstance(dimensions, AnonymousSE)
-        self._dimensions = dimensions
+        self._dimensions = AnonymousSE.ensure(dimensions)
 
     @staticmethod
     def ensure(type_name):
@@ -65,15 +53,12 @@ class TypeParameter(SourceElement):
     """
     Represents a type parameter in the definition of a class.
     """
+    name = property(attrgetter("_name"))
+    extends = property(attrgetter("_extends"))
 
     def __init__(self, name, extends=None):
         super(TypeParameter, self).__init__()
         self._fields = ['name', 'extends']
-        if extends is None:
-            extends = []
 
-        name = Name.ensure(name, True)
-        assert isinstance(extends, list)
-
-        self.name = name
-        self.extends = extends
+        self._name = Name.ensure(name, True)
+        self._extends = self._assert_list_ensure(extends, Type)

@@ -7,7 +7,6 @@ from plyj.model.classes import EmptyDeclaration, \
 from plyj.model.enum import EnumConstant, EnumDeclaration
 from plyj.model.interface import InterfaceDeclaration
 from plyj.model.method import MethodDeclaration, Throws, FormalParameter
-from plyj.model.name import Name
 from plyj.model.source_element import collect_tokens, AnonymousSE
 from plyj.model.expression import ArrayInitializer
 
@@ -183,8 +182,8 @@ class ClassParser(object):
         """constructor_header \
                : constructor_header_name formal_parameter_list_opt ')' \
                  method_header_throws_clause_opt"""
-        p[1].parameters = p[2]
-        p[1].throws = p[4]
+        p[1].set_parameters(p[2])
+        p[1].set_throws(p[4])
         p[0] = p[1]
         collect_tokens(p)
 
@@ -275,26 +274,29 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = MethodDeclaration(p[1]['name'],
-                                     parameters=p[1]['parameters'],
-                                     extended_dims=p[1]['extended_dims'],
-                                     type_parameters=p[1]['type_parameters'],
-                                     return_type=p[1]['type'],
-                                     modifiers=p[1]['modifiers'],
-                                     throws=p[1]['throws'],
+            p1 = p[1].value
+            p[0] = MethodDeclaration(p1['name'],
+                                     parameters=p1['parameters'],
+                                     extended_dims=p1['extended_dims'],
+                                     type_parameters=p1['type_parameters'],
+                                     return_type=p1['type'],
+                                     modifiers=p1['modifiers'],
+                                     throws=p1['throws'],
                                      body=p[2])
+            p[0].add_tokens_left(p[1])
 
     @staticmethod
     def p_abstract_method_declaration(p):
         """abstract_method_declaration : method_header ';' """
-        p[0] = MethodDeclaration(p[1].value['name'],
+        p1 = p[1].value
+        p[0] = MethodDeclaration(p1['name'],
                                  abstract=True,
-                                 parameters=p[1].value['parameters'],
-                                 extended_dims=p[1].value['extended_dims'],
-                                 type_parameters=p[1].value['type_parameters'],
-                                 return_type=p[1].value['type'],
-                                 modifiers=p[1].value['modifiers'],
-                                 throws=p[1].value['throws'])
+                                 parameters=p1['parameters'],
+                                 extended_dims=p1['extended_dims'],
+                                 type_parameters=p1['type_parameters'],
+                                 return_type=p1['type'],
+                                 modifiers=p1['modifiers'],
+                                 throws=p1['throws'])
         p[0].add_tokens_left(p[1])
         collect_tokens(p)
 
@@ -553,7 +555,8 @@ class ClassParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod

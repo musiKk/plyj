@@ -1,15 +1,12 @@
 #!/usr/bin/env python2
-from plyj.model.literal import Literal
+from operator import attrgetter
+from plyj.model.modifier import BasicModifier
 from plyj.model.name import Name
-from plyj.model.source_element import SourceElement, AnonymousSE, Statement, \
-    Expression
-from plyj.model.type import Type, TypeParameter
-
-
-def _assert_ensure_ase(modifiers):
-    for i in range(len(modifiers)):
-        modifiers[i] = AnonymousSE.ensure(modifiers[i])
-        assert isinstance(modifiers[i], AnonymousSE)
+from plyj.model.source_element import SourceElement, Statement, Expression, \
+    Modifier, AnonymousSE, Declaration
+from plyj.model.type import Type
+from plyj.model.variable import VariableDeclarator, Variable
+from plyj.utility import assert_type, assert_none_or, assert_none_or_ensure
 
 
 class Empty(Statement):
@@ -17,40 +14,35 @@ class Empty(Statement):
 
 
 class Block(Statement):
+    statements = property(attrgetter("_statements"))
+
     def __init__(self, statements=None):
         super(Statement, self).__init__()
         self._fields = ['statements']
-        if statements is None:
-            statements = []
 
-        assert isinstance(statements, list)
-        for x in statements:
-            assert isinstance(x, Statement)
-
-        self.statements = statements
+        self._statements = self._assert_list(statements, Statement)
 
     def __iter__(self):
-        for s in self.statements:
+        for s in self._statements:
             yield s
 
 
-class VariableDeclaration(SourceElement):
-    def __init__(self, field_type, variable_declarators,
-                 modifiers=None):
+class VariableDeclaration(Declaration):
+    type = property(attrgetter("_type"))
+    variable_declarators = property(attrgetter("_variable_declarators"))
+    modifiers = property(attrgetter("_modifiers"))
+
+    def __init__(self, type_, variable_declarators, modifiers=None):
         super(VariableDeclaration, self).__init__()
         self._fields = ['type', 'variable_declarators', 'modifiers']
-        if modifiers is None:
-            modifiers = []
 
-        variable_declarators = AnonymousSE.ensure(variable_declarators)
+        variable_declarators = self._absorb_ase_tokens(variable_declarators)
 
-        assert isinstance(field_type, Type)
-        assert isinstance(modifiers, list)
-        assert isinstance(variable_declarators, AnonymousSE)
-
-        self.type = field_type
-        self.variable_declarators = variable_declarators
-        self.modifiers = modifiers
+        self._type = Type.ensure(type_)
+        self._variable_declarators = self._assert_list(variable_declarators,
+                                                       VariableDeclarator)
+        self._modifiers = self._assert_list(modifiers, Modifier,
+                                            BasicModifier.ensure_modifier)
 
 
 class VariableDeclarationStatement(Statement, VariableDeclaration):
@@ -58,201 +50,192 @@ class VariableDeclarationStatement(Statement, VariableDeclaration):
 
 
 class IfThenElse(Statement):
+    predicate = property(attrgetter("_predicate"))
+    if_true = property(attrgetter("_if_true"))
+    if_false = property(attrgetter("_if_false"))
+
     def __init__(self, predicate, if_true=None, if_false=None):
         super(IfThenElse, self).__init__()
         self._fields = ['predicate', 'if_true', 'if_false']
 
-        assert isinstance(predicate, Expression)
-        assert isinstance(if_true, Statement)
-        assert if_false is None or isinstance(if_false, Statement)
-
-        self.predicate = predicate
-        self.if_true = if_true
-        self.if_false = if_false
+        self._predicate = assert_type(predicate, Expression)
+        self._if_true = assert_none_or(if_true, Statement)
+        self._if_false = assert_none_or(if_false, Statement)
 
 
 class While(Statement):
+    predicate = property(attrgetter("_predicate"))
+    body = property(attrgetter("_body"))
+
     def __init__(self, predicate, body=None):
         super(While, self).__init__()
         self._fields = ['predicate', 'body']
 
-        assert isinstance(predicate, Expression)
-        assert isinstance(body, Statement)
-
-        self.predicate = predicate
-        self.body = body
+        self._predicate = assert_type(predicate, Expression)
+        self._body = assert_none_or(body, Statement)
 
 
 class For(Statement):
+    init = property(attrgetter("_init"))
+    predicate = property(attrgetter("_predicate"))
+    update = property(attrgetter("_update"))
+    body = property(attrgetter("_body"))
+
     def __init__(self, init, predicate, update, body):
         super(For, self).__init__()
         self._fields = ['init', 'predicate', 'update', 'body']
 
-        assert isinstance(init, Expression)
-        assert isinstance(update, Expression)
-        assert isinstance(predicate, Expression)
-        assert isinstance(body, Statement)
-
-        self.init = init
-        self.predicate = predicate
-        self.update = update
-        self.body = body
+        self._init = self._assert_list(init, (Expression,
+                                              VariableDeclarationStatement))
+        self._predicate = assert_none_or(predicate, Expression)
+        self._update = self._assert_list(update, Expression)
+        self._body = assert_type(body, Statement)
 
 
 class ForEach(Statement):
-    def __init__(self, foreach_type, variable, iterable, body, modifiers=None):
+    type = property(attrgetter("_type"))
+    variable = property(attrgetter("_variable"))
+    iterable = property(attrgetter("_iterable"))
+    body = property(attrgetter("_body"))
+    modifiers = property(attrgetter("_modifiers"))
+
+    def __init__(self, type_, variable, iterable, body, modifiers=None):
         super(ForEach, self).__init__()
         self._fields = ['type', 'variable', 'iterable', 'body', 'modifiers']
 
-        if modifiers is None:
-            modifiers = []
-
-        foreach_type = AnonymousSE.ensure(foreach_type)
-
-        assert isinstance(foreach_type, (Type, AnonymousSE))
-        assert isinstance(variable, VariableDeclarationStatement)
-        assert isinstance(iterable, Expression)
-        assert isinstance(body, Statement)
-        assert isinstance(modifiers, list)
-        _assert_ensure_ase(modifiers)
-
-        self.type = foreach_type
-        self.variable = variable
-        self.iterable = iterable
-        self.body = body
-        self.modifiers = modifiers
+        self._type = Type.ensure(type_)
+        self._variable = assert_type(variable, Variable)
+        self._iterable = assert_type(iterable, Expression)
+        self._body = assert_type(body, Statement)
+        self._modifiers = self._assert_list(modifiers, Modifier,
+                                            BasicModifier.ensure_modifier)
 
 
 class Assert(Statement):
+    predicate = property(attrgetter("_predicate"))
+    message = property(attrgetter("_message"))
+
     def __init__(self, predicate, message=None):
         super(Assert, self).__init__()
         self._fields = ['predicate', 'message']
 
-        assert isinstance(predicate, Expression)
-        assert isinstance(message, Literal)
-
-        self.predicate = predicate
-        self.message = message
+        self._predicate = assert_type(predicate, Expression)
+        self._message = assert_none_or(message, Expression)
 
 
 class Switch(Statement):
+    expression = property(attrgetter("_expression"))
+    switch_cases = property(attrgetter("_switch_cases"))
+
     def __init__(self, expression, switch_cases):
         super(Switch, self).__init__()
         self._fields = ['expression', 'switch_cases']
 
-        assert isinstance(expression, Expression)
-        assert isinstance(switch_cases, [])
-
-        self.expression = expression
-        self.switch_cases = switch_cases
+        self._expression = assert_type(expression, Expression)
+        self._switch_cases = self._assert_list(switch_cases, SwitchCase)
 
 
 class SwitchCase(SourceElement):
+    cases = property(attrgetter("_cases"))
+    body = property(attrgetter("_body"))
+    default = property(attrgetter("_default"))
+
     def __init__(self, cases, body=None):
         super(SwitchCase, self).__init__()
         self._fields = ['cases', 'body']
-        if body is None:
-            body = []
 
-        assert isinstance(cases, list)
-        assert isinstance(body, list)
-        _assert_ensure_ase(cases)
-        for x in body:
-            assert isinstance(x, Statement)
+        default = False
+        for i, c in enumerate(cases):
+            if (c == "default" or
+               (isinstance(c, Name) and c.value == "default") or
+               (isinstance(c, AnonymousSE) and c.value == "default")):
+                default = True
+                del cases[i]
+                break
 
-        self.cases = cases
-        self.body = body
+        self._cases = self._assert_list(cases, Expression)
+        self._body = self._assert_list(body, Statement)
+        self._default = default
 
 
 class DoWhile(Statement):
+    predicate = property(attrgetter("_predicate"))
+    body = property(attrgetter("_body"))
+
     def __init__(self, predicate, body=None):
         super(DoWhile, self).__init__()
         self._fields = ['predicate', 'body']
 
-        assert isinstance(predicate, Expression)
-        assert body is None or isinstance(body, Statement)
-
-        self.predicate = predicate
-        self.body = body
+        self._predicate = assert_type(predicate, Expression)
+        self._body = assert_none_or(body, Statement)
 
 
 class Continue(Statement):
+    label = property(attrgetter("_label"))
+
     def __init__(self, label=None):
         super(Continue, self).__init__()
         self._fields = ['label']
 
-        if label is not None:
-            label = Name.ensure(label, True)
-
-        self.label = label
+        self._label = assert_none_or_ensure(label, Name, True)
 
 
 class Break(Statement):
+    label = property(attrgetter("_label"))
+
     def __init__(self, label=None):
         super(Break, self).__init__()
         self._fields = ['label']
 
-        if label is not None:
-            label = Name.ensure(label, True)
-
-        self.label = label
+        self._label = assert_none_or_ensure(label, Name, True)
 
 
 class Return(Statement):
+    result = property(attrgetter("_result"))
+
     def __init__(self, result=None):
         super(Return, self).__init__()
         self._fields = ['result']
 
-        assert result is None or isinstance(result, Expression)
-
-        self.result = result
+        self._result = assert_none_or(result, Expression)
 
 
 class Synchronized(Statement):
+    monitor = property(attrgetter("_monitor"))
+    body = property(attrgetter("_body"))
+
     def __init__(self, monitor, body):
         super(Synchronized, self).__init__()
         self._fields = ['monitor', 'body']
 
-        assert isinstance(monitor, Expression)
-        assert isinstance(body, Statement)
-
-        self.monitor = monitor
-        self.body = body
+        self._monitor = assert_type(monitor, Expression)
+        self._body = self._assert_list(body, Statement)
 
 
 class Throw(Statement):
+    exception = property(attrgetter("_exception"))
+
     def __init__(self, exception):
         super(Throw, self).__init__()
         self._fields = ['exception']
 
-        assert exception is None or isinstance(exception, Expression)
-
-        self.exception = exception
+        self._exception = assert_type(exception, Expression)
 
 
 class Try(Statement):
-    def __init__(self, block, catches=None, _finally=None, resources=None):
+    block = property(attrgetter("_block"))
+    catches = property(attrgetter("_catches"))
+    finally_ = property(attrgetter("_finally"))
+    resources = property(attrgetter("_resources"))
+
+    def __init__(self, block, catches=None, finally_=None, resources=None):
         super(Try, self).__init__()
-        self._fields = ['block', 'catches', '_finally', 'resources']
-        if catches is None:
-            catches = []
-        if resources is None:
-            resources = []
+        self._fields = ['block', 'catches', 'finally_', 'resources']
 
-        assert isinstance(catches, list)
-        assert isinstance(resources, list)
-        assert isinstance(_finally, Block)
-        assert isinstance(block, Block)
-
-        for x in catches:
-            assert isinstance(x, Catch)
-        for x in resources:
-            assert isinstance(x, Resource)
-
-        self.block = block
-        self.catches = catches
-        self._finally = _finally
-        self.resources = resources
+        self._block = assert_type(block, Block)
+        self._catches = self._assert_list(catches, Catch)
+        self._finally = assert_none_or(finally_, Block)
+        self._resources = self._assert_list(resources, Resource)
 
     def accept(self, visitor):
         if visitor.visit_Try(self):
@@ -265,27 +248,20 @@ class Try(Statement):
 
 
 class Catch(SourceElement):
+    variable = property(attrgetter("_variable"))
+    modifiers = property(attrgetter("_modifiers"))
+    types = property(attrgetter("_types"))
+    block = property(attrgetter("_block"))
+
     def __init__(self, variable, modifiers=None, types=None, block=None):
         super(Catch, self).__init__()
         self._fields = ['variable', 'modifiers', 'types', 'block']
-        if modifiers is None:
-            modifiers = []
-        if types is None:
-            types = []
 
-        assert isinstance(variable, VariableDeclarationStatement)
-        assert isinstance(modifiers, list)
-        assert isinstance(types, list)
-        assert isinstance(block, Block)
-
-        _assert_ensure_ase(modifiers)
-        for x in types:
-            assert isinstance(x, Type)
-
-        self.variable = variable
-        self.modifiers = modifiers
-        self.types = types
-        self.block = block
+        self._variable = assert_type(variable, Variable)
+        self._modifiers = self._assert_list(modifiers, Modifier,
+                                            BasicModifier.ensure_modifier)
+        self._types = self._assert_list_ensure(types, Type)
+        self._block = assert_none_or(block, Block)
 
 
 class Resource(SourceElement):
@@ -300,24 +276,21 @@ class Resource(SourceElement):
 
     where X implements java.lang.AutoCloseable, then "x" is a resource.
     """
-    def __init__(self, variable, resource_type=None,
-                 modifiers=None, initializer=None):
+    variable = property(attrgetter("_variable"))
+    type = property(attrgetter("_type"))
+    modifiers = property(attrgetter("_modifiers"))
+    initializer = property(attrgetter("_initializer"))
+
+    def __init__(self, variable, type_=None, modifiers=None,
+                 initializer=None):
         super(Resource, self).__init__()
         self._fields = ['variable', 'type', 'modifiers', 'initializer']
-        if modifiers is None:
-            modifiers = []
 
-        assert isinstance(variable, VariableDeclarationStatement)
-        assert isinstance(modifiers, list)
-        assert isinstance(resource_type, Type)
-        assert isinstance(initializer, Expression)
-
-        _assert_ensure_ase(modifiers)
-
-        self.variable = variable
-        self.type = resource_type
-        self.modifiers = modifiers
-        self.initializer = initializer
+        self._variable = assert_type(variable, Variable)
+        self._type = assert_none_or(type_, Type)
+        self._modifiers = self._assert_list(modifiers, Modifier,
+                                            BasicModifier.ensure_modifier)
+        self._initializer = assert_none_or(initializer, Expression)
 
 
 class ConstructorInvocation(Statement):
@@ -326,35 +299,29 @@ class ConstructorInvocation(Statement):
 
     This is a variant of either this() or super(), NOT a "new" expression.
     """
+    name = property(attrgetter("_name"))
+    target = property(attrgetter("_target"))
+    type_arguments = property(attrgetter("_type_arguments"))
+    arguments = property(attrgetter("_arguments"))
 
     def __init__(self, name, target=None, type_arguments=None, arguments=None):
         super(ConstructorInvocation, self).__init__()
         self._fields = ['name', 'target', 'type_arguments', 'arguments']
-        if type_arguments is None:
-            type_arguments = []
-        if arguments is None:
-            arguments = []
 
-        name = Name.ensure(name, True)
-        if target is not None:
-            target = Name.ensure(target, True)
-        assert isinstance(type_arguments, list)
-        assert isinstance(arguments, list)
+        arguments = self._absorb_ase_tokens(arguments)
+        type_arguments = self._absorb_ase_tokens(type_arguments)
 
-        for x in type_arguments:
-            assert isinstance(x, TypeParameter)
-        for x in arguments:
-            assert isinstance(x, VariableDeclarationStatement)
-
-        self.name = name
-        self.target = target
-        self.type_arguments = type_arguments
-        self.arguments = arguments
+        self._name = Name.ensure(name, True)
+        self._target = assert_none_or(target, Expression)
+        self._type_arguments = self._assert_list_ensure(type_arguments, Type)
+        self._arguments = self._assert_list(arguments, Expression)
 
 
 class ExpressionStatement(Statement):
+    expression = property(attrgetter("_expression"))
+
     def __init__(self, expression):
         super(ExpressionStatement, self).__init__()
         self._fields = ['expression']
-        assert isinstance(expression, Expression)
-        self.expression = expression
+
+        self._expression = assert_type(expression, Expression)

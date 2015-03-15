@@ -73,7 +73,8 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -299,7 +300,8 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -322,8 +324,10 @@ class StatementParser(object):
     @staticmethod
     def p_enhanced_for_statement(p):
         """enhanced_for_statement : enhanced_for_statement_header statement"""
-        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2],
-                       modifiers=p[1]['modifiers'])
+        p1 = p[1].value
+        p[0] = ForEach(p1['type'], p1['variable'], p1['iterable'], p[2],
+                       modifiers=p1['modifiers'])
+        p[0].add_tokens_left(p[0])
 
     @staticmethod
     def p_enhanced_for_statement_no_short_if(p):
@@ -336,9 +340,9 @@ class StatementParser(object):
     def p_enhanced_for_statement_header(p):
         """enhanced_for_statement_header \
                : enhanced_for_statement_header_init ':' expression ')' """
-        p[1]['iterable'] = p[3]
-        collect_tokens(p)
+        p[1].value['iterable'] = p[3]
         p[0] = p[1]
+        collect_tokens(p)
 
     @staticmethod
     def p_enhanced_for_statement_header_init(p):
@@ -508,7 +512,7 @@ class StatementParser(object):
         if len(p) == 4:
             p[0] = Try(p[2], catches=p[3])
         else:
-            p[0] = Try(p[2], catches=p[3], _finally=p[4])
+            p[0] = Try(p[2], catches=p[3], finally_=p[4])
         collect_tokens(p)
 
     @staticmethod
@@ -560,7 +564,8 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = [p[1]]
         else:
-            p[0] = p[1] + [p[3]]
+            p[1].value.append(p[3])
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod
@@ -571,7 +576,7 @@ class StatementParser(object):
         if len(p) == 5:
             p[0] = Try(p[3], resources=p[2], catches=p[4])
         else:
-            p[0] = Try(p[3], resources=p[2], catches=p[4], _finally=p[5])
+            p[0] = Try(p[3], resources=p[2], catches=p[4], finally_=p[5])
         collect_tokens(p)
 
     @staticmethod
@@ -603,7 +608,7 @@ class StatementParser(object):
     @staticmethod
     def p_resource(p):
         """resource : type variable_declarator_id '=' variable_initializer"""
-        p[0] = Resource(p[2], resource_type=p[1], initializer=p[4])
+        p[0] = Resource(p[2], type_=p[1], initializer=p[4])
         collect_tokens(p)
 
     @staticmethod
@@ -611,8 +616,7 @@ class StatementParser(object):
         """resource \
                : modifiers type variable_declarator_id '=' variable_initializer
         """
-        p[0] = Resource(p[3], resource_type=p[2], modifiers=p[1],
-                        initializer=p[5])
+        p[0] = Resource(p[3], type_=p[2], modifiers=p[1], initializer=p[5])
         collect_tokens(p)
 
     @staticmethod
@@ -765,7 +769,7 @@ class StatementParser(object):
         if len(p) == 3:
             p[0] = AnonymousSE(None)
         else:
-            p[0] = p[2]
+            p[0] = AnonymousSE(p[2])
         collect_tokens(p)
 
     @staticmethod

@@ -3,6 +3,7 @@ from plyj.model.expression import Assignment, Cast, Unary, Multiplicative, \
     Additive, Shift, Relational, InstanceOf, Equality, ConditionalAnd, \
     ConditionalOr, Conditional, Or, Xor, And
 from plyj.model.literal import ClassLiteral
+from plyj.model.name import Name
 from plyj.model.source_element import collect_tokens, AnonymousSE
 from plyj.model.type import Type
 
@@ -387,7 +388,10 @@ class ExpressionParser(object):
                                 | field_access
                                 | method_invocation
                                 | array_access"""
-        p[0] = p[1]
+        if p[1] == "this":
+            p[0] = Name("this")
+        else:
+            p[0] = p[1]
         collect_tokens(p)
 
     @staticmethod

@@ -39,7 +39,7 @@ class TypeDeclarationTest(unittest.TestCase):
         }
         ''')
         cls = self._assert_declaration(m, 'Foo', InterfaceDeclaration)
-        self.assertEquals(cls.body.value, [MethodDeclaration('foo', abstract=True)])
+        self.assertEquals(cls.body, [MethodDeclaration('foo', abstract=True)])
 
     def test_class_abstract_method(self):
         m = self.parser.parse_string('''
@@ -48,7 +48,7 @@ class TypeDeclarationTest(unittest.TestCase):
         }
         ''')
         cls = self._assert_declaration(m, 'Foo', ClassDeclaration)
-        self.assertEquals(cls.body.value, [
+        self.assertEquals(cls.body, [
             MethodDeclaration('foo', modifiers=['abstract'], abstract=True)])
 
     def _assert_declaration(self, compilation_unit, name, declaration_type):

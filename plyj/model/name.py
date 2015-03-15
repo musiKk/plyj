@@ -1,8 +1,9 @@
 from operator import attrgetter
-from plyj.model.source_element import SourceElement
+from plyj.model.source_element import Expression
+from plyj.utility import assert_type
 
 
-class Name(SourceElement):
+class Name(Expression):
     simple = property(attrgetter("_simple"))
     value = property(attrgetter("_value"))
 
@@ -14,9 +15,7 @@ class Name(SourceElement):
         super(Name, self).__init__()
         self._fields = ['value']
 
-        assert isinstance(value, str)
-
-        self._value = value
+        self._value = assert_type(value, str)
         self._simple = "." not in value
 
     def append_name(self, name):
