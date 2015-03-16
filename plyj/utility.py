@@ -81,5 +81,5 @@ def serialize_body(body):
     if len(body) == 0:
         return "{}"
     else:
-        body = [x.serialize() for x in body]
+        body = ["    " + x.serialize() for x in body]
         return "{\n" + ";\n".join(body) + "\n}\n"

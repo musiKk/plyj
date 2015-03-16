@@ -6,12 +6,16 @@ from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, Declaration, Modifier
 from plyj.model.statement import Block, VariableDeclaration
 from plyj.model.type import Type, TypeParameter
-from plyj.utility import assert_type, assert_none_or
+from plyj.utility import assert_type, assert_none_or, serialize_type_parameters, \
+    serialize_extends, serialize_implements, serialize_body
 
 
 class ClassInitializer(Declaration):
     block = property(attrgetter("_block"))
     static = property(attrgetter("_static"))
+
+    def serialize(self):
+        return ("static " if self.static else "") + self.block.serialize()
 
     def __init__(self, block, static=False):
         super(ClassInitializer, self).__init__()
@@ -28,6 +32,16 @@ class ClassDeclaration(Declaration):
     type_parameters = property(attrgetter("_type_parameters"))
     extends = property(attrgetter("_extends"))
     implements = property(attrgetter("_implements"))
+
+    def serialize(self):
+        return "{}class {}{}{}{}{}".format(
+            "".join([x.serialize() + " " for x in self.modifiers]),
+            self.name.serialize(),
+            serialize_type_parameters(self.type_parameters),
+            serialize_extends(self.extends),
+            serialize_implements(self.implements),
+            serialize_body(self.body)
+        )
 
     def __init__(self, name, body, modifiers=None, type_parameters=None,
                  extends=None, implements=None):
