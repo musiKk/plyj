@@ -83,3 +83,30 @@ def serialize_body(body):
     else:
         body = ["    " + x.serialize() for x in body]
         return "{\n" + ";\n".join(body) + "\n}\n"
+
+
+def serialize_parameters(parameters):
+    if len(parameters) == 0:
+        return "()"
+    else:
+        parameters = [x.serialize() for x in parameters]
+        return "(" + ", ".join(parameters) + ")"
+
+
+def serialize_type_arguments(type_arguments):
+    if type_arguments is None:
+        return ""
+    else:
+        return "<" + ", ".join([x.serialize() for x in type_arguments]) + ">"
+
+
+def serialize_arguments(arguments):
+    if arguments is None:
+        return "()"
+    else:
+        return "(" + ", ".join([x.serialize() for x in arguments]) + ")"
+
+
+def serialize_dimensions(dimensions):
+    assert dimensions is not None and len(dimensions) > 0
+    return "".join(["["+x+"]" for x in dimensions])

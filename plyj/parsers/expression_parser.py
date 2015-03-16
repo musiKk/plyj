@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 from plyj.model.expression import Assignment, Cast, Unary, Multiplicative, \
     Additive, Shift, Relational, InstanceOf, Equality, ConditionalAnd, \
-    ConditionalOr, Conditional, Or, Xor, And
+    ConditionalOr, Conditional, Or, Xor, And, BracketedExpression
 from plyj.model.literal import ClassLiteral
 from plyj.model.name import Name
 from plyj.model.source_element import collect_tokens, AnonymousSE
@@ -398,7 +398,7 @@ class ExpressionParser(object):
     def p_primary_no_new_array2(p):
         """primary_no_new_array : '(' name ')'
                                 | '(' expression_not_name ')' """
-        p[0] = p[2]
+        p[0] = BracketedExpression(p[2])
         collect_tokens(p)
 
     @staticmethod

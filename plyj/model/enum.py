@@ -6,6 +6,8 @@ from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, Declaration, Statement, \
     Modifier, Expression
 from plyj.model.type import Type, TypeParameter
+from plyj.utility import serialize_body, serialize_implements, \
+    serialize_type_parameters
 
 
 class EnumDeclaration(Declaration):
@@ -14,6 +16,15 @@ class EnumDeclaration(Declaration):
     modifiers = property(attrgetter("_modifiers"))
     type_parameters = property(attrgetter("_type_parameters"))
     body = property(attrgetter("_body"))
+
+    def serialize(self):
+        return "{}{}{} {}{}".format(
+            "".join([x.serialize() + " " for x in self.modifiers]),
+            self.name.serialize(),
+            serialize_type_parameters(self.type_parameters),
+            serialize_implements(self.implements),
+            serialize_body(self.body)
+        )
 
     def __init__(self, name, implements=None, modifiers=None,
                  type_parameters=None, body=None):
@@ -37,6 +48,19 @@ class EnumConstant(SourceElement):
     arguments = property(attrgetter("_arguments"))
     modifiers = property(attrgetter("_modifiers"))
     body = property(attrgetter("_body"))
+
+    def serialize(self):
+        if len(self.arguments) == 0:
+            arguments = ""
+        else:
+            arguments = [x.serialize() for x in self.arguments]
+            arguments = "(" + ", ".join(arguments) + ")"
+        return "{}{}{}{}".format(
+            "".join([x.serialize() + " " for x in self.modifiers]),
+            self.name.serialize(),
+            serialize_body(self.body),
+            arguments
+        )
 
     def __init__(self, name, arguments=None, modifiers=None, body=None):
         super(EnumConstant, self).__init__()

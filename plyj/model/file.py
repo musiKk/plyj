@@ -11,6 +11,18 @@ class CompilationUnit(SourceElement):
     import_declarations = property(attrgetter("_import_declarations"))
     type_declarations = property(attrgetter("_type_declarations"))
 
+    def serialize(self):
+        retn = ""
+        if self.package_declaration is not None:
+            retn += self.package_declaration.serialize() + ";\n\n"
+        for x in self.import_declarations:
+            retn += x + ";\n"
+        if len(self.import_declarations) > 0:
+            retn += "\n"
+        for x in self.type_declarations:
+            retn += x + ";\n"
+        return retn
+
     def __init__(self, package_declaration=None, import_declarations=None,
                  type_declarations=None):
         super(CompilationUnit, self).__init__()
@@ -29,6 +41,10 @@ class PackageDeclaration(SourceElement):
     name = property(attrgetter("_name"))
     modifiers = property(attrgetter("_modifiers"))
 
+    def serialize(self):
+        modifiers = "".join([x.serialize() + " " for x in self.modifiers])
+        return modifiers + "package " + self.name.serialize() + ";"
+
     def __init__(self, name, modifiers=None):
         super(PackageDeclaration, self).__init__()
         self._fields = ['name', 'modifiers']
@@ -42,6 +58,11 @@ class ImportDeclaration(SourceElement):
     name = property(attrgetter("_name"))
     static = property(attrgetter("_static"))
     on_demand = property(attrgetter("_on_demand"))
+
+    def serialize(self):
+        static = "static " if self.static else ""
+        on_demand = ".*" if self.on_demand else ""
+        return "import " + static + self.name.serialize() + on_demand
 
     def __init__(self, name, static=False, on_demand=False):
         super(ImportDeclaration, self).__init__()

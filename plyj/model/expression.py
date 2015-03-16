@@ -5,13 +5,21 @@ from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Declaration
 from plyj.model.type import Type
-from plyj.utility import assert_type, assert_none_or
+from plyj.utility import assert_type, assert_none_or, serialize_arguments, \
+    serialize_type_arguments, serialize_dimensions
 
 
 class BinaryExpression(Expression):
     operator = property(attrgetter("_operator"))
     lhs = property(attrgetter("_lhs"))
     rhs = property(attrgetter("_rhs"))
+
+    def serialize(self):
+        return "{} {} {}".format(
+            self.lhs.serialize(),
+            self.operator.serialize(),
+            self.rhs.serialize(),
+        )
 
     def __init__(self, operator, lhs, rhs):
         super(BinaryExpression, self).__init__()
@@ -73,10 +81,32 @@ class Multiplicative(BinaryExpression):
     pass
 
 
+class BracketedExpression(Expression):
+    value = property(attrgetter("_value"))
+
+    def serialize(self):
+        return "({})".format(
+            self.value.serialize(),
+        )
+
+    def __init__(self, value):
+        super(self.__class__, self).__init__()
+        self._fields = ['value']
+
+        self._value = assert_type(value, Expression)
+
+
 class Conditional(Expression):
     predicate = property(attrgetter("_predicate"))
     if_true = property(attrgetter("_if_true"))
     if_false = property(attrgetter("_if_false"))
+
+    def serialize(self):
+        return "{}?{}:{}".format(
+            self.predicate.serialize(),
+            self.if_true.serialize(),
+            self.if_false.serialize()
+        )
 
     def __init__(self, predicate, if_true, if_false):
         super(self.__class__, self).__init__()
@@ -91,6 +121,12 @@ class Unary(Expression):
     sign = property(attrgetter("_sign"))
     expression = property(attrgetter("_expression"))
 
+    def serialize(self):
+        return "{}{}".format(
+            self.sign.serialize(),
+            self.expression.serialize(),
+        )
+
     def __init__(self, sign, expression):
         super(Unary, self).__init__()
         self._fields = ['sign', 'expression']
@@ -102,6 +138,12 @@ class Unary(Expression):
 class Cast(Expression):
     target = property(attrgetter("_target"))
     expression = property(attrgetter("_expression"))
+
+    def serialize(self):
+        return "({}){}".format(
+            self.target.serialize(),
+            self.expression.serialize(),
+        )
 
     def __init__(self, target, expression):
         super(Cast, self).__init__()
@@ -126,6 +168,18 @@ class MethodInvocation(Expression):
     type_arguments = property(attrgetter("_type_arguments"))
     target = property(attrgetter("_target"))
 
+    def serialize(self):
+        if self.target is None:
+            target = ""
+        else:
+            target = self.target.serialize() + "."
+        return "{}{}{}{}".format(
+            target,
+            self.name.serialize(),
+            serialize_type_arguments(self.type_arguments),
+            serialize_arguments(self.arguments)
+        )
+
     def __init__(self, name, arguments=None, type_arguments=None, target=None):
         super(MethodInvocation, self).__init__()
         self._fields = ['name', 'arguments', 'type_arguments', 'target']
@@ -142,6 +196,19 @@ class InstanceCreation(Expression):
     arguments = property(attrgetter("_arguments"))
     body = property(attrgetter("_body"))
     enclosed_in = property(attrgetter("_enclosed_in"))
+
+    def serialize(self):
+        if self.enclosed_in is None:
+            target = ""
+        else:
+            target = self.enclosed_in.serialize() + "."
+        return "{}new {}{}{}{}".format(
+            target,
+            serialize_type_arguments(self.type_arguments),
+            serialize_arguments(self.arguments),
+            self.instance_type.serialize(),
+            self.body.serialize()
+        )
 
     def __init__(self, instance_type, type_arguments=None, arguments=None,
                  body=None, enclosed_in=None):
@@ -160,6 +227,13 @@ class FieldAccess(Expression):
     name = property(attrgetter("_name"))
     target = property(attrgetter("_target"))
 
+    def serialize(self):
+        if self.target is None:
+            target = ""
+        else:
+            target = self.target + "."
+        return target + self.name.serialize()
+
     def __init__(self, name, target):
         super(FieldAccess, self).__init__()
         self._fields = ['name', 'target']
@@ -172,18 +246,33 @@ class ArrayAccess(Expression):
     index = property(attrgetter("_index"))
     target = property(attrgetter("_target"))
 
+    def serialize(self):
+        return self.target.serialize() + "[" + self.index.serialize() + "]"
+
     def __init__(self, index, target):
         super(ArrayAccess, self).__init__()
         self._fields = ['index', 'target']
 
         self._name = assert_type(index, Expression)
         self._target = assert_target(target)
+        assert self._target is not None
 
 
 class ArrayCreation(Expression):
     type = property(attrgetter("_type"))
     dimensions = property(attrgetter("_dimensions"))
     initializer = property(attrgetter("_initializer"))
+
+    def serialize(self):
+        if self.initializer is None:
+            initializer = ""
+        else:
+            initializer = " " + self.initializer.serialize()
+        return "new {}{}{}".format(
+            self.type.serialize(),
+            serialize_dimensions(self.dimensions),
+            initializer
+        )
 
     def __init__(self, type_, dimensions=None, initializer=None):
         super(ArrayCreation, self).__init__()
@@ -206,6 +295,9 @@ class ArrayCreation(Expression):
 
 class ArrayInitializer(SourceElement):
     elements = property(attrgetter("_elements"))
+
+    def serialize(self):
+        return "{" + ", ".join(self.elements) + "}"
 
     def __init__(self, elements=None):
         super(ArrayInitializer, self).__init__()

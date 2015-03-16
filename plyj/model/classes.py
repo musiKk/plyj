@@ -7,7 +7,8 @@ from plyj.model.source_element import SourceElement, Declaration, Modifier
 from plyj.model.statement import Block, VariableDeclaration
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import assert_type, assert_none_or, serialize_type_parameters, \
-    serialize_extends, serialize_implements, serialize_body
+    serialize_extends, serialize_implements, serialize_body, \
+    serialize_parameters
 
 
 class ClassInitializer(Declaration):
@@ -69,6 +70,16 @@ class ConstructorDeclaration(Declaration):
     parameters = property(attrgetter("_parameters"))
     throws = property(attrgetter("_throws"))
 
+    def serialize(self):
+        return "{}{}{}{}{}{}".format(
+            "".join([x.serialize() + " " for x in self.modifiers]),
+            self.name.serialize(),
+            serialize_type_parameters(self.type_parameters),
+            serialize_parameters(self.parameters),
+            self.throws.serialize(),
+            self.block.serialize()
+        )
+
     def __init__(self, name, block, modifiers=None, type_parameters=None,
                  parameters=None, throws=None):
         super(ConstructorDeclaration, self).__init__()
@@ -110,6 +121,18 @@ class WildcardBound(SourceElement):
     extends = property(attrgetter("_extends"))
     super = property(attrgetter("_super"))
 
+    def serialize(self):
+        if self.extends:
+            keywords = " extends"
+        elif self.super:
+            keywords = " super"
+        else:
+            keywords = ""
+        return "{}{}".format(
+            self.type.serialize(),
+            keywords
+        )
+
     def __init__(self, type_, extends=False, super_=False):
         super(WildcardBound, self).__init__()
         self._fields = ['type', 'extends', 'super']
@@ -117,10 +140,16 @@ class WildcardBound(SourceElement):
         self._type = Type.ensure(type_)
         self._extends = assert_type(extends, bool)
         self._super = assert_none_or(super_, bool)
+        assert not (self.extends and self.super)
 
 
 class Wildcard(SourceElement):
     bounds = property(attrgetter("_bounds"))
+
+    def serialize(self):
+        return "?{}".format(
+            "".join([" " + x for x in self.bounds])
+        )
 
     def __init__(self, bounds=None):
         super(Wildcard, self).__init__()
