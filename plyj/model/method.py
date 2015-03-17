@@ -6,7 +6,8 @@ from plyj.model.source_element import SourceElement, AnonymousSE, Statement, \
     Declaration, Modifier
 from plyj.model.type import Type, TypeParameter
 from plyj.model.variable import Variable
-from plyj.utility import assert_type, assert_none_or
+from plyj.utility import assert_type, assert_none_or, serialize_type_parameters, \
+    serialize_body
 
 
 class MethodDeclaration(Declaration):
@@ -19,6 +20,27 @@ class MethodDeclaration(Declaration):
     abstract = property(attrgetter("_abstract"))
     extended_dims = property(attrgetter("_extended_dims"))
     throws = property(attrgetter("_throws"))
+
+    def serialize(self):
+        """
+        annotation_method_header_name
+        formal_parameter_list_opt
+        ')'
+        method_header_extended_dims
+        annotation_method_header_default_value_opt
+        """
+        type_parameters = serialize_type_parameters(self.type_parameters)
+        dimensions = "[]" * self.extended_dims.value
+        throws = "" if self.throws is None else self.throws.serialize()
+        return "{} {} {}{}({}){} {}{}".format(
+            " ".join([x.value for x in self.modifiers]),
+            self.return_type.serialize(),
+            self.name.serialize(),
+            type_parameters,
+            ", ".join([x.serialize() for x in self.parameters]),
+            dimensions,
+            throws,
+            serialize_body(self.body))
 
     def __init__(self, name, modifiers=None, type_parameters=None,
                  parameters=None, return_type='void', body=None,

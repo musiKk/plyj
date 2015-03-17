@@ -64,7 +64,7 @@ class AnnotationMethodDeclaration(Declaration):
         type_parameters = serialize_type_parameters(self.type_parameters)
         dimensions = "[]" * self.extended_dims.value
         default = "" if self.default is None else " default " + self.default.serialize()
-        return "{} {} {}{}({}){}{};".format(
+        return "{} {} {}{}({}){}{}".format(
             " ".join([x.value for x in self.modifiers]),
             self.type.serialize(),
             self.name.serialize(),
