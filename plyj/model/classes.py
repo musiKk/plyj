@@ -8,7 +8,7 @@ from plyj.model.statement import Block, VariableDeclaration
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import assert_type, assert_none_or, serialize_type_parameters, \
     serialize_extends, serialize_implements, serialize_body, \
-    serialize_parameters
+    serialize_parameters, serialize_modifiers
 
 
 class ClassInitializer(Declaration):
@@ -36,7 +36,7 @@ class ClassDeclaration(Declaration):
 
     def serialize(self):
         return "{}class {}{}{}{}{}".format(
-            "".join([x.serialize() + " " for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_extends(self.extends),
@@ -72,7 +72,7 @@ class ConstructorDeclaration(Declaration):
 
     def serialize(self):
         return "{}{}{}{}{}{}".format(
-            "".join([x.serialize() + " " for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_parameters(self.parameters),

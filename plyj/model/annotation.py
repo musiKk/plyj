@@ -8,7 +8,7 @@ from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Modifier, Declaration
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import assert_none_or, assert_type, serialize_type_parameters, serialize_extends, serialize_implements, \
-    serialize_body
+    serialize_body, serialize_modifiers
 
 
 class Annotation(Modifier):
@@ -65,7 +65,7 @@ class AnnotationMethodDeclaration(Declaration):
         dimensions = "[]" * self.extended_dims.value
         default = "" if self.default is None else " default " + self.default.serialize()
         return "{} {} {}{}({}){}{}".format(
-            " ".join([x.value for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.type.serialize(),
             self.name.serialize(),
             type_parameters,
@@ -81,7 +81,7 @@ class AnnotationMethodDeclaration(Declaration):
 
         self._name = Name.ensure(name, True)
         self._type = assert_type(return_type, Type)
-        self._parameters = self._assert_list(parameters, FormalParameter) # was expression...
+        self._parameters = self._assert_list(parameters, FormalParameter)
         self._default = assert_none_or(default, MEMBER_VALUE_TYPES)
         self._modifiers = self._assert_list(modifiers, Modifier,
                                             BasicModifier.ensure_modifier)
@@ -116,7 +116,7 @@ class AnnotationDeclaration(Declaration):
 
     def serialize(self):
         return "{}@interface {}{}{}{}{}".format(
-            "".join([x.serialize() + " " for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_extends(self.extends),

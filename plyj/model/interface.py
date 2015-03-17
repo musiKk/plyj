@@ -5,7 +5,7 @@ from plyj.model.name import Name
 from plyj.model.source_element import Declaration, Modifier
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import serialize_type_parameters, serialize_body, \
-    serialize_extends
+    serialize_extends, serialize_modifiers
 
 
 class InterfaceDeclaration(Declaration):
@@ -17,7 +17,7 @@ class InterfaceDeclaration(Declaration):
 
     def serialize(self):
         return "{}interface {}{} {}{}".format(
-            "".join([x.serialize() + " " for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_extends(self.extends),

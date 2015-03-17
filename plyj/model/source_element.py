@@ -136,6 +136,9 @@ class SourceElement(object):
 
 
 class AnonymousSE(SourceElement):
+    def serialize(self):
+        return str(self.value)
+
     """
     This is a SourceElement that does not warrant its own class. Before it was
     added, values would be passed around as strings, integers, dicts or other
@@ -210,6 +213,21 @@ def collect_tokens(p):
 class Statement(SourceElement):
     __metaclass__ = abc.ABCMeta
     label = property(attrgetter("_label"))
+
+    @abc.abstractmethod
+    def statement_serialize(self):
+        """
+        Instead of implementing serialize, please implement this instead. That
+        way you'll get the added benefit of the label stuff being automatically
+        done for you.
+        """
+        pass
+
+    def serialize(self):
+        if self.label is None:
+            return self.statement_serialize()
+        else:
+            return self.label + ":" + self.statement_serialize()
 
     def __init__(self):
         super(Statement, self).__init__()

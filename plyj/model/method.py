@@ -7,7 +7,7 @@ from plyj.model.source_element import SourceElement, AnonymousSE, Statement, \
 from plyj.model.type import Type, TypeParameter
 from plyj.model.variable import Variable
 from plyj.utility import assert_type, assert_none_or, serialize_type_parameters, \
-    serialize_body
+    serialize_body, serialize_modifiers
 
 
 class MethodDeclaration(Declaration):
@@ -26,7 +26,7 @@ class MethodDeclaration(Declaration):
         dimensions = "[]" * self.extended_dims.value
         throws = "" if self.throws is None else self.throws.serialize()
         return "{} {} {}{}({}){} {}{}".format(
-            " ".join([x.value for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.return_type.serialize(),
             self.name.serialize(),
             type_parameters,
@@ -64,7 +64,7 @@ class FormalParameter(SourceElement):
 
     def serialize(self):
         return "{}{}{} {}".format(
-            " ".join([x.value for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.parameter_type.serialize(),
             " ..." if self.vararg.value else "",
             self.variable.serialize())

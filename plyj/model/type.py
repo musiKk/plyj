@@ -2,7 +2,8 @@
 from operator import attrgetter
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE
-from plyj.utility import assert_none_or_ensure
+from plyj.utility import assert_none_or_ensure, serialize_type_arguments, \
+    serialize_dimensions
 
 
 class Type(SourceElement):
@@ -10,6 +11,14 @@ class Type(SourceElement):
     type_arguments = property(attrgetter("_type_arguments"))
     enclosed_in = property(attrgetter("_enclosed_in"))
     dimensions = property(attrgetter("_dimensions"))
+
+    def serialize(self):
+        enclosed_in = ""
+        if self.enclosed_in is not None:
+            enclosed_in += self.enclosed_in.serialize() + "."
+        type_args = serialize_type_arguments(self.type_arguments)
+        dimensions = serialize_dimensions(self.dimensions)
+        return enclosed_in + type_args + self.name.serialize() + dimensions
 
     def __init__(self, name, type_arguments=None, enclosed_in=None,
                  dimensions=0):
@@ -78,6 +87,12 @@ class TypeParameter(SourceElement):
     """
     name = property(attrgetter("_name"))
     extends = property(attrgetter("_extends"))
+
+    def serialize(self):
+        extends = ""
+        if self.extends is not None:
+            extends = " extends " + self.extends.serialize()
+        return self.name.serialize() + extends
 
     def __init__(self, name, extends=None):
         super(TypeParameter, self).__init__()

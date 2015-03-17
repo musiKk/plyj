@@ -56,7 +56,9 @@ expression_tests = [
     ('1+2*3', binary('+', one, binary('*', two, three))),
 
     # parenthesized expressions
-    ('(1+2)*3', binary('*', binary('+', one, two), three)),
+    ('(1+2)*3', binary('*',
+                       BracketedExpression(binary('+', one, two)),
+                       three)),
 
     # conditionals
     ('a ? b : c', Conditional(a, b, c)),

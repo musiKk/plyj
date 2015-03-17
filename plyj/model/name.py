@@ -7,6 +7,9 @@ class Name(Expression):
     simple = property(attrgetter("_simple"))
     value = property(attrgetter("_value"))
 
+    def serialize(self):
+        return self.value
+
     def __init__(self, value):
         """
         Represents a name.

@@ -3,7 +3,7 @@ from operator import attrgetter
 from plyj.model.expression import ArrayInitializer
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression
-from plyj.utility import assert_none_or, assert_type
+from plyj.utility import assert_none_or, assert_type, serialize_dimensions
 
 
 class Variable(SourceElement):
@@ -16,6 +16,9 @@ class Variable(SourceElement):
     name = property(attrgetter("_name"))
     dimensions = property(attrgetter("_dimensions"))
 
+    def serialize(self):
+        return self.name.serialize() + serialize_dimensions(self.dimensions)
+
     def __init__(self, name, dimensions=0):
         super(Variable, self).__init__()
         self._fields = ['name', 'dimensions']
@@ -27,6 +30,13 @@ class Variable(SourceElement):
 class VariableDeclarator(SourceElement):
     variable = property(attrgetter("_variable"))
     initializer = property(attrgetter("_initializer"))
+
+    def serialize(self):
+        if self.initializer is None:
+            return (self.variable.serialize() + " = " +
+                    self.initializer.serialize())
+        else:
+            return self.variable.serialize()
 
     def __init__(self, variable, initializer=None):
         super(VariableDeclarator, self).__init__()

@@ -85,6 +85,9 @@ def serialize_body(body):
         return "{\n" + ";\n".join(body) + "\n}\n"
 
 
+def serialize_modifiers(modifiers):
+    return " ".join([x.value for x in modifiers])
+
 def serialize_parameters(parameters):
     if len(parameters) == 0:
         return "()"

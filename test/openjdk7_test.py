@@ -173,7 +173,8 @@ class OpenJDK7Test(unittest.TestCase):
             percent = i / float(len(java_files)) * 100.0
             if _should_skip(java_file):
                 continue
-            if p.parse_file(java_file) is None:
+            parse_result = p.parse_file(java_file)
+            if parse_result is None:
                 message = "FAILED file ({:.1f}%) \"{}\""
                 failures.append(java_file)
             else:

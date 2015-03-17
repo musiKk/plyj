@@ -3,7 +3,7 @@ from operator import attrgetter
 from plyj.model.modifier import BasicModifier
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, Declaration, Modifier
-from plyj.utility import assert_type, assert_none_or
+from plyj.utility import assert_type, assert_none_or, serialize_modifiers
 
 
 class CompilationUnit(SourceElement):
@@ -42,7 +42,7 @@ class PackageDeclaration(SourceElement):
     modifiers = property(attrgetter("_modifiers"))
 
     def serialize(self):
-        modifiers = "".join([x.serialize() + " " for x in self.modifiers])
+        modifiers = serialize_modifiers(self.modifiers)
         return modifiers + "package " + self.name.serialize() + ";"
 
     def __init__(self, name, modifiers=None):

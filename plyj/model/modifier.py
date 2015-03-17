@@ -6,6 +6,9 @@ from plyj.utility import assert_type
 class BasicModifier(Modifier):
     value = property(attrgetter("_value"))
 
+    def serialize(self):
+        return self.value
+
     def __init__(self, value=None):
         """
         Represents a name.

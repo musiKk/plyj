@@ -7,7 +7,7 @@ from plyj.model.source_element import SourceElement, Declaration, Statement, \
     Modifier, Expression
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import serialize_body, serialize_implements, \
-    serialize_type_parameters
+    serialize_type_parameters, serialize_modifiers
 
 
 class EnumDeclaration(Declaration):
@@ -19,7 +19,7 @@ class EnumDeclaration(Declaration):
 
     def serialize(self):
         return "{}{}{} {}{}".format(
-            "".join([x.serialize() + " " for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_implements(self.implements),
@@ -56,7 +56,7 @@ class EnumConstant(SourceElement):
             arguments = [x.serialize() for x in self.arguments]
             arguments = "(" + ", ".join(arguments) + ")"
         return "{}{}{}{}".format(
-            "".join([x.serialize() + " " for x in self.modifiers]),
+            serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_body(self.body),
             arguments
