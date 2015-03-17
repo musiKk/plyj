@@ -16,7 +16,7 @@ class InterfaceDeclaration(Declaration):
     body = property(attrgetter("_body"))
 
     def serialize(self):
-        return "{}{}{} {}{}".format(
+        return "{}interface {}{} {}{}".format(
             "".join([x.serialize() + " " for x in self.modifiers]),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),

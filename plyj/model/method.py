@@ -22,13 +22,6 @@ class MethodDeclaration(Declaration):
     throws = property(attrgetter("_throws"))
 
     def serialize(self):
-        """
-        annotation_method_header_name
-        formal_parameter_list_opt
-        ')'
-        method_header_extended_dims
-        annotation_method_header_default_value_opt
-        """
         type_parameters = serialize_type_parameters(self.type_parameters)
         dimensions = "[]" * self.extended_dims.value
         throws = "" if self.throws is None else self.throws.serialize()
@@ -69,6 +62,13 @@ class FormalParameter(SourceElement):
     modifiers = property(attrgetter("_modifiers"))
     vararg = property(attrgetter("_vararg"))
 
+    def serialize(self):
+        return "{}{}{} {}".format(
+            " ".join([x.value for x in self.modifiers]),
+            self.parameter_type.serialize(),
+            " ..." if self.vararg.value else "",
+            self.variable.serialize())
+
     def __init__(self, variable, parameter_type, modifiers=None, vararg=None):
         super(FormalParameter, self).__init__()
         self._fields = ['variable', 'type', 'modifiers', 'vararg']
@@ -82,6 +82,9 @@ class FormalParameter(SourceElement):
 
 class Throws(SourceElement):
     types = property(attrgetter("_types"))
+
+    def serialize(self):
+        return "throws " + ", ".join([x.serialize() for x in self.types])
 
     def __init__(self, types):
         super(Throws, self).__init__()
