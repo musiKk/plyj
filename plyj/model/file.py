@@ -16,11 +16,11 @@ class CompilationUnit(SourceElement):
         if self.package_declaration is not None:
             retn += self.package_declaration.serialize() + ";\n\n"
         for x in self.import_declarations:
-            retn += x + ";\n"
+            retn += x.serialize() + ";\n"
         if len(self.import_declarations) > 0:
             retn += "\n"
         for x in self.type_declarations:
-            retn += x + ";\n"
+            retn += x.serialize() + ";\n"
         return retn
 
     def __init__(self, package_declaration=None, import_declarations=None,

@@ -1,3 +1,6 @@
+from plyj.model.source_element import AnonymousSE, Expression
+
+
 def assert_none_or_ensure(x, class_or_type_or_tuple, *ensure_args):
     """
     :param x: An object
@@ -86,7 +89,8 @@ def serialize_body(body):
 
 
 def serialize_modifiers(modifiers):
-    return " ".join([x.value for x in modifiers])
+    return "".join([x.value + " " for x in modifiers])
+
 
 def serialize_parameters(parameters):
     if len(parameters) == 0:
@@ -111,5 +115,12 @@ def serialize_arguments(arguments):
 
 
 def serialize_dimensions(dimensions):
-    assert dimensions is not None and len(dimensions) > 0
-    return "".join(["["+x+"]" for x in dimensions])
+    if isinstance(dimensions, AnonymousSE):
+        dimensions = dimensions.value
+    if isinstance(dimensions, int):
+        return "[]" * dimensions
+    assert isinstance(dimensions, list)
+    assert len(dimensions) > 0
+    for d in dimensions:
+        assert isinstance(d, Expression)
+    return "".join(["["+x.serialize()+"]" for x in dimensions])

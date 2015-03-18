@@ -30,7 +30,7 @@ class Block(Statement):
         return serialize_body(self.statements)
 
     def __init__(self, statements=None):
-        super(Statement, self).__init__()
+        super(Block, self).__init__()
         self._fields = ['statements']
 
         self._statements = self._assert_body(statements)
@@ -334,6 +334,7 @@ class Try(Statement):
         result += "".join([x.serialize() + "\n" for x in self.catches])
         if self.finally_ is not None:
             result += self.finally_.serialize()
+        return result
 
     def __init__(self, block, catches=None, finally_=None, resources=None):
         super(Try, self).__init__()
@@ -360,7 +361,7 @@ class Catch(SourceElement):
     types = property(attrgetter("_types"))
     block = property(attrgetter("_block"))
 
-    def statement_serialize(self):
+    def serialize(self):
         result = "catch (" + serialize_modifiers(self.modifiers)
         result += " | ".join([x.serialize() for x in self.types])
         result += self.variable.serialize()

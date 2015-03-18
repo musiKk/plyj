@@ -35,7 +35,7 @@ class ClassDeclaration(Declaration):
     implements = property(attrgetter("_implements"))
 
     def serialize(self):
-        return "{}class {}{}{}{}{}".format(
+        return "{}class {}{} {}{}{}".format(
             serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),

@@ -6,7 +6,7 @@ from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Declaration
 from plyj.model.type import Type
 from plyj.utility import assert_type, assert_none_or, serialize_arguments, \
-    serialize_type_arguments, serialize_dimensions
+    serialize_type_arguments, serialize_dimensions, serialize_body
 
 
 class BinaryExpression(Expression):
@@ -207,7 +207,7 @@ class InstanceCreation(Expression):
             serialize_type_arguments(self.type_arguments),
             serialize_arguments(self.arguments),
             self.instance_type.serialize(),
-            self.body.serialize()
+            serialize_body(self.body)
         )
 
     def __init__(self, instance_type, type_arguments=None, arguments=None,
