@@ -86,11 +86,12 @@ def indent(string):
     return "\n".join(["    " + x for x in string.split("\n")])
 
 
-def serialize_body(body):
+def serialize_body(body, semicolons=True):
     if len(body) == 0:
         return "{}"
     else:
-        body = [indent(x.serialize()) + ";\n" for x in body]
+        after_tokens = ";\n" if semicolons else "\n"
+        body = [indent(x.serialize()) + after_tokens for x in body]
         return "{\n" + "".join(body) + "}"
 
 

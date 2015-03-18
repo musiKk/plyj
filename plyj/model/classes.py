@@ -41,7 +41,7 @@ class ClassDeclaration(Declaration):
             serialize_type_parameters(self.type_parameters),
             serialize_extends(self.extends),
             serialize_implements(self.implements),
-            serialize_body(self.body)
+            serialize_body(self.body, False)
         )
 
     def __init__(self, name, body, modifiers=None, type_parameters=None,
@@ -64,45 +64,49 @@ class ClassDeclaration(Declaration):
 
 class ConstructorDeclaration(Declaration):
     name = property(attrgetter("_name"))
-    block = property(attrgetter("_block"))
+    body = property(attrgetter("_body"))
     modifiers = property(attrgetter("_modifiers"))
     type_parameters = property(attrgetter("_type_parameters"))
     parameters = property(attrgetter("_parameters"))
     throws = property(attrgetter("_throws"))
 
     def serialize(self):
-        return "{}{}{}{}{}{}".format(
+        return "{}{}{}{}{} {}".format(
             serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_parameters(self.parameters),
             "" if self.throws is None else self.throws.serialize(),
-            "" if self.block is None else self.block.serialize()
+            serialize_body(self.body)
         )
 
-    def __init__(self, name, block, modifiers=None, type_parameters=None,
+    def __init__(self, name, body=None, modifiers=None, type_parameters=None,
                  parameters=None, throws=None):
         super(ConstructorDeclaration, self).__init__()
-        self._fields = ['name', 'block', 'modifiers',
+        self._fields = ['name', 'body', 'modifiers',
                         'type_parameters', 'parameters', 'throws']
 
         self._name = Name.ensure(name, True)
-        self._block = assert_none_or(block, Block)
         self._modifiers = self._assert_list(modifiers, Modifier,
                                             BasicModifier.ensure_modifier)
         self._type_parameters = self._assert_list(type_parameters,
                                                   TypeParameter)
         self._parameters = None
         self._throws = None
+        self._body = None
 
         self.set_parameters(parameters)
         self.set_throws(throws)
+        self.set_body(body)
 
     def set_parameters(self, parameters):
         self._parameters = self._assert_list(parameters, FormalParameter)
 
     def set_throws(self, throws):
         self._throws = assert_none_or(throws, Throws)
+
+    def set_body(self, body):
+        self._body = self._assert_body(body)
 
 
 class EmptyDeclaration(Declaration):

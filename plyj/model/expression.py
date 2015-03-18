@@ -15,11 +15,30 @@ class BinaryExpression(Expression):
     rhs = property(attrgetter("_rhs"))
 
     def serialize(self):
-        return "{} {} {}".format(
-            self.lhs.serialize(),
-            self.operator.serialize(),
-            self.rhs.serialize(),
-        )
+        """
+        Some of the files in the oracle JDK deal with HUGE binary expression
+        trees. So I had to convert this function to an iterative solution
+        rather than the more natural recursive one.
+        :return:
+        """
+        stack = []
+        current = self
+        retn = ""
+        while True:
+            if not isinstance(current, BinaryExpression):
+                retn += current.serialize()
+                while current is stack[-1].rhs:
+                    current = stack.pop()
+                    if len(stack) == 0:
+                        return retn
+                retn += " "
+                retn += stack[-1].operator.serialize()
+                retn += " "
+                current = stack[-1].rhs
+            else:
+                stack.append(current)
+                current = current.lhs
+        return retn
 
     def __init__(self, operator, lhs, rhs):
         super(BinaryExpression, self).__init__()
@@ -122,10 +141,14 @@ class Unary(Expression):
     expression = property(attrgetter("_expression"))
 
     def serialize(self):
-        return "{}{}".format(
-            self.sign.serialize(),
-            self.expression.serialize(),
-        )
+        sign = self.sign.serialize()
+        expression = self.expression.serialize()
+        if sign == "x++":
+            return expression + "++"
+        elif sign == "x--":
+            return expression + "--"
+        else:
+            return sign + expression
 
     def __init__(self, sign, expression):
         super(Unary, self).__init__()
@@ -205,8 +228,8 @@ class InstanceCreation(Expression):
         return "{}new {}{}{}{}".format(
             target,
             serialize_type_arguments(self.type_arguments),
-            serialize_arguments(self.arguments),
             self.instance_type.serialize(),
+            serialize_arguments(self.arguments),
             serialize_body(self.body)
         )
 

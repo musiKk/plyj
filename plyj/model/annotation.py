@@ -121,7 +121,7 @@ class AnnotationDeclaration(Declaration):
             serialize_type_parameters(self.type_parameters),
             serialize_extends(self.extends),
             serialize_implements(self.implements),
-            serialize_body(self.body)
+            serialize_body(self.body, False)
         )
 
     def __init__(self, name, modifiers=None, type_parameters=None,

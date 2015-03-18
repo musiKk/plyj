@@ -18,12 +18,16 @@ class EnumDeclaration(Declaration):
     body = property(attrgetter("_body"))
 
     def serialize(self):
+        body = ""
+        # TODO: Enum must serialize using correct tokens (commas then
+        #       semicolons).
+        assert False
         return "{}{}{} {}{}".format(
             serialize_modifiers(self.modifiers),
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_implements(self.implements),
-            serialize_body(self.body)
+            body
         )
 
     def __init__(self, name, implements=None, modifiers=None,
@@ -41,6 +45,16 @@ class EnumDeclaration(Declaration):
         self._type_parameters = self._assert_list(type_parameters,
                                                   TypeParameter)
         self._body = self._assert_list(body, (EnumConstant, Declaration))
+
+        self._first_declaration_index = -1
+        for i, declaration in enumerate(self.body):
+            if isinstance(declaration, Declaration):
+                if self._first_declaration_index == -1:
+                    self._first_declaration_index = i
+            else:
+                # If we're here, this must be an EnumConstant, which CANNOT
+                # appear after a declaration
+                assert self._first_declaration_index == -1
 
 
 class EnumConstant(SourceElement):

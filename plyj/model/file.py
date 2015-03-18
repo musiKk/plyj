@@ -43,7 +43,7 @@ class PackageDeclaration(SourceElement):
 
     def serialize(self):
         modifiers = serialize_modifiers(self.modifiers)
-        return modifiers + "package " + self.name.serialize() + ";"
+        return modifiers + "package " + self.name.serialize()
 
     def __init__(self, name, modifiers=None):
         super(PackageDeclaration, self).__init__()

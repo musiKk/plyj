@@ -3,6 +3,7 @@ import subprocess
 import unittest
 
 # OpenJDK9 does not yet work due to new language features (lambda functions)
+import sys
 from plyj.parser import Parser
 
 MERCURIAL_REPO_LOCATION = "http://hg.openjdk.java.net/jdk7/jdk7"
@@ -173,14 +174,15 @@ class OpenJDK7Test(unittest.TestCase):
             percent = i / float(len(java_files)) * 100.0
             if _should_skip(java_file):
                 continue
+            sys.stdout.write('[{:.1f}%] \"{}\": '.format(percent, java_file))
+            sys.stdout.flush()
             parse_result = p.parse_file(java_file)
+            parse_result.serialize()
             if parse_result is None:
-                message = "FAILED file ({:.1f}%) \"{}\""
+                sys.stdout.write("FAILED\n")
                 failures.append(java_file)
             else:
-                message = "Parsed file ({:.1f}%) \"{}\""
-            parse_result.serialize()
-            print message.format(percent, java_file)
+                sys.stdout.write("OK\n")
         for failure in failures:
             print "Failed to parse \"{}\"".format(failure)
         self.assertEqual(0, len(failures))

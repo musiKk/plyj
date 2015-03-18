@@ -174,7 +174,7 @@ class ClassParser(object):
     @staticmethod
     def p_constructor_declaration(p):
         """constructor_declaration : constructor_header method_body"""
-        p[1].body = p[2]
+        p[1].set_body(p[2])
         p[0] = p[1]
 
     @staticmethod
@@ -193,11 +193,11 @@ class ClassParser(object):
                : modifiers_opt type_parameters simple_name '('
                | modifiers_opt simple_name '(' """
         if len(p) == 4:
-            p[0] = ConstructorDeclaration(p[2], None,
+            p[0] = ConstructorDeclaration(p[2],
                                           modifiers=p[1],
                                           type_parameters=[])
         else:
-            p[0] = ConstructorDeclaration(p[3], None,
+            p[0] = ConstructorDeclaration(p[3],
                                           modifiers=p[1],
                                           type_parameters=p[2])
         collect_tokens(p)

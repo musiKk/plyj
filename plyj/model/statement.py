@@ -8,7 +8,7 @@ from plyj.model.type import Type
 from plyj.model.variable import VariableDeclarator, Variable
 from plyj.utility import assert_type, assert_none_or, assert_none_or_ensure, \
     serialize_modifiers, serialize_body, serialize_type_arguments, \
-    serialize_arguments
+    serialize_arguments, indent
 
 
 class Empty(Statement):
@@ -48,6 +48,7 @@ class VariableDeclaration(Declaration):
     def _serialize(self):
         result = serialize_modifiers(self.modifiers)
         result += self.type.serialize()
+        result += " "
         result += ", ".join([x.serialize() for x in self.variable_declarators])
         return result
 
@@ -77,14 +78,21 @@ class IfThenElse(Statement):
     if_true = property(attrgetter("_if_true"))
     if_false = property(attrgetter("_if_false"))
 
-    def statement_serialize(self):
-        if self.if_false is None:
-            return "if ({}) {}".format(self.predicate.serialize(),
-                                       self.if_true.serialize())
+    @staticmethod
+    def _format(branch):
+        if isinstance(branch, Block):
+            return " " + branch.serialize()
         else:
-            return "if ({}) {}\n else {}".format(self.predicate.serialize(),
-                                                 self.if_true.serialize(),
-                                                 self.if_false.serialize())
+            return "\n" + indent(branch.serialize())
+
+    def statement_serialize(self):
+        if_true = self._format(self.if_true)
+        if self.if_false is None:
+            return "if ({}) {}".format(self.predicate.serialize(), if_true)
+        else:
+            if_false = self._format(self.if_false)
+            return "if ({}){};\nelse {}".format(self.predicate.serialize(),
+                                                if_true, if_false)
 
     def __init__(self, predicate, if_true=None, if_false=None):
         super(IfThenElse, self).__init__()
@@ -341,10 +349,9 @@ class Try(Statement):
             resources = [x.serialize() for x in self.resources]
             result += "(" + ";".join(resources) + ") "
         result += self.block.serialize()
-        result += " "
-        result += "\n".join([x.serialize() for x in self.catches])
+        result += "\n".join([" " + x.serialize() for x in self.catches])
         if self.finally_ is not None:
-            result += "\n" + self.finally_.serialize()
+            result += " finally " + self.finally_.serialize()
         return result
 
     def __init__(self, block, catches=None, finally_=None, resources=None):
