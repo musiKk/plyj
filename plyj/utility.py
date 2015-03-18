@@ -1,4 +1,4 @@
-from plyj.model.source_element import AnonymousSE, Expression
+from plyj.model.source_element import AnonymousSE, Expression, Modifier
 
 
 def assert_none_or_ensure(x, class_or_type_or_tuple, *ensure_args):
@@ -68,6 +68,8 @@ def serialize_type_parameters(type_parameters):
 def serialize_extends(extends):
     if extends is None:
         return ""
+    elif isinstance(extends, list):
+        return "extends " + "".join([x.serialize() + " " for x in extends])
     else:
         return "extends " + extends.serialize() + " "
 
@@ -89,7 +91,7 @@ def serialize_body(body):
 
 
 def serialize_modifiers(modifiers):
-    return "".join([x.value + " " for x in modifiers])
+    return "".join([x.serialize() + " " for x in modifiers])
 
 
 def serialize_parameters(parameters):
@@ -103,7 +105,12 @@ def serialize_parameters(parameters):
 def serialize_type_arguments(type_arguments):
     if type_arguments is None:
         return ""
+    elif type_arguments == "diamond":
+        return "<>"
     else:
+        for x in type_arguments:
+            if isinstance(x, str):
+                print type_arguments
         return "<" + ", ".join([x.serialize() for x in type_arguments]) + ">"
 
 
@@ -122,5 +129,11 @@ def serialize_dimensions(dimensions):
     assert isinstance(dimensions, list)
     assert len(dimensions) > 0
     for d in dimensions:
-        assert isinstance(d, Expression)
-    return "".join(["["+x.serialize()+"]" for x in dimensions])
+        assert d is None or isinstance(d, Expression)
+    result = ""
+    for dimension in dimensions:
+        if dimension is None:
+            result += "[]"
+        else:
+            result += "[" + dimension.serialize() + "]"
+    return result

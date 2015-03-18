@@ -33,10 +33,10 @@ class VariableDeclarator(SourceElement):
 
     def serialize(self):
         if self.initializer is None:
+            return self.variable.serialize()
+        else:
             return (self.variable.serialize() + " = " +
                     self.initializer.serialize())
-        else:
-            return self.variable.serialize()
 
     def __init__(self, variable, initializer=None):
         super(VariableDeclarator, self).__init__()

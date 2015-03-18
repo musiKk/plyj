@@ -231,7 +231,7 @@ class FieldAccess(Expression):
         if self.target is None:
             target = ""
         else:
-            target = self.target + "."
+            target = self.target.serialize() + "."
         return target + self.name.serialize()
 
     def __init__(self, name, target):
@@ -253,7 +253,7 @@ class ArrayAccess(Expression):
         super(ArrayAccess, self).__init__()
         self._fields = ['index', 'target']
 
-        self._name = assert_type(index, Expression)
+        self._index = assert_type(index, Expression)
         self._target = assert_target(target)
         assert self._target is not None
 
@@ -297,7 +297,7 @@ class ArrayInitializer(SourceElement):
     elements = property(attrgetter("_elements"))
 
     def serialize(self):
-        return "{" + ", ".join(self.elements) + "}"
+        return "{" + ", ".join([x.serialize() for x in self.elements]) + "}"
 
     def __init__(self, elements=None):
         super(ArrayInitializer, self).__init__()

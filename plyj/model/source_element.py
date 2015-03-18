@@ -227,7 +227,7 @@ class Statement(SourceElement):
         if self.label is None:
             return self.statement_serialize()
         else:
-            return self.label + ":" + self.statement_serialize()
+            return self.label.serialize() + ": " + self.statement_serialize()
 
     def __init__(self):
         super(Statement, self).__init__()

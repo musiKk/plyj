@@ -101,7 +101,7 @@ EXCEPTIONS = [
 
 def _should_skip(file_name):
     for e in EXCEPTIONS:
-        if file_name.endswith(e):
+        if file_name.replace("\\", "/").endswith(e):
             return True
     return False
 
@@ -179,6 +179,7 @@ class OpenJDK7Test(unittest.TestCase):
                 failures.append(java_file)
             else:
                 message = "Parsed file ({:.1f}%) \"{}\""
+            parse_result.serialize()
             print message.format(percent, java_file)
         for failure in failures:
             print "Failed to parse \"{}\"".format(failure)

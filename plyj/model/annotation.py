@@ -17,11 +17,11 @@ class Annotation(Modifier):
     single_member = property(attrgetter("_single_member"))
 
     def serialize(self):
-        if self.members is None:
+        if len(self.members) == 0:
             if self.single_member is None:
-                return "@" + self.name
+                return "@" + self.name.serialize()
             else:
-                return "@{}({})".format(self.name,
+                return "@{}({})".format(self.name.serialize(),
                                         self.single_member.serialize())
         else:
             assert self.single_member is None

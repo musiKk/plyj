@@ -45,11 +45,14 @@ class VariableDeclaration(Declaration):
     variable_declarators = property(attrgetter("_variable_declarators"))
     modifiers = property(attrgetter("_modifiers"))
 
-    def statement_serialize(self):
+    def _serialize(self):
         result = serialize_modifiers(self.modifiers)
         result += self.type.serialize()
         result += ", ".join([x.serialize() for x in self.variable_declarators])
         return result
+
+    def serialize(self):
+        return self._serialize()
 
     def __init__(self, type_, variable_declarators, modifiers=None):
         super(VariableDeclaration, self).__init__()
@@ -65,7 +68,8 @@ class VariableDeclaration(Declaration):
 
 
 class VariableDeclarationStatement(VariableDeclaration, Statement):
-    pass
+    def statement_serialize(self):
+        return self._serialize()
 
 
 class IfThenElse(Statement):
@@ -114,10 +118,15 @@ class For(Statement):
     body = property(attrgetter("_body"))
 
     def statement_serialize(self):
-        return "for ({};{};{}) {}".format(self.init.serialize(),
-                                          self.predicate.serialize(),
-                                          self.update.serialize(),
-                                          self.body.serialize())
+        init = ", ".join([x.serialize() for x in self.init])
+        update = ", ".join([x.serialize() for x in self.update])
+        predicate = ""
+        if self.predicate is not None:
+            predicate = self.predicate.serialize()
+        body = ""
+        if self.body is not None:
+            body = self.body.serialize()
+        return "for ({};{};{}) {}".format(init, predicate, update, body)
 
     def __init__(self, init, predicate, update, body):
         super(For, self).__init__()
@@ -199,7 +208,7 @@ class SwitchCase(SourceElement):
     body = property(attrgetter("_body"))
     default = property(attrgetter("_default"))
 
-    def statement_serialize(self):
+    def serialize(self):
         result = ""
         if self.default:
             result += "default:\n"
@@ -207,6 +216,7 @@ class SwitchCase(SourceElement):
             for case in self.cases:
                 result += "case " + case.serialize() + ":\n"
         result += serialize_body(self.body)
+        return result
 
     def __init__(self, cases, body=None):
         super(SwitchCase, self).__init__()
@@ -296,7 +306,7 @@ class Synchronized(Statement):
 
     def statement_serialize(self):
         return ("synchronized (" + self.monitor.serialize() + ") " +
-                self.body.serialize())
+                serialize_body(self.body))
 
     def __init__(self, monitor, body):
         super(Synchronized, self).__init__()
@@ -396,7 +406,7 @@ class Resource(SourceElement):
     modifiers = property(attrgetter("_modifiers"))
     initializer = property(attrgetter("_initializer"))
 
-    def statement_serialize(self):
+    def serialize(self):
         initializer = ""
         if self.initializer is not None:
             initializer = " = " + self.initializer.serialize()

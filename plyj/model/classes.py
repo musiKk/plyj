@@ -76,8 +76,8 @@ class ConstructorDeclaration(Declaration):
             self.name.serialize(),
             serialize_type_parameters(self.type_parameters),
             serialize_parameters(self.parameters),
-            self.throws.serialize(),
-            self.block.serialize()
+            "" if self.throws is None else self.throws.serialize(),
+            "" if self.block is None else self.block.serialize()
         )
 
     def __init__(self, name, block, modifiers=None, type_parameters=None,
@@ -109,7 +109,9 @@ class EmptyDeclaration(Declaration):
     """
     Created for stray semi-colons (;) in class/interface definitions.
     """
-    pass
+    @staticmethod
+    def serialize():
+        return ""
 
 
 class FieldDeclaration(VariableDeclaration):
@@ -148,7 +150,7 @@ class Wildcard(SourceElement):
 
     def serialize(self):
         return "?{}".format(
-            "".join([" " + x for x in self.bounds])
+            "".join([" " + x.serialize() for x in self.bounds])
         )
 
     def __init__(self, bounds=None):

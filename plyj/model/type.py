@@ -91,7 +91,8 @@ class TypeParameter(SourceElement):
     def serialize(self):
         extends = ""
         if self.extends is not None:
-            extends = " extends " + self.extends.serialize()
+            extends = ", ".join([x.serialize() for x in self.extends])
+            extends = " extends " + extends
         return self.name.serialize() + extends
 
     def __init__(self, name, extends=None):
