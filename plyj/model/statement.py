@@ -337,13 +337,14 @@ class Try(Statement):
 
     def statement_serialize(self):
         result = "try "
-        if self.resources is not None:
+        if len(self.resources) > 0:
             resources = [x.serialize() for x in self.resources]
-            result += "(" + ";".join(resources) + ")"
+            result += "(" + ";".join(resources) + ") "
         result += self.block.serialize()
-        result += "".join([x.serialize() + "\n" for x in self.catches])
+        result += " "
+        result += "\n".join([x.serialize() for x in self.catches])
         if self.finally_ is not None:
-            result += self.finally_.serialize()
+            result += "\n" + self.finally_.serialize()
         return result
 
     def __init__(self, block, catches=None, finally_=None, resources=None):
@@ -374,7 +375,7 @@ class Catch(SourceElement):
     def serialize(self):
         result = "catch (" + serialize_modifiers(self.modifiers)
         result += " | ".join([x.serialize() for x in self.types])
-        result += self.variable.serialize()
+        result += " " + self.variable.serialize()
         result += ") " + self.block.serialize()
         return result
 

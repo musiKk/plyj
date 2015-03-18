@@ -82,12 +82,16 @@ def serialize_implements(implements):
         return "implements " + ", ".join(implements) + " "
 
 
+def indent(string):
+    return "\n".join(["    " + x for x in string.split("\n")])
+
+
 def serialize_body(body):
     if len(body) == 0:
         return "{}"
     else:
-        body = ["    " + x.serialize() for x in body]
-        return "{\n" + ";\n".join(body) + "\n}\n"
+        body = [indent(x.serialize()) + ";\n" for x in body]
+        return "{\n" + "".join(body) + "}"
 
 
 def serialize_modifiers(modifiers):
@@ -103,7 +107,7 @@ def serialize_parameters(parameters):
 
 
 def serialize_type_arguments(type_arguments):
-    if type_arguments is None:
+    if len(type_arguments) == 0:
         return ""
     elif type_arguments == "diamond":
         return "<>"

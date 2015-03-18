@@ -25,7 +25,7 @@ class MethodDeclaration(Declaration):
         type_parameters = serialize_type_parameters(self.type_parameters)
         dimensions = "[]" * self.extended_dims.value
         throws = "" if self.throws is None else self.throws.serialize()
-        return "{} {} {}{}({}){} {}{}".format(
+        return "{}{} {}{}({}){} {}{}".format(
             serialize_modifiers(self.modifiers),
             self.return_type.serialize(),
             self.name.serialize(),

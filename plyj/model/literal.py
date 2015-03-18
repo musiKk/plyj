@@ -14,7 +14,8 @@ class Literal(Expression):
         if isinstance(self.value, (int, float)):
             return self.value
         # No need to escape string because it is already escaped.
-        return "\"" + self.value + "\""
+        # Value already has quotes too.
+        return self.value
 
     def __init__(self, value):
         super(Literal, self).__init__()
