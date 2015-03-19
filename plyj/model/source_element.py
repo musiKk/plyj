@@ -28,6 +28,8 @@ class SourceElement(object):
     def __eq__(self, other):
         if not isinstance(other, SourceElement):
             return False
+        if type(other) != type(self):
+            return False
         my_keys = set(self.__dict__.keys()) - IGNORE_KEYS
         your_keys = set(other.__dict__.keys()) - IGNORE_KEYS
 

@@ -13,6 +13,8 @@ def find_java_files():
         for f in files:
             if f.endswith(".java"):
                  retn.append(os.path.join(root, f))
+
+    retn.remove("/home/matthew/Documents/Swig/Examples/test-suite/java/profiletest_runme.java")
     return retn
 
 p = Parser()

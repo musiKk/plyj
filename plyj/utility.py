@@ -98,15 +98,18 @@ def needs_semicolon(x):
         return True
 """
 
-def serialize_body(body, default="{}"):
+def serialize_body(body, default="{}", braces=True):
     if len(body) == 0:
         return default
     else:
-        result = "{\n"
+        result = ""
+        if braces:
+            result += "{\n"
         for statement in body:
             result += indent(statement.serialize())
             result += "\n"
-        result += "}"
+        if braces:
+            result += "}"
         return result
 
 

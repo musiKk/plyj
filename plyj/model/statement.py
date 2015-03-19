@@ -230,7 +230,7 @@ class SwitchCase(SourceElement):
         else:
             for case in self.cases:
                 result += "case " + case.serialize() + ":\n"
-        result += serialize_body(self.body)
+        result += serialize_body(self.body, "", False)
         return result
 
     def __init__(self, cases, body=None):

@@ -8,13 +8,37 @@ from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Modifier, Declaration
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import assert_none_or, assert_type, serialize_type_parameters, serialize_extends, serialize_implements, \
-    serialize_body, serialize_modifiers
-
+    serialize_body, serialize_modifier
 
 class Annotation(Modifier):
+    """
+    An Annotation is serialized to the following:
+
+    If there are no members:
+        @<name>
+    If there is a single_member:
+        @<name>(<single_member>)
+    If there are members (implies no single member):
+        @<name>(<members separated by commas>)
+    """
     name = property(attrgetter("_name"))
     members = property(attrgetter("_members"))
     single_member = property(attrgetter("_single_member"))
+
+    def __init__(self, name, members=None, single_member=None):
+        super(Annotation, self).__init__()
+        self._fields = ['name', 'members', 'single_member']
+
+        members = self._absorb_ase_tokens(members)
+
+        if single_member is not None:
+            assert members is None
+
+        self._name = None
+
+        self.name = name
+        self.members = self._assert_list(members, AnnotationMember)
+        self._single_member = assert_none_or(single_member, MEMBER_VALUE_TYPES)
 
     def serialize(self):
         if len(self.members) == 0:
@@ -28,18 +52,12 @@ class Annotation(Modifier):
             members = ",".join([x.serialize() for x in self.members])
             return "@{}({})".format(self.name, members)
 
-    def __init__(self, name, members=None, single_member=None):
-        super(Annotation, self).__init__()
-        self._fields = ['name', 'members', 'single_member']
-
-        members = self._absorb_ase_tokens(members)
-
-        if single_member is not None:
-            assert members is None
-
+    @name.setter
+    def name(self, name):
         self._name = Name.ensure(name, False)
-        self._members = self._assert_list(members, AnnotationMember)
-        self._single_member = assert_none_or(single_member, MEMBER_VALUE_TYPES)
+
+
+
 
 MEMBER_VALUE_TYPES = (Annotation, Expression, ArrayInitializer)
 
