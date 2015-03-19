@@ -12,6 +12,7 @@ class SourceElement(object):
     A SourceElement is the base class for all elements that occur in a Java
     file parsed by plyj.
     """
+    __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         super(SourceElement, self).__init__()
@@ -41,6 +42,10 @@ class SourceElement(object):
 
     def __ne__(self, other):
         return not self == other
+
+    @abc.abstractmethod
+    def serialize(self):
+        pass
 
     def _assert_body(self, body):
         from plyj.model.annotation import AnnotationDeclaration
@@ -238,19 +243,28 @@ class Statement(SourceElement):
         self._label = Name.ensure(label, True)
 
 
+class StatementNoPostfixSemicolon(Statement):
+    @abc.abstractmethod
+    def statement_serialize(self):
+        pass
+
+
 class Expression(SourceElement):
-    __metaclass__ = abc.ABCMeta
-    pass
+    @abc.abstractmethod
+    def serialize(self):
+        pass
 
 
 class Declaration(SourceElement):
     """
     Something acceptable to find within the body of a class
     """
-    __metaclass__ = abc.ABCMeta
-    pass
+    @abc.abstractmethod
+    def serialize(self):
+        pass
 
 
 class Modifier(SourceElement):
-    __metaclass__ = abc.ABCMeta
-    pass
+    @abc.abstractmethod
+    def serialize(self):
+        pass

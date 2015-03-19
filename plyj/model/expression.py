@@ -147,6 +147,10 @@ class Unary(Expression):
             return expression + "++"
         elif sign == "x--":
             return expression + "--"
+        elif sign == "++x":
+            return "++" + expression
+        elif sign == "--x":
+            return "--" + expression
         else:
             return sign + expression
 
@@ -230,7 +234,7 @@ class InstanceCreation(Expression):
             serialize_type_arguments(self.type_arguments),
             self.instance_type.serialize(),
             serialize_arguments(self.arguments),
-            serialize_body(self.body)
+            serialize_body(self.body, "")
         )
 
     def __init__(self, instance_type, type_arguments=None, arguments=None,

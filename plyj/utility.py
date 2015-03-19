@@ -1,4 +1,5 @@
-from plyj.model.source_element import AnonymousSE, Expression, Modifier
+from plyj.model.source_element import AnonymousSE, Expression, \
+    StatementNoPostfixSemicolon, Declaration, Statement
 
 
 def assert_none_or_ensure(x, class_or_type_or_tuple, *ensure_args):
@@ -86,13 +87,27 @@ def indent(string):
     return "\n".join(["    " + x for x in string.split("\n")])
 
 
-def serialize_body(body, semicolons=True):
+"""
+def needs_semicolon(x):
+    if isinstance(x, Statement):
+        return not isinstance(x, StatementNoPostfixSemicolon)
+    elif not isinstance(x, Declaration):
+        # Make sure we've check that this isn't a statement first.
+        # VariableDeclarationStatement is both a declaration and a
+        # statement, but it requires a postfix seimcolon
+        return True
+"""
+
+def serialize_body(body, default="{}"):
     if len(body) == 0:
-        return "{}"
+        return default
     else:
-        after_tokens = ";\n" if semicolons else "\n"
-        body = [indent(x.serialize()) + after_tokens for x in body]
-        return "{\n" + "".join(body) + "}"
+        result = "{\n"
+        for statement in body:
+            result += indent(statement.serialize())
+            result += "\n"
+        result += "}"
+        return result
 
 
 def serialize_modifiers(modifiers):

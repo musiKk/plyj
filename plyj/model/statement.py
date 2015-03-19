@@ -3,7 +3,7 @@ from operator import attrgetter
 from plyj.model.modifier import BasicModifier
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, Statement, Expression, \
-    Modifier, AnonymousSE, Declaration
+    Modifier, AnonymousSE, Declaration, StatementNoPostfixSemicolon
 from plyj.model.type import Type
 from plyj.model.variable import VariableDeclarator, Variable
 from plyj.utility import assert_type, assert_none_or, assert_none_or_ensure, \
@@ -13,10 +13,10 @@ from plyj.utility import assert_type, assert_none_or, assert_none_or_ensure, \
 
 class Empty(Statement):
     def statement_serialize(self):
-        return ""
+        return ";"
 
 
-class Block(Statement):
+class Block(StatementNoPostfixSemicolon):
     statements = property(attrgetter("_statements"))
 
     def statement_serialize(self):
@@ -50,6 +50,7 @@ class VariableDeclaration(Declaration):
         result += self.type.serialize()
         result += " "
         result += ", ".join([x.serialize() for x in self.variable_declarators])
+        result += ";"
         return result
 
     def serialize(self):
@@ -73,7 +74,7 @@ class VariableDeclarationStatement(VariableDeclaration, Statement):
         return self._serialize()
 
 
-class IfThenElse(Statement):
+class IfThenElse(StatementNoPostfixSemicolon):
     predicate = property(attrgetter("_predicate"))
     if_true = property(attrgetter("_if_true"))
     if_false = property(attrgetter("_if_false"))
@@ -91,8 +92,8 @@ class IfThenElse(Statement):
             return "if ({}) {}".format(self.predicate.serialize(), if_true)
         else:
             if_false = self._format(self.if_false)
-            return "if ({}){};\nelse {}".format(self.predicate.serialize(),
-                                                if_true, if_false)
+            return "if ({}){}\nelse {}".format(self.predicate.serialize(),
+                                               if_true, if_false)
 
     def __init__(self, predicate, if_true=None, if_false=None):
         super(IfThenElse, self).__init__()
@@ -103,7 +104,7 @@ class IfThenElse(Statement):
         self._if_false = assert_none_or(if_false, Statement)
 
 
-class While(Statement):
+class While(StatementNoPostfixSemicolon):
     predicate = property(attrgetter("_predicate"))
     body = property(attrgetter("_body"))
 
@@ -119,14 +120,17 @@ class While(Statement):
         self._body = assert_none_or(body, Statement)
 
 
-class For(Statement):
+class For(StatementNoPostfixSemicolon):
     init = property(attrgetter("_init"))
     predicate = property(attrgetter("_predicate"))
     update = property(attrgetter("_update"))
     body = property(attrgetter("_body"))
 
     def statement_serialize(self):
-        init = ", ".join([x.serialize() for x in self.init])
+        if isinstance(self.init, VariableDeclarationStatement):
+            init = self.init.serialize()[:-1]
+        else:
+            init = ", ".join(x.serialize() for x in self.init)
         update = ", ".join([x.serialize() for x in self.update])
         predicate = ""
         if self.predicate is not None:
@@ -140,14 +144,17 @@ class For(Statement):
         super(For, self).__init__()
         self._fields = ['init', 'predicate', 'update', 'body']
 
-        self._init = self._assert_list(init, (Expression,
-                                              VariableDeclarationStatement))
+        if isinstance(init, VariableDeclarationStatement):
+            self._init = init
+        else:
+            self._init = self._assert_list(init, Expression)
+
         self._predicate = assert_none_or(predicate, Expression)
         self._update = self._assert_list(update, Expression)
         self._body = assert_type(body, Statement)
 
 
-class ForEach(Statement):
+class ForEach(StatementNoPostfixSemicolon):
     type = property(attrgetter("_type"))
     variable = property(attrgetter("_variable"))
     iterable = property(attrgetter("_iterable"))
@@ -180,7 +187,7 @@ class Assert(Statement):
     message = property(attrgetter("_message"))
 
     def statement_serialize(self):
-        return "assert {}{}".format(
+        return "assert {}{};".format(
             self.predicate.serialize(),
             "" if self.message is None else ", " + self.message.serialize(),
         )
@@ -193,7 +200,7 @@ class Assert(Statement):
         self._message = assert_none_or(message, Expression)
 
 
-class Switch(Statement):
+class Switch(StatementNoPostfixSemicolon):
     expression = property(attrgetter("_expression"))
     switch_cases = property(attrgetter("_switch_cases"))
 
@@ -244,7 +251,7 @@ class SwitchCase(SourceElement):
         self._default = default
 
 
-class DoWhile(Statement):
+class DoWhile(StatementNoPostfixSemicolon):
     predicate = property(attrgetter("_predicate"))
     body = property(attrgetter("_body"))
 
@@ -265,9 +272,9 @@ class Continue(Statement):
 
     def statement_serialize(self):
         if self.label is None:
-            return "continue"
+            return "continue;"
         else:
-            return "continue " + self.label.serialize()
+            return "continue " + self.label.serialize() + ";"
 
     def __init__(self, label=None):
         super(Continue, self).__init__()
@@ -281,9 +288,9 @@ class Break(Statement):
 
     def statement_serialize(self):
         if self.label is None:
-            return "break"
+            return "break;"
         else:
-            return "break " + self.label.serialize()
+            return "break " + self.label.serialize() + ";"
 
     def __init__(self, label=None):
         super(Break, self).__init__()
@@ -297,9 +304,9 @@ class Return(Statement):
 
     def statement_serialize(self):
         if self.result is None:
-            return "return"
+            return "return;"
         else:
-            return "return " + self.result.serialize()
+            return "return " + self.result.serialize() + ";"
 
     def __init__(self, result=None):
         super(Return, self).__init__()
@@ -308,7 +315,7 @@ class Return(Statement):
         self._result = assert_none_or(result, Expression)
 
 
-class Synchronized(Statement):
+class Synchronized(StatementNoPostfixSemicolon):
     monitor = property(attrgetter("_monitor"))
     body = property(attrgetter("_body"))
 
@@ -328,7 +335,7 @@ class Throw(Statement):
     exception = property(attrgetter("_exception"))
 
     def statement_serialize(self):
-        return "throw " + self.exception.serialize()
+        return "throw " + self.exception.serialize() + ";"
 
     def __init__(self, exception):
         super(Throw, self).__init__()
@@ -337,7 +344,7 @@ class Throw(Statement):
         self._exception = assert_type(exception, Expression)
 
 
-class Try(Statement):
+class Try(StatementNoPostfixSemicolon):
     block = property(attrgetter("_block"))
     catches = property(attrgetter("_catches"))
     finally_ = property(attrgetter("_finally"))
@@ -453,18 +460,11 @@ class ConstructorInvocation(Statement):
         target = ""
         if self.target is not None:
             target = self.target.serialize() + "."
-        return "{}{}{}{}".format(
+        return "{}{}{}{};".format(
             target,
             self.name.serialize(),
             serialize_type_arguments(self.type_arguments),
             serialize_arguments(self.arguments)
-        )
-
-        return "{}{} {}{}".format(
-            serialize_modifiers(self.modifiers),
-            "" if self.type is None else self.type.serialize(),
-            self.variable.serialize(),
-            initializer
         )
 
     def __init__(self, name, target=None, type_arguments=None, arguments=None):
@@ -484,7 +484,7 @@ class ExpressionStatement(Statement):
     expression = property(attrgetter("_expression"))
 
     def statement_serialize(self):
-        return self.expression.serialize()
+        return self.expression.serialize() + ";"
 
     def __init__(self, expression):
         super(ExpressionStatement, self).__init__()

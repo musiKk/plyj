@@ -4,7 +4,8 @@ from plyj.model.method import FormalParameter, Throws
 from plyj.model.modifier import BasicModifier
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, Declaration, Modifier
-from plyj.model.statement import Block, VariableDeclaration
+from plyj.model.statement import Block, VariableDeclaration, \
+    VariableDeclarationStatement
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import assert_type, assert_none_or, serialize_type_parameters, \
     serialize_extends, serialize_implements, serialize_body, \
@@ -41,7 +42,7 @@ class ClassDeclaration(Declaration):
             serialize_type_parameters(self.type_parameters),
             serialize_extends(self.extends),
             serialize_implements(self.implements),
-            serialize_body(self.body, False)
+            serialize_body(self.body)
         )
 
     def __init__(self, name, body, modifiers=None, type_parameters=None,
@@ -113,12 +114,11 @@ class EmptyDeclaration(Declaration):
     """
     Created for stray semi-colons (;) in class/interface definitions.
     """
-    @staticmethod
-    def serialize():
-        return ""
+    def serialize(self):
+        return ";"
 
 
-class FieldDeclaration(VariableDeclaration):
+class FieldDeclaration(VariableDeclarationStatement):
     pass
 
 

@@ -20,7 +20,7 @@ class CompilationUnit(SourceElement):
         if len(self.import_declarations) > 0:
             retn += "\n"
         for x in self.type_declarations:
-            retn += x.serialize() + ";\n"
+            retn += x.serialize() + "\n"
         return retn
 
     def __init__(self, package_declaration=None, import_declarations=None,

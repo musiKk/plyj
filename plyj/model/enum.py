@@ -19,9 +19,16 @@ class EnumDeclaration(Declaration):
 
     def serialize(self):
         body = ""
-        # TODO: Enum must serialize using correct tokens (commas then
-        #       semicolons).
-        assert False
+        in_declarations = False
+        for x in body:
+            if isinstance(x, Declaration):
+                if not in_declarations:
+                    in_declarations = True
+                    body = body[0:-2]  # Remove trailing ",\n"
+                    body += ";\n"
+                body += x.serialize() + ";\n"
+            else:
+                body += x.serialize() + ",\n"
         return "{}{}{} {}{}".format(
             serialize_modifiers(self.modifiers),
             self.name.serialize(),
