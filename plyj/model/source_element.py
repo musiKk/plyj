@@ -11,13 +11,21 @@ class SourceElement(object):
     """
     A SourceElement is the base class for all elements that occur in a Java
     file parsed by plyj.
+
+    The "tokens" field is a dictionary of lists. Each key in the dictionary
+    should be the name of an attribute to which these tokens are related.
+    For example, a function call will have a key called "arguments" in its
+    "tokens" dictionary which will consist of the comma tokens that separate
+    arguments.
+
+    The "_fields" field is a dictionary of
     """
     __metaclass__ = abc.ABCMeta
 
     def __init__(self):
         super(SourceElement, self).__init__()
         self._fields = []
-        self.tokens = []
+        self.tokens = {}
 
     def __repr__(self):
         equals = ("{0}={1!r}".format(k, getattr(self, k))
@@ -61,17 +69,31 @@ class SourceElement(object):
                                         AnnotationDeclaration,
                                         EnumDeclaration))
 
-    def _absorb_ase_tokens(self, ase):
+    def _alter_tokens(self, name, ase, clear_if_not_ase=True):
         """
-        Absorbs all the tokens in the passed AnonymousSE. If it isn't an
-        AnonymousSE, ignore it and return ase. If it is actually an
-        AnonymousSE, move the tokens into this SourceElement and return
-        ase.value
+        Sets the tokens for a particular group from an abstract syntax element.
+        If ase is NOT an AnonymousSE, the tokens for that group are cleared if
+        clear_if_not_ase is True.
+
+        For more information, see the SourceElement class docstring.
+        :type ase: AnonymousSE
+        :type name: str
+        :param name: The token group to replace
+        :param ase: The anonymous syntax element to take the tokens from
+        :return: If ase is an AnonymousSE, "ase.value". Otherwise ase.
         """
         if isinstance(ase, AnonymousSE):
-            self.add_tokens_right(ase)
+            self.tokens[name] = ase.tokens
             return ase.value
+        if clear_if_not_ase:
+            self.tokens[name] = []
         return ase
+
+    def _absorb_ase_tokens(self, ase):
+        """
+        Shortcut to _alter_tokens(ase)
+        """
+        return self._alter_tokens("", ase)
 
     def _assert_list_ensure(self, list_, class_):
         """
@@ -113,14 +135,14 @@ class SourceElement(object):
 
     def add_tokens_right(self, other):
         assert isinstance(other, SourceElement)
-        self.tokens.extend(other.tokens)
-        other.tokens = []
+        self.tokens[""].extend(other.tokens[""])
+        other.tokens[""] = []
 
     def add_tokens_left(self, other):
-        assert isinstance(other, SourceElement)
-        other.tokens.extend(self.tokens)
-        self.tokens = other.tokens
-        other.tokens = []
+        assert isinstance(other, AnonymousSE)
+        other.tokens[""].extend(self.tokens[""])
+        self.tokens[""] = other.tokens[""]
+        other.tokens[""] = []
 
     def accept(self, visitor):
         """
@@ -143,9 +165,6 @@ class SourceElement(object):
 
 
 class AnonymousSE(SourceElement):
-    def serialize(self):
-        return str(self.value)
-
     """
     This is a SourceElement that does not warrant its own class. Before it was
     added, values would be passed around as strings, integers, dicts or other
@@ -154,6 +173,10 @@ class AnonymousSE(SourceElement):
     Java source, so AnonymousSE was added to wrap these values and
     provide room to store the tokens that created them.
     """
+
+    def serialize(self):
+        return str(self.value)
+
     def __init__(self, value):
         super(AnonymousSE, self).__init__()
         self._fields = ['value']
@@ -208,13 +231,13 @@ def collect_tokens(p):
     # Turn the parser result into an AnonymousSE or if it already is
     # a SourceElement, add the tokens to the current element.
     if isinstance(p[0], SourceElement):
-        tokens_before.extend(p[0].tokens)
+        tokens_before.extend(p[0].tokens[""])
         tokens_before.extend(tokens_after)
-        p[0].tokens = tokens_before
+        p[0].tokens[""] = tokens_before
     else:
         tokens_before.extend(tokens_after)
         p[0] = AnonymousSE(p[0])
-        p[0].tokens = tokens_before
+        p[0].tokens[""] = tokens_before
 
 
 class Statement(SourceElement):

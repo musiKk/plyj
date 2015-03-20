@@ -8,7 +8,7 @@ from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Modifier, Declaration
 from plyj.model.type import Type, TypeParameter
 from plyj.utility import assert_none_or, assert_type, serialize_type_parameters, serialize_extends, serialize_implements, \
-    serialize_body, serialize_modifier
+    serialize_body
 
 class Annotation(Modifier):
     """
@@ -29,16 +29,13 @@ class Annotation(Modifier):
         super(Annotation, self).__init__()
         self._fields = ['name', 'members', 'single_member']
 
-        members = self._absorb_ase_tokens(members)
-
-        if single_member is not None:
-            assert members is None
-
         self._name = None
+        self._members = None
+        self._single_member = None
 
         self.name = name
-        self.members = self._assert_list(members, AnnotationMember)
-        self._single_member = assert_none_or(single_member, MEMBER_VALUE_TYPES)
+        self.members = members
+        self.single_member = single_member
 
     def serialize(self):
         if len(self.members) == 0:
@@ -55,6 +52,17 @@ class Annotation(Modifier):
     @name.setter
     def name(self, name):
         self._name = Name.ensure(name, False)
+
+    @members.setter
+    def members(self, members):
+        assert self.single_member is None
+        members = self._alter_tokens("members", members)
+        self._members = self._assert_list(members, AnnotationMember)
+
+    @single_member.setter
+    def single_member(self, single_member):
+        assert len(self.members) == 0
+        self._single_member = assert_none_or(single_member, MEMBER_VALUE_TYPES)
 
 
 
