@@ -1,15 +1,14 @@
 #!/usr/bin/env python2
 
 import sys
-from parser import Parser
-import plyj.java_parser
+from plyj.parser import Parser
 import plyj.visitor as m
 
 p = Parser()
 tree = p.parse_file(sys.argv[1])
 
-class MyVisitor(m.Visitor):
 
+class MyVisitor(m.Visitor):
     def __init__(self):
         super(MyVisitor, self).__init__()
 
@@ -38,10 +37,10 @@ class MyVisitor(m.Visitor):
             self.first_field = False
         for var_decl in field_decl.variable_declarators:
             if type(field_decl.type) is str:
-                type_name = field_decl.type
+                type_name = field_decl.type.serialize()
             else:
-                type_name = field_decl.type.name.value
-            print('    ' + type_name + ' ' + var_decl.variable.name)
+                type_name = field_decl.type.name.serialize()
+            print('    ' + type_name + ' ' + var_decl.variable.name.serialize())
 
     def visit_MethodDeclaration(self, method_decl):
         if self.first_method:
@@ -52,20 +51,20 @@ class MyVisitor(m.Visitor):
         param_strings = []
         for param in method_decl.parameters:
             if type(param.type) is str:
-                param_strings.append(param.type + ' ' + param.variable.name)
+                param_strings.append(param.type.serialize() + ' ' + param.variable.serialize())
             else:
-                param_strings.append(param.type.name.value + ' ' + param.variable.name)
-        print('    ' + method_decl.name + '(' + ', '.join(param_strings) + ')')
+                param_strings.append(param.type.name.serialize() + ' ' + param.variable.name.serialize())
+        print('    ' + method_decl.name.serialize() + '(' + ', '.join(param_strings) + ')')
 
         return True
 
     def visit_VariableDeclaration(self, var_declaration):
         for var_decl in var_declaration.variable_declarators:
             if type(var_declaration.type) is str:
-                type_name = var_declaration.type
+                type_name = var_declaration.type.serialize()
             else:
-                type_name = var_declaration.type.name.value
-            print('        ' + type_name + ' ' + var_decl.variable.name)
+                type_name = var_declaration.type.name.serialize()
+            print('        ' + type_name + ' ' + var_decl.variable.name.serialize())
 
 print('declared types:')
 tree.accept(MyVisitor())

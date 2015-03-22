@@ -1,5 +1,4 @@
-from plyj.model.source_element import AnonymousSE, Expression, \
-    StatementNoPostfixSemicolon, Declaration, Statement
+from plyj.model.source_element import AnonymousSE, Expression
 
 
 def assert_none_or_ensure(x, class_or_type_or_tuple, *ensure_args):
@@ -67,10 +66,10 @@ def serialize_type_parameters(type_parameters):
 
 
 def serialize_extends(extends):
-    if extends is None:
+    if extends is None or extends == []:
         return ""
     elif isinstance(extends, list):
-        return "extends " + "".join([x.serialize() + " " for x in extends])
+        return "extends " + ", ".join([x.serialize() for x in extends]) + " "
     else:
         return "extends " + extends.serialize() + " "
 
@@ -84,7 +83,13 @@ def serialize_implements(implements):
 
 
 def indent(string):
-    return "\n".join(["    " + x for x in string.split("\n")])
+    indented = []
+    for line in string.split("\n"):
+        if line.strip() != "":
+            indented.append("    " + line)
+        else:
+            indented.append("")
+    return "\n".join(indented)
 
 
 """
@@ -93,10 +98,11 @@ def needs_semicolon(x):
         return not isinstance(x, StatementNoPostfixSemicolon)
     elif not isinstance(x, Declaration):
         # Make sure we've check that this isn't a statement first.
-        # VariableDeclarationStatement is both a declaration and a
+        # VariableDeclaration is both a declaration and a
         # statement, but it requires a postfix seimcolon
         return True
 """
+
 
 def serialize_body(body, default="{}", braces=True):
     if len(body) == 0:

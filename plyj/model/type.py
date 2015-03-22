@@ -12,39 +12,31 @@ class Type(SourceElement):
     enclosed_in = property(attrgetter("_enclosed_in"))
     dimensions = property(attrgetter("_dimensions"))
 
-    def serialize(self):
-        enclosed_in = ""
-        if self.enclosed_in is not None:
-            enclosed_in += self.enclosed_in.serialize() + "."
-        type_args = serialize_type_arguments(self.type_arguments)
-        dimensions = serialize_dimensions(self.dimensions)
-        return enclosed_in + type_args + self.name.serialize() + dimensions
-
     def __init__(self, name, type_arguments=None, enclosed_in=None,
                  dimensions=0):
         super(Type, self).__init__()
         self._fields = ['name', 'type_arguments', 'enclosed_in', 'dimensions']
 
-        self._name = Name.ensure(name, False)
+        self._name = None
         self._type_arguments = None
-        self._type_arguments_tokens = []
         self._dimensions = None
         self._enclosed_in = None
 
-        self.set_enclosed_in(enclosed_in)
-        self.set_dimensions(dimensions)
-        self.set_type_arguments(type_arguments)
+        self.name = name
+        self.enclosed_in = enclosed_in
+        self.dimensions = dimensions
+        self.type_arguments = type_arguments
 
-    def set_type_arguments(self, type_arguments):
-        # First, remove all tokens from the previous value of type_arguments
-        for x in self._type_arguments_tokens:
-            self.tokens.remove(x)
-        # Collect any new tokens if required
-        if type_arguments is AnonymousSE:
-            self._type_arguments_tokens = type_arguments.tokens
-            self.tokens.extend(self._type_arguments_tokens)
-            type_arguments = type_arguments.value
-        if type_arguments == 'diamond':
+    @name.setter
+    def name(self, name):
+        self._name = Name.ensure(name, False)
+
+    @type_arguments.setter
+    def type_arguments(self, type_arguments):
+        # Replace tokens
+        type_arguments = self._alter_tokens("type_arguments", type_arguments)
+
+        if isinstance(type_arguments, str) and type_arguments == 'diamond':
             # "Diamond" is an acceptable value for type arguments. I.E "<>"
             self._type_arguments = type_arguments
         else:
@@ -58,11 +50,13 @@ class Type(SourceElement):
             self._type_arguments = self._assert_list(type_arguments,
                                                      (Type, Wildcard))
 
-    def set_enclosed_in(self, enclosed_in):
-        self._enclosed_in = assert_none_or_ensure(enclosed_in, Type)
-
-    def set_dimensions(self, dimensions):
+    @dimensions.setter
+    def dimensions(self, dimensions):
         self._dimensions = AnonymousSE.ensure(dimensions)
+
+    @enclosed_in.setter
+    def enclosed_in(self, enclosed_in):
+        self._enclosed_in = assert_none_or_ensure(enclosed_in, Type)
 
     @staticmethod
     def ensure(type_name):
@@ -80,6 +74,14 @@ class Type(SourceElement):
         return type_ in ["boolean", "void", "byte", "short", "int", "long",
                          "char", "float", "double"]
 
+    def serialize(self):
+        enclosed_in = ""
+        if self.enclosed_in is not None:
+            enclosed_in += self.enclosed_in.serialize() + "."
+        type_args = serialize_type_arguments(self.type_arguments)
+        dimensions = serialize_dimensions(self.dimensions)
+        return enclosed_in + self.name.serialize() + type_args + dimensions
+
 
 class TypeParameter(SourceElement):
     """
@@ -88,16 +90,27 @@ class TypeParameter(SourceElement):
     name = property(attrgetter("_name"))
     extends = property(attrgetter("_extends"))
 
-    def serialize(self):
-        extends = ""
-        if self.extends is not None:
-            extends = ", ".join([x.serialize() for x in self.extends])
-            extends = " extends " + extends
-        return self.name.serialize() + extends
-
     def __init__(self, name, extends=None):
         super(TypeParameter, self).__init__()
         self._fields = ['name', 'extends']
 
+        self._name = None
+        self._extends = None
+
+        self.name = name
+        self.extends = extends
+
+    @name.setter
+    def name(self, name):
         self._name = Name.ensure(name, True)
+
+    @extends.setter
+    def extends(self, extends):
         self._extends = self._assert_list_ensure(extends, Type)
+
+    def serialize(self):
+        extends = ""
+        if len(self.extends) != 0:
+            extends = " & ".join([x.serialize() for x in self.extends])
+            extends = " extends " + extends
+        return self.name.serialize() + extends

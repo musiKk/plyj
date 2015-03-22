@@ -169,20 +169,18 @@ class OpenJDK7Test(unittest.TestCase):
         java_files = self.find_java_files()
 
         p = Parser()
-        failures = []
         for i, java_file in enumerate(java_files):
             percent = i / float(len(java_files)) * 100.0
             if _should_skip(java_file):
                 continue
             sys.stdout.write('[{:.1f}%] \"{}\": '.format(percent, java_file))
             sys.stdout.flush()
+
             parse_result = p.parse_file(java_file)
-            parse_result.serialize()
-            if parse_result is None:
-                sys.stdout.write("FAILED\n")
-                failures.append(java_file)
-            else:
-                sys.stdout.write("OK\n")
-        for failure in failures:
-            print "Failed to parse \"{}\"".format(failure)
-        self.assertEqual(0, len(failures))
+            self.assertIsNotNone(parse_result)
+            parse_string = parse_result.serialize()
+            parse_result2 = p.parse_string(parse_string)
+            self.assertIsNotNone(parse_result2)
+            self.assertEqual(parse_result, parse_result2)
+
+            sys.stdout.write("OK\n")

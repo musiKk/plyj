@@ -1,20 +1,17 @@
 #!/usr/bin/env python2
 import os
-
 from plyj.parser import Parser
 
-DOWNLOAD_FOLDER = "/home/matthew/Documents/Swig"
+JAVA_FILES_FOLDER = "./"
 
 
 def find_java_files():
     retn = []
     # Thanks ghostdog74 https://stackoverflow.com/questions/3964681
-    for root, dirs, files in os.walk(DOWNLOAD_FOLDER):
+    for root, dirs, files in os.walk(JAVA_FILES_FOLDER):
         for f in files:
             if f.endswith(".java"):
                  retn.append(os.path.join(root, f))
-
-    retn.remove("/home/matthew/Documents/Swig/Examples/test-suite/java/profiletest_runme.java")
     return retn
 
 p = Parser()

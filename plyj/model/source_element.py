@@ -34,19 +34,56 @@ class SourceElement(object):
         return "{0}({1})".format(self.__class__.__name__, args)
 
     def __eq__(self, other):
-        if not isinstance(other, SourceElement):
-            return False
-        if type(other) != type(self):
-            return False
-        my_keys = set(self.__dict__.keys()) - IGNORE_KEYS
-        your_keys = set(other.__dict__.keys()) - IGNORE_KEYS
+        """
+        Unfortunately, we hit Python's built in recursion limit on some files
+        in the JDK7. So we're going to have to work around it by using a stack
+        of some kind.
+        :param other:
+        :return:
+        """
+        class StackItem:
+            def __init__(self, compare_left, compare_right, compare_iterator):
+                self.compare_left = compare_left
+                self.compare_right = compare_right
+                self.compare_iterator = compare_iterator
 
-        if my_keys != your_keys:
-            return False
+        stack = [StackItem(self, other, None)]
 
-        for key in my_keys:
-            if self.__dict__[key] != other.__dict__[key]:
-                return False
+        while len(stack) > 0:
+            left = stack[-1].compare_left
+            right = stack[-1].compare_right
+            iterator = stack[-1].compare_iterator
+
+            if iterator is None:
+                # Set up the iterator
+                if not isinstance(other, SourceElement):
+                    return False
+                if type(left) != type(right):
+                    return False
+
+                left_keys = set(left.__dict__.keys()) - IGNORE_KEYS
+                right_keys = set(right.__dict__.keys()) - IGNORE_KEYS
+
+                if left_keys != right_keys:
+                    return False
+
+                iterator = stack[-1].compare_iterator = left_keys.__iter__()
+
+            for key in iterator:
+                # Check everything unless it is a SourceElement
+                left_element = left.__dict__[key]
+                right_element = right.__dict__[key]
+                if type(left_element) != type(right_element):
+                    return False
+
+                if isinstance(left_element, SourceElement):
+                    stack.append(StackItem(left_element, right_element, None))
+                    break
+                else:
+                    if left_element != right_element:
+                        return False
+            else:
+                stack.pop()
 
         return True
 
@@ -83,7 +120,9 @@ class SourceElement(object):
         :return: If ase is an AnonymousSE, "ase.value". Otherwise ase.
         """
         if isinstance(ase, AnonymousSE):
-            self.tokens[name] = ase.tokens
+            if "" in ase.tokens:
+                self.tokens[name] = ase.tokens[""]
+                assert len(ase.tokens) == 1  # Only has un-grouped ("") tokens.
             return ase.value
         if clear_if_not_ase:
             self.tokens[name] = []
@@ -134,14 +173,23 @@ class SourceElement(object):
         return list_
 
     def add_tokens_right(self, other):
-        assert isinstance(other, SourceElement)
-        self.tokens[""].extend(other.tokens[""])
+        assert isinstance(other, AnonymousSE)
+        if "" not in other.tokens:
+            return
+        if "" in self.tokens:
+            self.tokens[""].extend(other.tokens[""])
+        else:
+            self.tokens[""] = other.tokens[""]
         other.tokens[""] = []
 
     def add_tokens_left(self, other):
         assert isinstance(other, AnonymousSE)
-        other.tokens[""].extend(self.tokens[""])
-        self.tokens[""] = other.tokens[""]
+        if "" not in other.tokens:
+            return
+        if "" in self.tokens:
+            other.tokens[""].extend(self.tokens[""])
+        else:
+            self.tokens[""] = other.tokens[""]
         other.tokens[""] = []
 
     def accept(self, visitor):
@@ -231,7 +279,8 @@ def collect_tokens(p):
     # Turn the parser result into an AnonymousSE or if it already is
     # a SourceElement, add the tokens to the current element.
     if isinstance(p[0], SourceElement):
-        tokens_before.extend(p[0].tokens[""])
+        if "" in p[0].tokens:
+            tokens_before.extend(p[0].tokens[""])
         tokens_before.extend(tokens_after)
         p[0].tokens[""] = tokens_before
     else:
@@ -242,7 +291,16 @@ def collect_tokens(p):
 
 class Statement(SourceElement):
     __metaclass__ = abc.ABCMeta
-    label = property(attrgetter("_label"))
+    statement_label = property(attrgetter("_statement_label"))
+
+    def __init__(self):
+        super(Statement, self).__init__()
+        self._statement_label = None
+
+    @statement_label.setter
+    def statement_label(self, statement_label):
+        from plyj.model.name import Name
+        self._statement_label = Name.ensure(statement_label, True)
 
     @abc.abstractmethod
     def statement_serialize(self):
@@ -254,24 +312,11 @@ class Statement(SourceElement):
         pass
 
     def serialize(self):
-        if self.label is None:
+        if self.statement_label is None:
             return self.statement_serialize()
         else:
-            return self.label.serialize() + ": " + self.statement_serialize()
-
-    def __init__(self):
-        super(Statement, self).__init__()
-        self._label = None
-
-    def set_label(self, label):
-        from plyj.model.name import Name
-        self._label = Name.ensure(label, True)
-
-
-class StatementNoPostfixSemicolon(Statement):
-    @abc.abstractmethod
-    def statement_serialize(self):
-        pass
+            return (self.statement_label.serialize() + ": " +
+                    self.statement_serialize())
 
 
 class Expression(SourceElement):

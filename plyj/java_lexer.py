@@ -2,6 +2,13 @@
 
 
 class JavaLexer(object):
+    """
+    There should be no reason to use this class directly. Please use Parser in
+    parser.py
+
+    This class implements the Java lexer for Lex.
+    """
+
     keywords = ('this', 'class', 'void', 'super', 'extends', 'implements',
                 'enum', 'interface', 'byte', 'short', 'int', 'long', 'char',
                 'float', 'double', 'boolean', 'null', 'true', 'false', 'final',

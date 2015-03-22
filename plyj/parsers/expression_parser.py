@@ -388,7 +388,7 @@ class ExpressionParser(object):
                                 | field_access
                                 | method_invocation
                                 | array_access"""
-        if p[1] == "this":
+        if isinstance(p[1], str) and p[1] == "this":
             p[0] = Name("this")
         else:
             p[0] = p[1]
@@ -479,8 +479,8 @@ class ExpressionParser(object):
                : '(' name type_arguments \
                  '.' class_or_interface_type dims_opt \
                  ')' unary_expression_not_plus_minus"""
-        p[5].set_dimensions(p[6])
-        p[5].set_enclosed_in(Type(p[2], type_arguments=p[3]))
+        p[5].dimensions = p[6]
+        p[5].enclosed_in = Type(p[2], type_arguments=p[3])
         p[0] = Cast(p[5], p[8])
         collect_tokens(p)
 

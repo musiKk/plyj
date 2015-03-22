@@ -174,7 +174,7 @@ class ClassParser(object):
     @staticmethod
     def p_constructor_declaration(p):
         """constructor_declaration : constructor_header method_body"""
-        p[1].set_body(p[2])
+        p[1].body = p[2]
         p[0] = p[1]
 
     @staticmethod
@@ -182,8 +182,8 @@ class ClassParser(object):
         """constructor_header \
                : constructor_header_name formal_parameter_list_opt ')' \
                  method_header_throws_clause_opt"""
-        p[1].set_parameters(p[2])
-        p[1].set_throws(p[4])
+        p[1].parameters = p[2]
+        p[1].throws = p[4]
         p[0] = p[1]
         collect_tokens(p)
 

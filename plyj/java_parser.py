@@ -12,6 +12,12 @@ from parsers.type_parser import TypeParser
 
 class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser,
                  ClassParser, StatementParser, CompilationUnitParser):
+    """
+    There should be no reason to use this class directly. Please use Parser in
+    parser.py
+
+    This class implements the Java parser for YACC.
+    """
     tokens = JavaLexer.tokens
 
     @staticmethod

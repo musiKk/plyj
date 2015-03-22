@@ -16,20 +16,50 @@ class Variable(SourceElement):
     name = property(attrgetter("_name"))
     dimensions = property(attrgetter("_dimensions"))
 
-    def serialize(self):
-        return self.name.serialize() + serialize_dimensions(self.dimensions)
-
     def __init__(self, name, dimensions=0):
         super(Variable, self).__init__()
         self._fields = ['name', 'dimensions']
 
+        self._name = None
+        self._dimensions = None
+
+        self.name = name
+        self.dimensions = dimensions
+
+    @name.setter
+    def name(self, name):
         self._name = Name.ensure(name, True)
+
+    @dimensions.setter
+    def dimensions(self, dimensions):
         self._dimensions = AnonymousSE.ensure(dimensions)
+
+    def serialize(self):
+        return self.name.serialize() + serialize_dimensions(self.dimensions)
 
 
 class VariableDeclarator(SourceElement):
     variable = property(attrgetter("_variable"))
     initializer = property(attrgetter("_initializer"))
+
+    def __init__(self, variable, initializer=None):
+        super(VariableDeclarator, self).__init__()
+        self._fields = ['variable', 'initializer']
+
+        self._variable = None
+        self._initializer = None
+
+        self.variable = variable
+        self.initializer = initializer
+
+    @variable.setter
+    def variable(self, variable):
+        self._variable = assert_type(variable, Variable)
+
+    @initializer.setter
+    def initializer(self, initializer):
+        self._initializer = assert_none_or(initializer,
+                                           (Expression, ArrayInitializer))
 
     def serialize(self):
         if self.initializer is None:
@@ -37,16 +67,3 @@ class VariableDeclarator(SourceElement):
         else:
             return (self.variable.serialize() + " = " +
                     self.initializer.serialize())
-
-    def __init__(self, variable, initializer=None):
-        super(VariableDeclarator, self).__init__()
-        self._fields = ['variable', 'initializer']
-
-        self._variable = assert_type(variable, Variable)
-        self._initializer = None
-
-        self.set_initializer(initializer)
-
-    def set_initializer(self, initializer):
-        self._initializer = assert_none_or(initializer,
-                                           (Expression, ArrayInitializer))

@@ -18,47 +18,42 @@ foo = Name('foo')
 T = Name('T')
 bar = Name('Bar')
 
-
-def binary(operator, operand1, operand2):
-    return BinaryExpression(operator, operand1, operand2)
-
-
 def u(operator, operand):
     return Unary(operator, operand)
 
 expression_tests = [
     # simple test for each operator
-    ('1+2', binary('+', one, two)),
-    (' 1 + 2 ', binary('+', one, two)),
-    ('1-2', binary('-', one, two)),
-    ('1*2', binary('*', one, two)),
-    ('1/2', binary('/', one, two)),
-    ('1%2', binary('%', one, two)),
-    ('1^2', binary('^', one, two)),
-    ('1&2', binary('&', one, two)),
-    ('1&&2', binary('&&', one, two)),
-    ('1|2', binary('|', one, two)),
-    ('1||2', binary('||', one, two)),
-    ('1==2', binary('==', one, two)),
-    ('1!=2', binary('!=', one, two)),
-    ('1<2', binary('<', one, two)),
-    ('1<=2', binary('<=', one, two)),
-    ('1>2', binary('>', one, two)),
-    ('1>=2', binary('>=', one, two)),
-    ('1<<2', binary('<<', one, two)),
-    ('1>>2', binary('>>', one, two)),
-    ('1>>>2', binary('>>>', one, two)),
+    ('1+2', Additive('+', one, two)),
+    (' 1 + 2 ', Additive('+', one, two)),
+    ('1-2', Additive('-', one, two)),
+    ('1*2', Multiplicative('*', one, two)),
+    ('1/2', Multiplicative('/', one, two)),
+    ('1%2', Multiplicative('%', one, two)),
+    ('1^2', Xor('^', one, two)),
+    ('1&2', And('&', one, two)),
+    ('1&&2', ConditionalAnd('&&', one, two)),
+    ('1|2', Or('|', one, two)),
+    ('1||2', ConditionalOr('||', one, two)),
+    ('1==2', Equality('==', one, two)),
+    ('1!=2', Equality('!=', one, two)),
+    ('1<2', Relational('<', one, two)),
+    ('1<=2', Relational('<=', one, two)),
+    ('1>2', Relational('>', one, two)),
+    ('1>=2', Relational('>=', one, two)),
+    ('1<<2', Shift('<<', one, two)),
+    ('1>>2', Shift('>>', one, two)),
+    ('1>>>2', Shift('>>>', one, two)),
 
     # left associativity
-    ('1+2+3', binary('+', binary('+', one, two), three)),
+    ('1+2+3', Additive('+', Additive('+', one, two), three)),
 
     # precedence
-    ('1+2*3', binary('+', one, binary('*', two, three))),
+    ('1+2*3', Additive('+', one, Multiplicative('*', two, three))),
 
     # parenthesized expressions
-    ('(1+2)*3', binary('*',
-                       BracketedExpression(binary('+', one, two)),
-                       three)),
+    ('(1+2)*3', Multiplicative('*',
+                               BracketedExpression(Additive('+', one, two)),
+                               three)),
 
     # conditionals
     ('a ? b : c', Conditional(a, b, c)),

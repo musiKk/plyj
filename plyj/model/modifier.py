@@ -17,6 +17,12 @@ class BasicModifier(Modifier):
         super(BasicModifier, self).__init__()
         self._fields = ['value']
 
+        self._value = None
+
+        self.value = value
+
+    @value.setter
+    def value(self, value):
         assert BasicModifier.is_basic_modifier(value)
         self._value = assert_type(value, str)
 
@@ -24,9 +30,18 @@ class BasicModifier(Modifier):
     def ensure_modifier(se):
         if isinstance(se, str):
             return BasicModifier(se)
-        if not isinstance(se, Modifier):
-            assert False
+        assert isinstance(se, Modifier)
         return se
+
+    @staticmethod
+    def set_visibility(modifier_list, new_visibility):
+        for x in modifier_list:
+            if (isinstance(x, BasicModifier) and
+               x.value in ["protected", "public", "private"]):
+                x.value = new_visibility
+                return
+        # Couldn't find visibility specifier.
+        modifier_list.append(BasicModifier(new_visibility))
 
     @staticmethod
     def is_basic_modifier(string):

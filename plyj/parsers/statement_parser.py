@@ -7,8 +7,8 @@ from plyj.model.expression import MethodInvocation
 from plyj.model.source_element import collect_tokens, AnonymousSE
 from plyj.model.statement import Block, ConstructorInvocation, Try, Catch, \
     Throw, DoWhile, SwitchCase, Switch, ForEach, IfThenElse, \
-    ExpressionStatement,  VariableDeclarationStatement, Resource, While, For,  Assert, \
-    Empty, Break, Continue, Return, Synchronized
+    ExpressionStatement,  Resource, While, For,  Assert, \
+    Empty, Break, Continue, Return, Synchronized, VariableDeclaration
 from plyj.model.variable import VariableDeclarator, Variable
 
 
@@ -58,12 +58,12 @@ class StatementParser(object):
     @staticmethod
     def p_local_variable_declaration(p):
         """local_variable_declaration : type variable_declarators"""
-        p[0] = VariableDeclarationStatement(p[1], p[2])
+        p[0] = VariableDeclaration(p[1], p[2])
 
     @staticmethod
     def p_local_variable_declaration2(p):
         """local_variable_declaration : modifiers type variable_declarators"""
-        p[0] = VariableDeclarationStatement(p[2], p[3], modifiers=p[1])
+        p[0] = VariableDeclaration(p[2], p[3], modifiers=p[1])
 
     @staticmethod
     def p_variable_declarators(p):
@@ -216,14 +216,14 @@ class StatementParser(object):
     @staticmethod
     def p_labeled_statement(p):
         """labeled_statement : label ':' statement"""
-        p[3].set_label(p[1])
+        p[3].statement_label = p[1]
         p[0] = p[3]
         collect_tokens(p)
 
     @staticmethod
     def p_labeled_statement_no_short_if(p):
         """labeled_statement_no_short_if : label ':' statement_no_short_if"""
-        p[3].set_label(p[1])
+        p[3].statement_label = p[1]
         p[0] = p[3]
         collect_tokens(p)
 
@@ -330,7 +330,7 @@ class StatementParser(object):
         p1 = p[1].value
         p[0] = ForEach(p1['type'], p1['variable'], p1['iterable'], p[2],
                        modifiers=p1['modifiers'])
-        p[0].add_tokens_left(p[0])
+        p[0].add_tokens_left(p[1])
 
     @staticmethod
     def p_enhanced_for_statement_no_short_if(p):
@@ -339,7 +339,7 @@ class StatementParser(object):
         p1 = p[1].value
         p[0] = ForEach(p1['type'], p1['variable'], p1['iterable'], p[2],
                        modifiers=p1['modifiers'])
-        p[0].add_tokens_left(p[0])
+        p[0].add_tokens_left(p[1])
 
     @staticmethod
     def p_enhanced_for_statement_header(p):
@@ -671,7 +671,7 @@ class StatementParser(object):
         """class_instance_creation_expression \
                : NEW type_arguments class_type '(' argument_list_opt ')' \
                  class_body_opt"""
-        p[0] = InstanceCreation(p[3], type_arguments=p[3], arguments=p[5],
+        p[0] = InstanceCreation(p[3], type_arguments=p[2], arguments=p[5],
                                 body=p[7])
         collect_tokens(p)
 

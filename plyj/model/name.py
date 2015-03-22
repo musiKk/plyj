@@ -7,9 +7,6 @@ class Name(Expression):
     simple = property(attrgetter("_simple"))
     value = property(attrgetter("_value"))
 
-    def serialize(self):
-        return self.value
-
     def __init__(self, value):
         """
         Represents a name.
@@ -18,6 +15,13 @@ class Name(Expression):
         super(Name, self).__init__()
         self._fields = ['value']
 
+        self._value = None
+        self._simple = False
+
+        self.value = value
+
+    @value.setter
+    def value(self, value):
         self._value = assert_type(value, str)
         self._simple = "." not in value
 
@@ -37,3 +41,6 @@ class Name(Expression):
         if simple and not se.simple:
             raise TypeError("Required simple Name, got complex Name")
         return se
+
+    def serialize(self):
+        return self.value

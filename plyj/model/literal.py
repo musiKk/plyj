@@ -8,6 +8,18 @@ from plyj.utility import assert_type
 class Literal(Expression):
     value = property(attrgetter("_value"))
 
+    def __init__(self, value):
+        super(Literal, self).__init__()
+        self._fields = ['value']
+
+        self._value = None
+
+        self.value = value
+
+    @value.setter
+    def value(self, value):
+        self._value = assert_type(value, (int, bool, float, str))
+
     def serialize(self):
         if isinstance(self.value, bool):
             return "true" if self.value else "false"
@@ -16,12 +28,6 @@ class Literal(Expression):
         # No need to escape string because it is already escaped.
         # Value already has quotes too.
         return self.value
-
-    def __init__(self, value):
-        super(Literal, self).__init__()
-        self._fields = ['value']
-
-        self._value = assert_type(value, (int, bool, float, str))
 
 
 class ClassLiteral(Expression):
@@ -34,4 +40,10 @@ class ClassLiteral(Expression):
         super(ClassLiteral, self).__init__()
         self._fields = ['type']
 
+        self._type = None
+
+        self.type = type_
+
+    @type.setter
+    def type(self, type_):
         self._type = Type.ensure(type_)
