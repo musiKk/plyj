@@ -32,8 +32,10 @@ class Parser(object):
         self.lexer.lineno = lineno
         return self.parser.parse(prefix + code, lexer=self.lexer, debug=debug)
 
-    def parse_file(self, _file, debug=0):
-        if type(_file) == str:
-            _file = open(_file)
-        content = _file.read()
+    def parse_file(self, file_, debug=0):
+        if isinstance(file_, str):
+            with open(file_) as file_obj_:
+                content = file_obj_.read()
+        else:
+            content = file_.read()
         return self.parse_string(content, debug=debug)
