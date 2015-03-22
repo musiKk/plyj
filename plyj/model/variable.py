@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 from operator import attrgetter
+from types import NoneType
 from plyj.model.expression import ArrayInitializer
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression
@@ -32,7 +33,8 @@ class Variable(SourceElement):
 
     @dimensions.setter
     def dimensions(self, dimensions):
-        self._dimensions = AnonymousSE.ensure(dimensions)
+        dimensions = self._alter_tokens("dimensions", dimensions)
+        self._dimensions = assert_type(dimensions, int)
 
     def serialize(self):
         return self.name.serialize() + serialize_dimensions(self.dimensions)

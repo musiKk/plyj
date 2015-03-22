@@ -61,7 +61,7 @@ from plyj.model.literal import Literal
 from plyj.model.method import MethodDeclaration
 from plyj.model.modifier import BasicModifier
 from plyj.model.name import Name
-from plyj.model.statement import IfThenElse, Return, Block
+from plyj.model.statement import IfThenElse, Return, Block, ExpressionStatement
 from plyj.model.variable import VariableDeclarator, Variable
 from plyj.parser import Parser
 import abc
@@ -69,7 +69,7 @@ import abc
 
 def find_function_declaration(name, class_decl):
     for i, decl in enumerate(class_decl.body):
-        if isinstance(decl, MethodDeclaration) and decl.name == name:
+        if isinstance(decl, MethodDeclaration) and decl.name.value == name:
             return i, decl
     return None, None
 
@@ -110,12 +110,12 @@ class CacheInstruction(Instruction):
         is_cached_name = "is" + func_decl.name.value + "Cached"
         is_cached_decl = FieldDeclaration(
             "boolean",
-            VariableDeclarator(Variable(is_cached_name, "false")))
+            VariableDeclarator(Variable(is_cached_name), Literal("false")))
 
         cached_name = func_decl.name.value + "Cached"
         cached_decl = FieldDeclaration(
             func_decl.return_type,
-            VariableDeclarator(Variable(cached_name, "false")))
+            VariableDeclarator(Variable(cached_name)))
 
         class_decl.body.insert(func_index, cached_decl)
         class_decl.body.insert(func_index, is_cached_decl)
@@ -130,16 +130,16 @@ class CacheInstruction(Instruction):
             IfThenElse(
                 Unary("!", Name(is_cached_name)),
                 Block([
-                    Assignment(
+                    ExpressionStatement(Assignment(
                         "=",
                         Name(is_cached_name),
                         Literal("true")
-                    ),
-                    Assignment(
+                    )),
+                    ExpressionStatement(Assignment(
                         "=",
                         Name(cached_name),
                         MethodInvocation(func_decl.name)
-                    )
+                    ))
                 ])
             ),
             Return(Name(cached_name))
@@ -181,7 +181,7 @@ class CacheArrayNoNullsInstruction(Instruction):
         if len(get_decl.type_parameters) != 0:
             raise ValueError("Type parameters not supported")
 
-        if get_decl.return_type.name not in ["int", "long"]:
+        if count_decl.return_type.name.value not in ["int", "long"]:
             raise ValueError("Count must return int or long.")
 
         if len(count_decl.parameters) != 0:
@@ -190,7 +190,7 @@ class CacheArrayNoNullsInstruction(Instruction):
         if len(get_decl.parameters) != 1:
             raise ValueError("Exactly 1 parameter allowed in get function.")
 
-        if get_decl.parameters[0].type.name not in ["int", "long"]:
+        if get_decl.parameters[0].type.name.value not in ["int", "long"]:
             raise ValueError("Get parameter muse be int or long.")
 
         get_decl_name = get_decl.name.value
@@ -198,35 +198,36 @@ class CacheArrayNoNullsInstruction(Instruction):
 
         # rename get_decl to a new private function
         BasicModifier.set_visibility(get_decl.modifiers, "private")
-        get_decl.name += get_decl_name + "Uncached"
+        get_decl.name = get_decl_name + "Uncached"
 
         # rename count_decl to a new private function
         BasicModifier.set_visibility(count_decl.modifiers, "private")
-        count_decl.name += count_decl_name + "Uncached"
+        count_decl.name = count_decl_name + "Uncached"
 
         # add a new array field called <self.array_name> of the return type of
         #     get_decl
+        null = Literal("null")
         array_name = get_decl_name + count_decl_name + "Cache"
         earliest_index = min(count_index, get_index)
-        declarator = VariableDeclarator(Variable(array_name, 1), "null")
+        declarator = VariableDeclarator(Variable(array_name, 1), null)
         array_decl = FieldDeclaration(get_decl.return_type,
                                       declarator, ["private"])
-        array_decl_name = Name(array_decl)
+        array_decl_name = Name(array_name)
         class_decl.body.insert(earliest_index, array_decl)
 
         # create count_decl again, it returns size of the array or if the array
         # is null it creates it with the size of count_decl_uncached
         count_decl_cached_body = [
             IfThenElse(
-                Equality("==", array_decl_name, Literal("null")),
-                Assignment(
+                Equality("==", array_decl_name, null),
+                ExpressionStatement(Assignment(
                     "=",
                     array_decl_name,
                     ArrayCreation(
                         get_decl.return_type,
                         [MethodInvocation(count_decl.name)]
                     )
-                )
+                ))
             ),
             Return(FieldAccess("length", array_decl_name))
         ]
@@ -238,18 +239,18 @@ class CacheArrayNoNullsInstruction(Instruction):
         # create get_decl again: it calls count_decl first (to ensure array
         # existance) and then checks if the array at the passed index is null
         # if it is null, it initializes it. Then it returns the value.
-        get_param_name = get_decl.parameters[0].name
-        array_at_index = ArrayAccess(Cast("int", Name(get_param_name)),
+        get_param_name = get_decl.parameters[0].variable.name
+        array_at_index = ArrayAccess(Cast("int", get_param_name),
                                      array_decl_name)
         get_decl_cached_body = [
-            MethodInvocation(count_decl_name),
+            ExpressionStatement(MethodInvocation(count_decl_name)),
             IfThenElse(
-                Equality("==", array_at_index, Literal("null")),
-                Assignment(
+                Equality("==", array_at_index, null),
+                ExpressionStatement(Assignment(
                     "=",
                     array_at_index,
                     MethodInvocation(get_decl.name, [get_param_name])
-                )
+                ))
             ),
             Return(array_at_index)
         ]
@@ -301,10 +302,10 @@ def main(input_filename, instruction_file_filename, output_filename):
     # Run all instructions.
     package = ""
     if tree.package_declaration is not None:
-        package = tree.package_declaration.name
+        package = tree.package_declaration.name + "."
     for type_decl in tree.type_declarations:
         if isinstance(type_decl, ClassDeclaration):
-            name = package + "." + type_decl.name.value
+            name = package + type_decl.name.value
             instruction_file.rewrite_class_decl(name, type_decl)
 
     # Write tree to output.
@@ -312,14 +313,14 @@ def main(input_filename, instruction_file_filename, output_filename):
         f.write(tree.serialize())
 
 if __name__ == "__main__":
-    if len(sys.argv) != 3:
+    if len(sys.argv) != 4:
         print "usage: function_cacher.py <input> <instruction_file> <output>"
         print "    input: Some Java source file."
         print "    instruction_file: A file where each line is one of the"
         print "                      following commands:"
         print "        cache <fully_qualified_type> <function_name>"
         print "        cache_array_no_nulls <fully_qualified_type> " \
-              "<count_function> <get_function> <array_name>"
+              "<count_function> <get_function>"
         print "    output: Where to write the new Java source file."
         sys.exit(1)
 

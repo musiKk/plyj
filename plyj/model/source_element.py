@@ -162,7 +162,7 @@ class SourceElement(object):
             # Mistake: Needed a list of X, but got X instead.
             return [list_]
         if not isinstance(list_, list):
-            raise TypeError("list_ is not a list")
+            raise TypeError("list_ is not a list (got " + str(list_) + ")")
         for i in range(len(list_)):
             if map_func is not None:
                 list_[i] = map_func(list_[i])
