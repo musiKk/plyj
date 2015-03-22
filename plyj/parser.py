@@ -34,8 +34,8 @@ class Parser(object):
 
     def parse_file(self, file_, debug=0):
         if isinstance(file_, str):
-            with open(file_) as file_obj_:
-                content = file_obj_.read()
+            with open(file_, "rb") as file_obj_:
+                content = file_obj_.read().decode('utf8', 'ignore')
         else:
             content = file_.read()
         return self.parse_string(content, debug=debug)

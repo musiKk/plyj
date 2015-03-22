@@ -254,7 +254,7 @@ class StatementTest(unittest.TestCase):
         self.assert_statement(';', Empty())
 
     def assert_statements(self, statements):
-        for test, expected in statements.iteritems():
+        for test, expected in statements.items():
             self.assert_statement(test, expected)
 
     def assert_statement(self, stmt, result):
