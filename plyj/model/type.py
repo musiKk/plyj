@@ -70,7 +70,7 @@ class Type(SourceElement):
     def is_primitive(type_):
         if isinstance(type_, Type):
             type_ = type_.name
-        assert isinstance(type_, (str, unicode))
+        assert isinstance(type_, str)
         return type_ in ["boolean", "void", "byte", "short", "int", "long",
                          "char", "float", "double"]
 

@@ -314,14 +314,14 @@ def main(input_filename, instruction_file_filename, output_filename):
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        print "usage: function_cacher.py <input> <instruction_file> <output>"
-        print "    input: Some Java source file."
-        print "    instruction_file: A file where each line is one of the"
-        print "                      following commands:"
-        print "        cache <fully_qualified_type> <function_name>"
-        print "        cache_array_no_nulls <fully_qualified_type> " \
-              "<count_function> <get_function>"
-        print "    output: Where to write the new Java source file."
+        print("usage: function_cacher.py <input> <instruction_file> <output>")
+        print("    input: Some Java source file.")
+        print("    instruction_file: A file where each line is one of the")
+        print("                      following commands:")
+        print("        cache <fully_qualified_type> <function_name>")
+        print("        cache_array_no_nulls <fully_qualified_type> "
+              "<count_function> <get_function>")
+        print("    output: Where to write the new Java source file.")
         sys.exit(1)
 
     main(sys.argv[1], sys.argv[2], sys.argv[3])

@@ -27,7 +27,7 @@ class MyVisitor(m.Visitor):
             print(' -> extending ' + type_decl.extends.name.value)
         if len(type_decl.implements) is not 0:
             print(' -> implementing ' + ', '.join([type.name.value for type in type_decl.implements]))
-        print
+        print()
 
         return True
 
@@ -44,7 +44,7 @@ class MyVisitor(m.Visitor):
 
     def visit_MethodDeclaration(self, method_decl):
         if self.first_method:
-            print
+            print()
             print('methods:')
             self.first_method = False
 

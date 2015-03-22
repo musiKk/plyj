@@ -11,4 +11,3 @@ if len(sys.argv) == 1:
 parser = Parser()
 for expr in sys.argv[1:]:
     print(parser.parse_expression(expr))
-

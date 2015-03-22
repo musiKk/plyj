@@ -34,7 +34,7 @@ class Block(Statement):
         self.statements = statements
 
     def __iter__(self):
-        for s in self._statements:
+        for s in self.statements:
             yield s
 
     @statements.setter

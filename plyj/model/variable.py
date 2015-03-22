@@ -1,9 +1,8 @@
 #!/usr/bin/env python2
 from operator import attrgetter
-from types import NoneType
 from plyj.model.expression import ArrayInitializer
 from plyj.model.name import Name
-from plyj.model.source_element import SourceElement, AnonymousSE, Expression
+from plyj.model.source_element import SourceElement, Expression
 from plyj.utility import assert_none_or, assert_type, serialize_dimensions
 
 

@@ -124,8 +124,8 @@ class OpenJDK7Test(unittest.TestCase):
         else:
             os.mkdir(DOWNLOAD_FOLDER)
 
-            print "Cloning Mercurial repository at \"{}\" into \"{}\"".format(
-                MERCURIAL_REPO_LOCATION, DOWNLOAD_FOLDER)
+            print("Cloning Mercurial repository at \"{}\" into \"{}\"".format(
+                MERCURIAL_REPO_LOCATION, DOWNLOAD_FOLDER))
 
             # Thanks Sven Marnach! https://stackoverflow.com/questions/11210104
             try:
@@ -139,7 +139,7 @@ class OpenJDK7Test(unittest.TestCase):
                         "sure `hg` is on your path.")
                 raise
 
-            print "OpenJDK7 Cloned successfully. Getting source..."
+            print("OpenJDK7 Cloned successfully. Getting source...")
 
             # Now we need to follow the instructions in the readme (run
             # ./get_source.sh)

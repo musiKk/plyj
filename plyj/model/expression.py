@@ -1,6 +1,5 @@
 #!/usr/bin/env python2
 from operator import attrgetter
-from types import NoneType
 from plyj.model.name import Name
 from plyj.model.source_element import SourceElement, AnonymousSE, Expression, \
     Declaration
@@ -450,7 +449,7 @@ class ArrayCreation(Expression):
     @dimensions.setter
     def dimensions(self, dimensions):
         self._dimensions = self._assert_list(dimensions,
-                                             (NoneType, Expression))
+                                             (type(None), Expression))
 
     @initializer.setter
     def initializer(self, initializer):

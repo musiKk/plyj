@@ -1,7 +1,7 @@
 #!/usr/bin/env python2
 from ply import lex as lex, yacc
-from java_lexer import JavaLexer
-from java_parser import JavaParser
+from plyj.java_lexer import JavaLexer
+from plyj.java_parser import JavaParser
 
 
 class Parser(object):

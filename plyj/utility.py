@@ -137,9 +137,6 @@ def serialize_type_arguments(type_arguments):
     elif type_arguments == "diamond":
         return "<>"
     else:
-        for x in type_arguments:
-            if isinstance(x, str):
-                print type_arguments
         return "<" + ", ".join([x.serialize() for x in type_arguments]) + ">"
 
 

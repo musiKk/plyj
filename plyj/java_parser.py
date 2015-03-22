@@ -1,13 +1,13 @@
 #!/usr/bin/env python2
-from java_lexer import JavaLexer
+from plyj.java_lexer import JavaLexer
 
-from parsers.class_parser import ClassParser
-from parsers.compilation_unit_parser import CompilationUnitParser
-from parsers.expression_parser import ExpressionParser
-from parsers.literal_parser import LiteralParser
-from parsers.name_parser import NameParser
-from parsers.statement_parser import StatementParser
-from parsers.type_parser import TypeParser
+from plyj.parsers.class_parser import ClassParser
+from plyj.parsers.compilation_unit_parser import CompilationUnitParser
+from plyj.parsers.expression_parser import ExpressionParser
+from plyj.parsers.literal_parser import LiteralParser
+from plyj.parsers.name_parser import NameParser
+from plyj.parsers.statement_parser import StatementParser
+from plyj.parsers.type_parser import TypeParser
 
 
 class JavaParser(ExpressionParser, NameParser, LiteralParser, TypeParser,
