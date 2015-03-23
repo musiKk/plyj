@@ -324,6 +324,9 @@ def cache_file(input_filename, instruction_file, output_filename,
 
 def main(input_filename, instruction_file_filename, output_filename,
          tree_callback=None):
+    """
+    :param tree_callback: See cache_file.
+    """
     # Load instruction_file
     with open(instruction_file_filename) as f:
         instruction_file = InstructionFile(f.read())

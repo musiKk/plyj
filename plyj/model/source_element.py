@@ -70,6 +70,8 @@ class SourceElement(object):
                 iterator = stack[-1].compare_iterator = left_keys.__iter__()
 
             for key in iterator:
+                if key.startswith("_"):
+                    continue  # Ignore private attributes.
                 # Check everything unless it is a SourceElement
                 left_element = left.__dict__[key]
                 right_element = right.__dict__[key]
