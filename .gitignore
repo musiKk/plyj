@@ -12,3 +12,5 @@ parser.out
 cover/
 dist/
 build/
+
+openjdk7/
