@@ -52,6 +52,7 @@
 #
 # cache ConstArray name
 # cache_array_no_nulls ConstArray count get
+import os
 
 import sys
 from plyj.model.classes import ClassDeclaration, FieldDeclaration
@@ -282,7 +283,7 @@ class InstructionFile:
         # First, let's recurse into all child class definitions
         for declaration in class_decl.body:
             if isinstance(declaration, ClassDeclaration):
-                name = fully_qualified_name + "." + declaration.name
+                name = fully_qualified_name + "." + declaration.name.value
                 self.rewrite_class_decl(name, declaration)
 
         # Now we run all our instructions on the class declaration
@@ -290,11 +291,16 @@ class InstructionFile:
             instruction.run(fully_qualified_name, class_decl)
 
 
-def main(input_filename, instruction_file_filename, output_filename):
-    # Load instruction_file
-    with open(instruction_file_filename) as f:
-        instruction_file = InstructionFile(f.read())
-
+def cache_file(input_filename, instruction_file, output_filename,
+               tree_callback=None):
+    """
+    Takes the input filename (not a folder) and runs the instructions on it.
+    :param tree_callback: A callback that accepts three arguments: the tree of
+                          the input_file, the input filename and the output
+                          filename. Use this to apply any modifications before
+                          the file is written out. Note that by this point the
+                          caching has been applied.
+    """
     # Parse input file
     parser = Parser()
     tree = parser.parse_file(input_filename)
@@ -308,14 +314,43 @@ def main(input_filename, instruction_file_filename, output_filename):
             name = package + type_decl.name.value
             instruction_file.rewrite_class_decl(name, type_decl)
 
+    if tree_callback is not None:
+        tree_callback(tree, input_filename, output_filename)
+
     # Write tree to output.
     with open(output_filename, "w") as f:
         f.write(tree.serialize())
 
+
+def main(input_filename, instruction_file_filename, output_filename,
+         tree_callback=None):
+    # Load instruction_file
+    with open(instruction_file_filename) as f:
+        instruction_file = InstructionFile(f.read())
+
+    if os.path.isfile(input_filename):
+        cache_file(input_filename, instruction_file, output_filename)
+    else:
+        if os.path.isfile(output_filename):
+            raise ValueError("Output must be a directory if input is a "
+                             "directory")
+        if not os.path.exists(output_filename):
+            os.mkdir(output_filename)
+        for root, folders, files in os.walk(input_filename):
+            rel_path = os.path.relpath(root, input_filename)
+            for file_ in files:
+                file_loc = os.path.join(rel_path, file_)
+                out_path = os.path.join(output_filename, file_loc)
+                out_path = os.path.abspath(out_path)
+                in_path = os.path.join(root, file_)
+                print("{} -> {}".format(in_path, out_path))
+                cache_file(in_path, instruction_file, out_path, tree_callback)
+
+
 if __name__ == "__main__":
     if len(sys.argv) != 4:
         print("usage: function_cacher.py <input> <instruction_file> <output>")
-        print("    input: Some Java source file.")
+        print("    input: Some Java source file or folder")
         print("    instruction_file: A file where each line is one of the")
         print("                      following commands:")
         print("        cache <fully_qualified_type> <function_name>")
