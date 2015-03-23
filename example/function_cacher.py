@@ -82,6 +82,12 @@ class Instruction(object):
     def run(self, fully_qualified_name, class_decl):
         pass
 
+def is_static(modifier_list):
+    for modifier in modifier_list:
+        if isinstance(modifier, BasicModifier):
+            if modifier.value == "static":
+                return True
+    return False
 
 class CacheInstruction(Instruction):
     def __init__(self, fields):
@@ -107,16 +113,22 @@ class CacheInstruction(Instruction):
 
         if len(func_decl.parameters) != 0:
             raise ValueError("Parameters are not supported")
+          
+        static_modifiers = []  
+        if is_static(func_decl.modifiers):
+            static_modifiers = ["static"]
 
         is_cached_name = "is" + func_decl.name.value + "Cached"
         is_cached_decl = FieldDeclaration(
             "boolean",
-            VariableDeclarator(Variable(is_cached_name), Literal("false")))
+            VariableDeclarator(Variable(is_cached_name), Literal("false")),
+            modifiers=["private"] + static_modifiers)
 
         cached_name = func_decl.name.value + "Cached"
         cached_decl = FieldDeclaration(
             func_decl.return_type,
-            VariableDeclarator(Variable(cached_name)))
+            VariableDeclarator(Variable(cached_name)),
+            modifiers=["private"] + static_modifiers)
 
         class_decl.body.insert(func_index, cached_decl)
         class_decl.body.insert(func_index, is_cached_decl)
@@ -146,7 +158,7 @@ class CacheInstruction(Instruction):
             Return(Name(cached_name))
         ]
         func_decl_cached = MethodDeclaration(
-            func_decl_name, ["public"],
+            func_decl_name, ["public"] + static_modifiers,
             return_type=func_decl.return_type, body=func_decl_cached_body)
         class_decl.body.insert(func_index, func_decl_cached)
 
@@ -194,6 +206,16 @@ class CacheArrayNoNullsInstruction(Instruction):
         if get_decl.parameters[0].type.name.value not in ["int", "long"]:
             raise ValueError("Get parameter muse be int or long.")
 
+        if get_decl.parameters[0].type.name.value not in ["int", "long"]:
+            raise ValueError("Get parameter muse be int or long.")
+        
+        if is_static(count_decl.modifiers) != is_static(get_decl.modifiers):
+            raise ValueError("Both functions must be static or non-static")
+
+        static_modifiers = []  
+        if is_static(count_decl.modifiers):
+            static_modifiers = ["static"]
+
         get_decl_name = get_decl.name.value
         count_decl_name = count_decl.name.value
 
@@ -212,7 +234,7 @@ class CacheArrayNoNullsInstruction(Instruction):
         earliest_index = min(count_index, get_index)
         declarator = VariableDeclarator(Variable(array_name, 1), null)
         array_decl = FieldDeclaration(get_decl.return_type,
-                                      declarator, ["private"])
+                                      declarator, ["private"] + static_modifiers)
         array_decl_name = Name(array_name)
         class_decl.body.insert(earliest_index, array_decl)
 
@@ -233,7 +255,7 @@ class CacheArrayNoNullsInstruction(Instruction):
             Return(FieldAccess("length", array_decl_name))
         ]
         count_decl_cached = MethodDeclaration(
-            count_decl_name, ["public"], parameters=count_decl.parameters,
+            count_decl_name, ["public"] + static_modifiers, parameters=count_decl.parameters,
             return_type="int", body=count_decl_cached_body)
         class_decl.body.insert(count_index, count_decl_cached)
 
@@ -256,7 +278,7 @@ class CacheArrayNoNullsInstruction(Instruction):
             Return(array_at_index)
         ]
         get_decl_cached = MethodDeclaration(
-            get_decl_name, ["public"], parameters=get_decl.parameters,
+            get_decl_name, ["public"] + static_modifiers, parameters=get_decl.parameters,
             return_type=get_decl.return_type, body=get_decl_cached_body)
         class_decl.body.insert(get_index, get_decl_cached)
 
