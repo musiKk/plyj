@@ -308,7 +308,7 @@ def cache_file(input_filename, instruction_file, output_filename,
     # Run all instructions.
     package = ""
     if tree.package_declaration is not None:
-        package = tree.package_declaration.name + "."
+        package = tree.package_declaration.name.value + "."
     for type_decl in tree.type_declarations:
         if isinstance(type_decl, ClassDeclaration):
             name = package + type_decl.name.value
