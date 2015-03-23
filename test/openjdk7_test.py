@@ -1,9 +1,9 @@
-import os
 import subprocess
 import unittest
 
 # OpenJDK9 does not yet work due to new language features (lambda functions)
 import sys
+import os
 from plyj.parser import Parser
 
 MERCURIAL_REPO_LOCATION = "http://hg.openjdk.java.net/jdk7/jdk7"
@@ -100,6 +100,12 @@ EXCEPTIONS = [
 ]
 
 
+def is_travis():
+    if os.environ.get("TRAVIS") == "true":
+        return True
+    return False
+
+
 def _should_skip(file_name):
     for e in EXCEPTIONS:
         if file_name.replace("\\", "/").endswith(e):
@@ -118,9 +124,9 @@ class ShNotFoundError(Exception):
 class OpenJDK7Test(unittest.TestCase):
     def download_openjdk7(self):
         if os.path.exists(DOWNLOAD_FOLDER):
-            print ("OpenJDK7 already cloned. If this failed, please delete "
-                   "the folder \"{}\". ".format(DOWNLOAD_FOLDER))
-            print ("Skipping download of OpenJDK7")
+            print("OpenJDK7 already cloned. If this failed, please delete "
+                  "the folder \"{}\". ".format(DOWNLOAD_FOLDER))
+            print("Skipping download of OpenJDK7")
         else:
             os.mkdir(DOWNLOAD_FOLDER)
 
@@ -165,6 +171,11 @@ class OpenJDK7Test(unittest.TestCase):
         return retn
 
     def test_openjdk7(self):
+        if is_travis():
+            print("Running in Travis CI, skipping this test (it takes too "
+                  "long)")
+            return
+
         self.download_openjdk7()
         java_files = self.find_java_files()
 
