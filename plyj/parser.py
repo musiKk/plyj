@@ -9,7 +9,7 @@ class MyLexer(object):
     keywords = ('this', 'class', 'void', 'super', 'extends', 'implements', 'enum', 'interface',
                 'byte', 'short', 'int', 'long', 'char', 'float', 'double', 'boolean', 'null',
                 'true', 'false',
-                'final', 'public', 'protected', 'private', 'abstract', 'static', 'strictfp', 'transient', 'volatile',
+                'final', 'public', 'protected', 'private', 'abstract', 'static', 'strictfp', 'transient', 'volatile', 'in', 'out', 'inout', 'oneway',
                 'synchronized', 'native',
                 'throws', 'default',
                 'instanceof',
@@ -1048,6 +1048,10 @@ class TypeParser(object):
                     | STATIC
                     | ABSTRACT
                     | FINAL
+					| IN
+					| OUT
+					| INOUT
+					| ONEWAY
                     | NATIVE
                     | SYNCHRONIZED
                     | TRANSIENT
