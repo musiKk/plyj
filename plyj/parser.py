@@ -1122,7 +1122,7 @@ class TypeParser(object):
 
     def p_array_type2(self, p):
         '''array_type : generic_type dims'''
-        p[1].dims = p[2]
+        p[1].dimensions = p[2]
         p[0] = p[1]
 
     def p_array_type3(self, p):

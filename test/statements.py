@@ -174,6 +174,9 @@ class StatementTest(unittest.TestCase):
         var_i_decltor.initializer = None
         self.assert_stmt('int[] i;', model.VariableDeclaration(int_ar, [var_i_decltor]))
 
+        foo_ar = model.Type(name=model.Name('Foo'), type_arguments=[model.Type(name=model.Name(value='T'))], dimensions=1)
+        self.assert_stmt('Foo<T>[] i;', model.VariableDeclaration(foo_ar, [var_i_decltor]))
+
     def test_array(self):
         var_i = model.Variable('i')
         var_i_decltor = model.VariableDeclarator(var_i)
