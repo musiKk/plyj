@@ -1,7 +1,12 @@
 plyj [![Build Status](https://secure.travis-ci.org/musiKk/plyj.png?branch=master)](http://travis-ci.org/musiKk/plyj)
 ====
 
-plyj is a Java parser written in Python. It has the awesome [PLY] as its sole dependency.
+plyj is a Java 7 parser written in Python. It has the awesome [PLY] as its sole dependency.
+
+Status
+------
+
+**plyj is officially in maintenance mode.** For the foreseeable future no new developments will be made by me. As explained below plyj is basically a manual transcription of JDT's grammar. This has served me well in the past but with the Java 8 features JDT's developers did some things I'm unable to reproduce with PLY. I'm not smart enough to do this on my own. Writing parsers is still black magic to me. I am not thrilled by this development.
 
 Synopsis
 --------
