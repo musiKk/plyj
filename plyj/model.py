@@ -643,15 +643,6 @@ class Try(Statement):
         self._finally = _finally
         self.resources = resources
 
-    def accept(self, visitor):
-        if visitor.visit_Try(self):
-            for s in self.block:
-                s.accept(visitor)
-        for c in self.catches:
-            visitor.visit_Catch(c)
-        if self._finally:
-            self._finally.accept(visitor)
-
 
 class Catch(SourceElement):
 
