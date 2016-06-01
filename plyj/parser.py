@@ -35,7 +35,9 @@ class MyLexer(object):
 
         'PLUSPLUS', 'MINUSMINUS',
 
-        'ELLIPSIS'
+        'ELLIPSIS',
+
+        'COLON_COLON'
     ] + [k.upper() for k in keywords]
     literals = '()+-*/=?:,.^|&~!=[]{};<>@%'
 
@@ -77,6 +79,8 @@ class MyLexer(object):
     t_MINUSMINUS = r'\-\-'
 
     t_ELLIPSIS = r'\.\.\.'
+
+    t_COLON_COLON = '::'
 
     t_ignore = ' \t\f'
 
@@ -391,7 +395,8 @@ class ExpressionParser(object):
                                 | class_instance_creation_expression
                                 | field_access
                                 | method_invocation
-                                | array_access'''
+                                | array_access
+                                | reference_expression'''
         p[0] = p[1]
 
     def p_primary_no_new_array2(self, p):
@@ -462,6 +467,30 @@ class ExpressionParser(object):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
         # technically it's not necessarily a type but could be a type parameter
         p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+
+    def p_reference_expression(self, p):
+        '''reference_expression : primitive_type dims COLON_COLON type_arguments identifier_or_new
+                                | primitive_type dims COLON_COLON identifier_or_new
+                                | name dims_opt COLON_COLON type_arguments identifier_or_new
+                                | name dims_opt COLON_COLON identifier_or_new
+                                | primary COLON_COLON type_arguments NAME
+                                | primary COLON_COLON NAME
+                                | SUPER COLON_COLON type_arguments NAME
+                                | SUPER COLON_COLON NAME'''
+        # TODO following case is missing but I cannot resolve the
+        # resulting conflicts
+        # | name reference_expression_type_arguments_and_trunk COLON_COLON type_arguments identifier_or_new
+        pass
+
+    def p_identifier_or_new(self, p):
+        '''identifier_or_new : NAME
+                             | NEW'''
+        pass
+
+    def p_reference_expression_type_arguments_and_trunk(self, p):
+        '''reference_expression_type_arguments_and_trunk : type_arguments dims_opt
+                                                         | type_arguments '.' class_or_interface_type dims_opt'''
+        pass
 
 class StatementParser(object):
 
@@ -1531,7 +1560,8 @@ class ClassParser(object):
 
     def p_method_declaration(self, p):
         '''method_declaration : abstract_method_declaration
-                              | method_header method_body'''
+                              | method_header method_body
+                              | default_method_header method_body'''
         if len(p) == 2:
             p[0] = p[1]
         else:
@@ -1554,6 +1584,13 @@ class ClassParser(object):
         p[1]['throws'] = p[5]
         p[0] = p[1]
 
+    def p_default_method_header(self, p):
+        '''default_method_header : default_method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
+        p[1]['parameters'] = p[2]
+        p[1]['extended_dims'] = p[4]
+        p[1]['throws'] = p[5]
+        p[0] = p[1]
+
     def p_method_header_name(self, p):
         '''method_header_name : modifiers_opt type_parameters type NAME '('
                               | modifiers_opt type NAME '(' '''
@@ -1561,6 +1598,18 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+
+    def p_default_method_header_name(self, p):
+        '''default_method_header_name : modifiers_with_default type_parameters type NAME '('
+                                      | modifiers_with_default type NAME '(' '''
+        if len(p) == 5:
+            p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
+        else:
+            p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+
+    def p_modifiers_with_default(self, p):
+        '''modifiers_with_default : modifiers_opt DEFAULT modifiers_opt'''
+        p[0] = p[1] + [p[2]] + p[3]
 
     def p_method_header_extended_dims(self, p):
         '''method_header_extended_dims : dims_opt'''
@@ -1625,7 +1674,7 @@ class ClassParser(object):
 
     def p_interface_member_declaration(self, p):
         '''interface_member_declaration : constant_declaration
-                                        | abstract_method_declaration
+                                        | method_declaration
                                         | class_declaration
                                         | interface_declaration
                                         | enum_declaration
