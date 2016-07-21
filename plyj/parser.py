@@ -1892,7 +1892,7 @@ class ClassParser(object):
 
     def p_annotation_name(self, p):
         '''annotation_name : '@' name'''
-        p[0] = (p[2], p.lexer.lineno)
+        p[0] = (p[2], p[2].lineno)
 
     def p_member_value_pairs_opt(self, p):
         '''member_value_pairs_opt : member_value_pairs'''

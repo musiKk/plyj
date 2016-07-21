@@ -16,7 +16,7 @@ class TypeDeclarationTest(unittest.TestCase):
         }
         ''')
         cls = self._assert_declaration(m, 'Foo')
-        self.assertEquals(cls.body, [MethodDeclaration('foo', body=[])])
+        self.assertEquals(cls.body, [MethodDeclaration('foo', body=[], lineno=3)])
 
     def test_interface_method(self):
         m = self.parser.parse_string('''
@@ -25,7 +25,7 @@ class TypeDeclarationTest(unittest.TestCase):
         }
         ''')
         cls = self._assert_declaration(m, 'Foo', type=model.InterfaceDeclaration)
-        self.assertEquals(cls.body, [MethodDeclaration('foo', abstract=True)])
+        self.assertEquals(cls.body, [MethodDeclaration('foo', abstract=True, lineno=3)])
 
     def test_class_abstract_method(self):
         m = self.parser.parse_string('''
@@ -34,7 +34,7 @@ class TypeDeclarationTest(unittest.TestCase):
         }
         ''')
         cls = self._assert_declaration(m, 'Foo')
-        self.assertEquals(cls.body, [MethodDeclaration('foo', modifiers=['abstract'], abstract=True)])
+        self.assertEquals(cls.body, [MethodDeclaration('foo', modifiers=['abstract'], abstract=True, lineno=3)])
 
     def _assert_declaration(self, compilation_unit, name, index=0, type=model.ClassDeclaration):
         self.assertIsInstance(compilation_unit, model.CompilationUnit)

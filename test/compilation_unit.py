@@ -32,7 +32,7 @@ class CompilationUnitTest(unittest.TestCase):
         m = self.parser.parse_string('''
         package foo.bar;
         ''')
-        self.assertEqual(m.package_declaration, model.PackageDeclaration(model.Name('foo.bar')))
+        self.assertEqual(m.package_declaration, model.PackageDeclaration(model.Name('foo.bar', lineno=2), lineno=2))
 
     def test_package_annotation(self):
         m = self.parser.parse_string('''
@@ -40,8 +40,9 @@ class CompilationUnitTest(unittest.TestCase):
         package foo;
         ''')
         self.assertEqual(m.package_declaration,
-                         model.PackageDeclaration(model.Name('foo'),
-                                                  modifiers=[model.Annotation(model.Name('Annot'))]))
+                         model.PackageDeclaration(model.Name('foo', lineno=3),
+                                                  modifiers=[model.Annotation(model.Name('Annot', lineno=3), lineno=3)],
+																									lineno=3))
 
     def test_import(self):
         m = self.parser.parse_string('''
@@ -49,29 +50,29 @@ class CompilationUnitTest(unittest.TestCase):
         import foo.bar;
         ''')
         self.assertEqual(m.import_declarations,
-                         [model.ImportDeclaration(model.Name('foo')),
-                          model.ImportDeclaration(model.Name('foo.bar'))])
+                         [model.ImportDeclaration(model.Name('foo', lineno=2), lineno=2),
+                          model.ImportDeclaration(model.Name('foo.bar', lineno=3), lineno=3)])
 
     def test_static_import(self):
         m = self.parser.parse_string('''
         import static foo.bar;
         ''')
         self.assertEqual(m.import_declarations,
-                         [model.ImportDeclaration(model.Name('foo.bar'), static=True)])
+                         [model.ImportDeclaration(model.Name('foo.bar', lineno=2), static=True, lineno=2)])
 
     def test_wildcard_import(self):
         m = self.parser.parse_string('''
         import foo.bar.*;
         ''')
         self.assertEqual(m.import_declarations,
-                         [model.ImportDeclaration(model.Name('foo.bar'), on_demand=True)])
+                         [model.ImportDeclaration(model.Name('foo.bar', lineno=2), on_demand=True, lineno=2)])
 
     def test_static_wildcard_import(self):
         m = self.parser.parse_string('''
         import static foo.bar.*;
         ''')
         self.assertEqual(m.import_declarations,
-                         [model.ImportDeclaration(model.Name('foo.bar'), static=True, on_demand=True)])
+                         [model.ImportDeclaration(model.Name('foo.bar', lineno=2), static=True, on_demand=True, lineno=2)])
 
     def test_annotations(self):
         # bug #13
@@ -82,9 +83,11 @@ class CompilationUnitTest(unittest.TestCase):
         t = self._assert_declaration(m, 'Foo')
 
         self.assertEqual(t.modifiers, [model.Annotation(
-            name=model.Name('Annot'),
-            members=[model.AnnotationMember(name=model.Name('key'),
-                                            value=model.Literal('1'))])])
+            name=model.Name('Annot', lineno=2),
+            members=[model.AnnotationMember(name=model.Name('key', lineno=2),
+                                            value=model.Literal('1', lineno=2),
+																						lineno=2)],
+						lineno=2)])
 
     def test_line_comment(self):
         m = self.parser.parse_string(r'''

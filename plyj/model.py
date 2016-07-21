@@ -8,11 +8,11 @@ class SourceElement(object):
     def __init__(self, lineno=None):
         super(SourceElement, self).__init__()
         self._fields = []
-        self.lineno = lineno
+        self.lineno = lineno or 1
 
     def __repr__(self):
         equals = ("{0}={1!r}".format(k, getattr(self, k))
-                  for k in self._fields)
+                  for k in self._fields + ['lineno'])
         args = ", ".join(equals)
         return "{0}({1})".format(self.__class__.__name__, args)
 
@@ -330,7 +330,7 @@ class Annotation(SourceElement):
 class AnnotationMember(SourceElement):
 
     def __init__(self, name, value, lineno=None):
-        super(SourceElement, self).__init__(lineno=lineno)
+        super(AnnotationMember, self).__init__(lineno=lineno)
         self._fields = ['name', 'value']
         self.name = name
         self.value = value
