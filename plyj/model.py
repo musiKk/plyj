@@ -5,9 +5,10 @@ class SourceElement(object):
     file parsed by plyj.
     '''
 
-    def __init__(self):
+    def __init__(self, lineno=None):
         super(SourceElement, self).__init__()
         self._fields = []
+        self.lineno = lineno
 
     def __repr__(self):
         equals = ("{0}={1!r}".format(k, getattr(self, k))
@@ -48,7 +49,7 @@ class CompilationUnit(SourceElement):
 
     def __init__(self, package_declaration=None, import_declarations=None,
                  type_declarations=None):
-        super(CompilationUnit, self).__init__()
+        super(CompilationUnit, self).__init__(lineno=0)
         self._fields = [
             'package_declaration', 'import_declarations', 'type_declarations']
         if import_declarations is None:
@@ -61,8 +62,8 @@ class CompilationUnit(SourceElement):
 
 class PackageDeclaration(SourceElement):
 
-    def __init__(self, name, modifiers=None):
-        super(PackageDeclaration, self).__init__()
+    def __init__(self, name, modifiers=None, lineno=None):
+        super(PackageDeclaration, self).__init__(lineno=lineno)
         self._fields = ['name', 'modifiers']
         if modifiers is None:
             modifiers = []
@@ -72,8 +73,8 @@ class PackageDeclaration(SourceElement):
 
 class ImportDeclaration(SourceElement):
 
-    def __init__(self, name, static=False, on_demand=False):
-        super(ImportDeclaration, self).__init__()
+    def __init__(self, name, static=False, on_demand=False, lineno=None):
+        super(ImportDeclaration, self).__init__(lineno=lineno)
         self._fields = ['name', 'static', 'on_demand']
         self.name = name
         self.static = static
@@ -83,8 +84,8 @@ class ImportDeclaration(SourceElement):
 class ClassDeclaration(SourceElement):
 
     def __init__(self, name, body, modifiers=None, type_parameters=None,
-                 extends=None, implements=None):
-        super(ClassDeclaration, self).__init__()
+                 extends=None, implements=None, lineno=None):
+        super(ClassDeclaration, self).__init__(lineno=lineno)
         self._fields = ['name', 'body', 'modifiers',
                         'type_parameters', 'extends', 'implements']
         if modifiers is None:
@@ -102,8 +103,8 @@ class ClassDeclaration(SourceElement):
 
 class ClassInitializer(SourceElement):
 
-    def __init__(self, block, static=False):
-        super(ClassInitializer, self).__init__()
+    def __init__(self, block, static=False, lineno=None):
+        super(ClassInitializer, self).__init__(lineno=lineno)
         self._fields = ['block', 'static']
         self.block = block
         self.static = static
@@ -111,8 +112,8 @@ class ClassInitializer(SourceElement):
 class ConstructorDeclaration(SourceElement):
 
     def __init__(self, name, block, modifiers=None, type_parameters=None,
-                 parameters=None, throws=None):
-        super(ConstructorDeclaration, self).__init__()
+                 parameters=None, throws=None, lineno=None):
+        super(ConstructorDeclaration, self).__init__(lineno=lineno)
         self._fields = ['name', 'block', 'modifiers',
                         'type_parameters', 'parameters', 'throws']
         if modifiers is None:
@@ -129,12 +130,14 @@ class ConstructorDeclaration(SourceElement):
         self.throws = throws
 
 class EmptyDeclaration(SourceElement):
-    pass
+
+    def __init__(self, lineno=None):
+        super(EmptyDeclaration, self).__init__(lineno=lineno)
 
 class FieldDeclaration(SourceElement):
 
-    def __init__(self, type, variable_declarators, modifiers=None):
-        super(FieldDeclaration, self).__init__()
+    def __init__(self, type, variable_declarators, modifiers=None, lineno=None):
+        super(FieldDeclaration, self).__init__(lineno=lineno)
         self._fields = ['type', 'variable_declarators', 'modifiers']
         if modifiers is None:
             modifiers = []
@@ -146,8 +149,8 @@ class MethodDeclaration(SourceElement):
 
     def __init__(self, name, modifiers=None, type_parameters=None,
                  parameters=None, return_type='void', body=None, abstract=False,
-                 extended_dims=0, throws=None):
-        super(MethodDeclaration, self).__init__()
+                 extended_dims=0, throws=None, lineno=None):
+        super(MethodDeclaration, self).__init__(lineno=lineno)
         self._fields = ['name', 'modifiers', 'type_parameters', 'parameters',
                         'return_type', 'body', 'abstract', 'extended_dims',
                         'throws']
@@ -169,8 +172,8 @@ class MethodDeclaration(SourceElement):
 
 class FormalParameter(SourceElement):
 
-    def __init__(self, variable, type, modifiers=None, vararg=False):
-        super(FormalParameter, self).__init__()
+    def __init__(self, variable, type, modifiers=None, vararg=False, lineno=None):
+        super(FormalParameter, self).__init__(lineno=lineno)
         self._fields = ['variable', 'type', 'modifiers', 'vararg']
         if modifiers is None:
             modifiers = []
@@ -188,8 +191,8 @@ class Variable(SourceElement):
     # If the variable is to go away, the type has to be duplicated for every
     # variable...
 
-    def __init__(self, name, dimensions=0):
-        super(Variable, self).__init__()
+    def __init__(self, name, dimensions=0, lineno=None):
+        super(Variable, self).__init__(lineno=lineno)
         self._fields = ['name', 'dimensions']
         self.name = name
         self.dimensions = dimensions
@@ -197,24 +200,24 @@ class Variable(SourceElement):
 
 class VariableDeclarator(SourceElement):
 
-    def __init__(self, variable, initializer=None):
-        super(VariableDeclarator, self).__init__()
+    def __init__(self, variable, initializer=None, lineno=None):
+        super(VariableDeclarator, self).__init__(lineno=lineno)
         self._fields = ['variable', 'initializer']
         self.variable = variable
         self.initializer = initializer
 
 class Throws(SourceElement):
 
-    def __init__(self, types):
-        super(Throws, self).__init__()
+    def __init__(self, types, lineno=None):
+        super(Throws, self).__init__(lineno=lineno)
         self._fields = ['types']
         self.types = types
 
 class InterfaceDeclaration(SourceElement):
 
     def __init__(self, name, modifiers=None, extends=None, type_parameters=None,
-                 body=None):
-        super(InterfaceDeclaration, self).__init__()
+                 body=None, lineno=None):
+        super(InterfaceDeclaration, self).__init__(lineno=lineno)
         self._fields = [
             'name', 'modifiers', 'extends', 'type_parameters', 'body']
         if modifiers is None:
@@ -234,8 +237,8 @@ class InterfaceDeclaration(SourceElement):
 class EnumDeclaration(SourceElement):
 
     def __init__(self, name, implements=None, modifiers=None,
-                 type_parameters=None, body=None):
-        super(EnumDeclaration, self).__init__()
+                 type_parameters=None, body=None, lineno=None):
+        super(EnumDeclaration, self).__init__(lineno=lineno)
         self._fields = [
             'name', 'implements', 'modifiers', 'type_parameters', 'body']
         if implements is None:
@@ -254,8 +257,8 @@ class EnumDeclaration(SourceElement):
 
 class EnumConstant(SourceElement):
 
-    def __init__(self, name, arguments=None, modifiers=None, body=None):
-        super(EnumConstant, self).__init__()
+    def __init__(self, name, arguments=None, modifiers=None, body=None, lineno=None):
+        super(EnumConstant, self).__init__(lineno=lineno)
         self._fields = ['name', 'arguments', 'modifiers', 'body']
         if arguments is None:
             arguments = []
@@ -271,8 +274,8 @@ class EnumConstant(SourceElement):
 class AnnotationDeclaration(SourceElement):
 
     def __init__(self, name, modifiers=None, type_parameters=None, extends=None,
-                 implements=None, body=None):
-        super(AnnotationDeclaration, self).__init__()
+                 implements=None, body=None, lineno=None):
+        super(AnnotationDeclaration, self).__init__(lineno=lineno)
         self._fields = [
             'name', 'modifiers', 'type_parameters', 'extends', 'implements',
             'body']
@@ -294,8 +297,8 @@ class AnnotationDeclaration(SourceElement):
 class AnnotationMethodDeclaration(SourceElement):
 
     def __init__(self, name, type, parameters=None, default=None,
-                 modifiers=None, type_parameters=None, extended_dims=0):
-        super(AnnotationMethodDeclaration, self).__init__()
+                 modifiers=None, type_parameters=None, extended_dims=0, lineno=None):
+        super(AnnotationMethodDeclaration, self).__init__(lineno=lineno)
         self._fields = ['name', 'type', 'parameters', 'default',
                         'modifiers', 'type_parameters', 'extended_dims']
         if parameters is None:
@@ -314,8 +317,8 @@ class AnnotationMethodDeclaration(SourceElement):
 
 class Annotation(SourceElement):
 
-    def __init__(self, name, members=None, single_member=None):
-        super(Annotation, self).__init__()
+    def __init__(self, name, members=None, single_member=None, lineno=None):
+        super(Annotation, self).__init__(lineno=lineno)
         self._fields = ['name', 'members', 'single_member']
         if members is None:
             members = []
@@ -326,18 +329,18 @@ class Annotation(SourceElement):
 
 class AnnotationMember(SourceElement):
 
-    def __init__(self, name, value):
-        super(SourceElement, self).__init__()
+    def __init__(self, name, value, lineno=None):
+        super(SourceElement, self).__init__(lineno=lineno)
         self._fields = ['name', 'value']
         self.name = name
         self.value = value
 
-
+#TODO
 class Type(SourceElement):
 
     def __init__(self, name, type_arguments=None, enclosed_in=None,
-                 dimensions=0):
-        super(Type, self).__init__()
+                 dimensions=0, lineno=None):
+        super(Type, self).__init__(lineno=lineno)
         self._fields = ['name', 'type_arguments', 'enclosed_in', 'dimensions']
         if type_arguments is None:
             type_arguments = []
@@ -349,8 +352,8 @@ class Type(SourceElement):
 
 class Wildcard(SourceElement):
 
-    def __init__(self, bounds=None):
-        super(Wildcard, self).__init__()
+    def __init__(self, bounds=None, lineno=None):
+        super(Wildcard, self).__init__(lineno=lineno)
         self._fields = ['bounds']
         if bounds is None:
             bounds = []
@@ -359,8 +362,8 @@ class Wildcard(SourceElement):
 
 class WildcardBound(SourceElement):
 
-    def __init__(self, type, extends=False, _super=False):
-        super(WildcardBound, self).__init__()
+    def __init__(self, type, extends=False, _super=False, lineno=None):
+        super(WildcardBound, self).__init__(lineno=lineno)
         self._fields = ['type', 'extends', '_super']
         self.type = type
         self.extends = extends
@@ -369,8 +372,8 @@ class WildcardBound(SourceElement):
 
 class TypeParameter(SourceElement):
 
-    def __init__(self, name, extends=None):
-        super(TypeParameter, self).__init__()
+    def __init__(self, name, extends=None, lineno=None):
+        super(TypeParameter, self).__init__(lineno=lineno)
         self._fields = ['name', 'extends']
         if extends is None:
             extends = []
@@ -380,14 +383,14 @@ class TypeParameter(SourceElement):
 
 class Expression(SourceElement):
 
-    def __init__(self):
-        super(Expression, self).__init__()
+    def __init__(self, lineno=None):
+        super(Expression, self).__init__(lineno=lineno)
         self._fields = []
 
 class BinaryExpression(Expression):
 
-    def __init__(self, operator, lhs, rhs):
-        super(BinaryExpression, self).__init__()
+    def __init__(self, operator, lhs, rhs, lineno=None):
+        super(BinaryExpression, self).__init__(lineno=lineno)
         self._fields = ['operator', 'lhs', 'rhs']
         self.operator = operator
         self.lhs = lhs
@@ -399,8 +402,8 @@ class Assignment(BinaryExpression):
 
 class Conditional(Expression):
 
-    def __init__(self, predicate, if_true, if_false):
-        super(self.__class__, self).__init__()
+    def __init__(self, predicate, if_true, if_false, lineno=None):
+        super(self.__class__, self).__init__(lineno=lineno)
         self._fields = ['predicate', 'if_true', 'if_false']
         self.predicate = predicate
         self.if_true = if_true
@@ -450,8 +453,8 @@ class Multiplicative(BinaryExpression):
 
 class Unary(Expression):
 
-    def __init__(self, sign, expression):
-        super(Unary, self).__init__()
+    def __init__(self, sign, expression, lineno=None):
+        super(Unary, self).__init__(lineno=lineno)
         self._fields = ['sign', 'expression']
         self.sign = sign
         self.expression = expression
@@ -459,8 +462,8 @@ class Unary(Expression):
 
 class Cast(Expression):
 
-    def __init__(self, target, expression):
-        super(Cast, self).__init__()
+    def __init__(self, target, expression, lineno=None):
+        super(Cast, self).__init__(lineno=lineno)
         self._fields = ['target', 'expression']
         self.target = target
         self.expression = expression
@@ -475,8 +478,8 @@ class Empty(Statement):
 
 class Block(Statement):
 
-    def __init__(self, statements=None):
-        super(Statement, self).__init__()
+    def __init__(self, statements=None, lineno=None):
+        super(Statement, self).__init__(lineno=lineno)
         self._fields = ['statements']
         if statements is None:
             statements = []
@@ -490,8 +493,8 @@ class VariableDeclaration(Statement, FieldDeclaration):
     pass
 
 class ArrayInitializer(SourceElement):
-    def __init__(self, elements=None):
-        super(ArrayInitializer, self).__init__()
+    def __init__(self, elements=None, lineno=None):
+        super(ArrayInitializer, self).__init__(lineno=lineno)
         self._fields = ['elements']
         if elements is None:
             elements = []
@@ -499,8 +502,8 @@ class ArrayInitializer(SourceElement):
 
 
 class MethodInvocation(Expression):
-    def __init__(self, name, arguments=None, type_arguments=None, target=None):
-        super(MethodInvocation, self).__init__()
+    def __init__(self, name, arguments=None, type_arguments=None, target=None, lineno=None):
+        super(MethodInvocation, self).__init__(lineno=lineno)
         self._fields = ['name', 'arguments', 'type_arguments', 'target']
         if arguments is None:
             arguments = []
@@ -513,8 +516,8 @@ class MethodInvocation(Expression):
 
 class IfThenElse(Statement):
 
-    def __init__(self, predicate, if_true=None, if_false=None):
-        super(IfThenElse, self).__init__()
+    def __init__(self, predicate, if_true=None, if_false=None, lineno=None):
+        super(IfThenElse, self).__init__(lineno=lineno)
         self._fields = ['predicate', 'if_true', 'if_false']
         self.predicate = predicate
         self.if_true = if_true
@@ -522,16 +525,16 @@ class IfThenElse(Statement):
 
 class While(Statement):
 
-    def __init__(self, predicate, body=None):
-        super(While, self).__init__()
+    def __init__(self, predicate, body=None, lineno=None):
+        super(While, self).__init__(lineno=lineno)
         self._fields = ['predicate', 'body']
         self.predicate = predicate
         self.body = body
 
 class For(Statement):
 
-    def __init__(self, init, predicate, update, body):
-        super(For, self).__init__()
+    def __init__(self, init, predicate, update, body, lineno=None):
+        super(For, self).__init__(lineno=lineno)
         self._fields = ['init', 'predicate', 'update', 'body']
         self.init = init
         self.predicate = predicate
@@ -540,8 +543,8 @@ class For(Statement):
 
 class ForEach(Statement):
 
-    def __init__(self, type, variable, iterable, body, modifiers=None):
-        super(ForEach, self).__init__()
+    def __init__(self, type, variable, iterable, body, modifiers=None, lineno=None):
+        super(ForEach, self).__init__(lineno=lineno)
         self._fields = ['type', 'variable', 'iterable', 'body', 'modifiers']
         if modifiers is None:
             modifiers = []
@@ -554,8 +557,8 @@ class ForEach(Statement):
 
 class Assert(Statement):
 
-    def __init__(self, predicate, message=None):
-        super(Assert, self).__init__()
+    def __init__(self, predicate, message=None, lineno=None):
+        super(Assert, self).__init__(lineno=lineno)
         self._fields = ['predicate', 'message']
         self.predicate = predicate
         self.message = message
@@ -563,16 +566,16 @@ class Assert(Statement):
 
 class Switch(Statement):
 
-    def __init__(self, expression, switch_cases):
-        super(Switch, self).__init__()
+    def __init__(self, expression, switch_cases, lineno=None):
+        super(Switch, self).__init__(lineno=lineno)
         self._fields = ['expression', 'switch_cases']
         self.expression = expression
         self.switch_cases = switch_cases
 
 class SwitchCase(SourceElement):
 
-    def __init__(self, cases, body=None):
-        super(SwitchCase, self).__init__()
+    def __init__(self, cases, body=None, lineno=None):
+        super(SwitchCase, self).__init__(lineno=lineno)
         self._fields = ['cases', 'body']
         if body is None:
             body = []
@@ -581,8 +584,8 @@ class SwitchCase(SourceElement):
 
 class DoWhile(Statement):
 
-    def __init__(self, predicate, body=None):
-        super(DoWhile, self).__init__()
+    def __init__(self, predicate, body=None, lineno=None):
+        super(DoWhile, self).__init__(lineno=lineno)
         self._fields = ['predicate', 'body']
         self.predicate = predicate
         self.body = body
@@ -590,32 +593,32 @@ class DoWhile(Statement):
 
 class Continue(Statement):
 
-    def __init__(self, label=None):
-        super(Continue, self).__init__()
+    def __init__(self, label=None, lineno=None):
+        super(Continue, self).__init__(lineno=lineno)
         self._fields = ['label']
         self.label = label
 
 
 class Break(Statement):
 
-    def __init__(self, label=None):
-        super(Break, self).__init__()
+    def __init__(self, label=None, lineno=None):
+        super(Break, self).__init__(lineno=lineno)
         self._fields = ['label']
         self.label = label
 
 
 class Return(Statement):
 
-    def __init__(self, result=None):
-        super(Return, self).__init__()
+    def __init__(self, result=None, lineno=None):
+        super(Return, self).__init__(lineno=lineno)
         self._fields = ['result']
         self.result = result
 
 
 class Synchronized(Statement):
 
-    def __init__(self, monitor, body):
-        super(Synchronized, self).__init__()
+    def __init__(self, monitor, body, lineno=None):
+        super(Synchronized, self).__init__(lineno=lineno)
         self._fields = ['monitor', 'body']
         self.monitor = monitor
         self.body = body
@@ -623,16 +626,16 @@ class Synchronized(Statement):
 
 class Throw(Statement):
 
-    def __init__(self, exception):
-        super(Throw, self).__init__()
+    def __init__(self, exception, lineno=None):
+        super(Throw, self).__init__(lineno=lineno)
         self._fields = ['exception']
         self.exception = exception
 
 
 class Try(Statement):
 
-    def __init__(self, block, catches=None, _finally=None, resources=None):
-        super(Try, self).__init__()
+    def __init__(self, block, catches=None, _finally=None, resources=None, lineno=None):
+        super(Try, self).__init__(lineno=lineno)
         self._fields = ['block', 'catches', '_finally', 'resources']
         if catches is None:
             catches = []
@@ -655,8 +658,8 @@ class Try(Statement):
 
 class Catch(SourceElement):
 
-    def __init__(self, variable, modifiers=None, types=None, block=None):
-        super(Catch, self).__init__()
+    def __init__(self, variable, modifiers=None, types=None, block=None, lineno=None):
+        super(Catch, self).__init__(lineno=lineno)
         self._fields = ['variable', 'modifiers', 'types', 'block']
         if modifiers is None:
             modifiers = []
@@ -670,8 +673,8 @@ class Catch(SourceElement):
 
 class Resource(SourceElement):
 
-    def __init__(self, variable, type=None, modifiers=None, initializer=None):
-        super(Resource, self).__init__()
+    def __init__(self, variable, type=None, modifiers=None, initializer=None, lineno=None):
+        super(Resource, self).__init__(lineno=lineno)
         self._fields = ['variable', 'type', 'modifiers', 'initializer']
         if modifiers is None:
             modifiers = []
@@ -687,8 +690,8 @@ class ConstructorInvocation(Statement):
     This is a variant of either this() or super(), NOT a "new" expression.
     """
 
-    def __init__(self, name, target=None, type_arguments=None, arguments=None):
-        super(ConstructorInvocation, self).__init__()
+    def __init__(self, name, target=None, type_arguments=None, arguments=None, lineno=None):
+        super(ConstructorInvocation, self).__init__(lineno=lineno)
         self._fields = ['name', 'target', 'type_arguments', 'arguments']
         if type_arguments is None:
             type_arguments = []
@@ -703,8 +706,8 @@ class ConstructorInvocation(Statement):
 class InstanceCreation(Expression):
 
     def __init__(self, type, type_arguments=None, arguments=None, body=None,
-                 enclosed_in=None):
-        super(InstanceCreation, self).__init__()
+                 enclosed_in=None, lineno=None):
+        super(InstanceCreation, self).__init__(lineno=lineno)
         self._fields = [
             'type', 'type_arguments', 'arguments', 'body', 'enclosed_in']
         if type_arguments is None:
@@ -722,8 +725,8 @@ class InstanceCreation(Expression):
 
 class FieldAccess(Expression):
 
-    def __init__(self, name, target):
-        super(FieldAccess, self).__init__()
+    def __init__(self, name, target, lineno=None):
+        super(FieldAccess, self).__init__(lineno=lineno)
         self._fields = ['name', 'target']
         self.name = name
         self.target = target
@@ -731,8 +734,8 @@ class FieldAccess(Expression):
 
 class ArrayAccess(Expression):
 
-    def __init__(self, index, target):
-        super(ArrayAccess, self).__init__()
+    def __init__(self, index, target, lineno=None):
+        super(ArrayAccess, self).__init__(lineno=lineno)
         self._fields = ['index', 'target']
         self.index = index
         self.target = target
@@ -740,8 +743,8 @@ class ArrayAccess(Expression):
 
 class ArrayCreation(Expression):
 
-    def __init__(self, type, dimensions=None, initializer=None):
-        super(ArrayCreation, self).__init__()
+    def __init__(self, type, dimensions=None, initializer=None, lineno=None):
+        super(ArrayCreation, self).__init__(lineno=lineno)
         self._fields = ['type', 'dimensions', 'initializer']
         if dimensions is None:
             dimensions = []
@@ -752,24 +755,24 @@ class ArrayCreation(Expression):
 
 class Literal(SourceElement):
 
-    def __init__(self, value):
-        super(Literal, self).__init__()
+    def __init__(self, value, lineno=None):
+        super(Literal, self).__init__(lineno=lineno)
         self._fields = ['value']
         self.value = value
 
 
 class ClassLiteral(SourceElement):
 
-    def __init__(self, type):
-        super(ClassLiteral, self).__init__()
+    def __init__(self, type, lineno=None):
+        super(ClassLiteral, self).__init__(lineno=lineno)
         self._fields = ['type']
         self.type = type
 
 
 class Name(SourceElement):
 
-    def __init__(self, value):
-        super(Name, self).__init__()
+    def __init__(self, value, lineno=None):
+        super(Name, self).__init__(lineno=lineno)
         self._fields = ['value']
         self.value = value
 
@@ -781,8 +784,8 @@ class Name(SourceElement):
 
 
 class ExpressionStatement(Statement):
-    def __init__(self, expression):
-        super(ExpressionStatement, self).__init__()
+    def __init__(self, expression, lineno=None):
+        super(ExpressionStatement, self).__init__(lineno=lineno)
         self._fields = ['expression']
         self.expression = expression
 

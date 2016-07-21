@@ -120,7 +120,7 @@ class ExpressionParser(object):
 
     def p_assignment(self, p):
         '''assignment : postfix_expression assignment_operator assignment_expression'''
-        p[0] = Assignment(p[2], p[1], p[3])
+        p[0] = Assignment(p[2], p[1], p[3], lineno=p.lexer.lineno)
 
     def p_assignment_operator(self, p):
         '''assignment_operator : '='
@@ -143,7 +143,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = Conditional(p[1], p[3], p[5])
+            p[0] = Conditional(p[1], p[3], p[5], lineno=p.lexer.lineno)
 
     def p_conditional_expression_not_name(self, p):
         '''conditional_expression_not_name : conditional_or_expression_not_name
@@ -152,13 +152,13 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = Conditional(p[1], p[3], p[5])
+            p[0] = Conditional(p[1], p[3], p[5], lineno=p.lexer.lineno)
 
     def binop(self, p, ctor):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = ctor(p[2], p[1], p[3])
+            p[0] = ctor(p[2], p[1], p[3], lineno=p.lexer.lineno)
 
     def p_conditional_or_expression(self, p):
         '''conditional_or_expression : conditional_and_expression
@@ -317,7 +317,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = Unary(p[1], p[2], lineno=p.lexer.lineno)
 
     def p_unary_expression_not_name(self, p):
         '''unary_expression_not_name : pre_increment_expression
@@ -328,15 +328,15 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = Unary(p[1], p[2], lineno=p.lexer.lineno)
 
     def p_pre_increment_expression(self, p):
         '''pre_increment_expression : PLUSPLUS unary_expression'''
-        p[0] = Unary('++x', p[2])
+        p[0] = Unary('++x', p[2], lineno=p.lexer.lineno)
 
     def p_pre_decrement_expression(self, p):
         '''pre_decrement_expression : MINUSMINUS unary_expression'''
-        p[0] = Unary('--x', p[2])
+        p[0] = Unary('--x', p[2], lineno=p.lexer.lineno)
 
     def p_unary_expression_not_plus_minus(self, p):
         '''unary_expression_not_plus_minus : postfix_expression
@@ -346,7 +346,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = Unary(p[1], p[2], lineno=p.lexer.lineno)
 
     def p_unary_expression_not_plus_minus_not_name(self, p):
         '''unary_expression_not_plus_minus_not_name : postfix_expression_not_name
@@ -356,7 +356,7 @@ class ExpressionParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = Unary(p[1], p[2])
+            p[0] = Unary(p[1], p[2], lineno=p.lexer.lineno)
 
     def p_postfix_expression(self, p):
         '''postfix_expression : primary
@@ -373,11 +373,11 @@ class ExpressionParser(object):
 
     def p_post_increment_expression(self, p):
         '''post_increment_expression : postfix_expression PLUSPLUS'''
-        p[0] = Unary('x++', p[1])
+        p[0] = Unary('x++', p[1], lineno=p.lexer.lineno)
 
     def p_post_decrement_expression(self, p):
         '''post_decrement_expression : postfix_expression MINUSMINUS'''
-        p[0] = Unary('x--', p[1])
+        p[0] = Unary('x--', p[1], lineno=p.lexer.lineno)
 
     def p_primary(self, p):
         '''primary : primary_no_new_array
@@ -411,9 +411,9 @@ class ExpressionParser(object):
                                 | primitive_type dims '.' CLASS
                                 | primitive_type '.' CLASS'''
         if len(p) == 4:
-            p[0] = ClassLiteral(Type(p[1]))
+            p[0] = ClassLiteral(Type(p[1], lineno=p.lexer.lineno), lineno=p.lexer.lineno)
         else:
-            p[0] = ClassLiteral(Type(p[1], dimensions=p[2]))
+            p[0] = ClassLiteral(Type(p[1], dimensions=p[2], lineno=p.lexer.lineno), lineno=p.lexer.lineno)
 
     def p_dims_opt(self, p):
         '''dims_opt : dims'''
@@ -441,33 +441,37 @@ class ExpressionParser(object):
 
     def p_cast_expression(self, p):
         '''cast_expression : '(' primitive_type dims_opt ')' unary_expression'''
-        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        p[0] = Cast(Type(p[2], dimensions=p[3], lineno=p.lexer.lineno), p[5])
 
     def p_cast_expression2(self, p):
         '''cast_expression : '(' name type_arguments dims_opt ')' unary_expression_not_plus_minus'''
-        p[0] = Cast(Type(p[2], type_arguments=p[3], dimensions=p[4]), p[6])
+        p[0] = Cast(Type(p[2], type_arguments=p[3], dimensions=p[4], lineno=p.lexer.lineno), p[6])
 
     def p_cast_expression3(self, p):
         '''cast_expression : '(' name type_arguments '.' class_or_interface_type dims_opt ')' unary_expression_not_plus_minus'''
         p[5].dimensions = p[6]
-        p[5].enclosed_in = Type(p[2], type_arguments=p[3])
+        p[5].enclosed_in = Type(p[2], type_arguments=p[3], lineno=p.lexer.lineno)
         p[0] = Cast(p[5], p[8])
 
     def p_cast_expression4(self, p):
         '''cast_expression : '(' name ')' unary_expression_not_plus_minus'''
         # technically it's not necessarily a type but could be a type parameter
-        p[0] = Cast(Type(p[2]), p[4])
+        p[0] = Cast(Type(p[2], lineno=p.lexer.lineno), p[4])
 
     def p_cast_expression5(self, p):
         '''cast_expression : '(' name dims ')' unary_expression_not_plus_minus'''
         # technically it's not necessarily a type but could be a type parameter
-        p[0] = Cast(Type(p[2], dimensions=p[3]), p[5])
+        p[0] = Cast(Type(p[2], dimensions=p[3], lineno=p.lexer.lineno), p[5])
 
 class StatementParser(object):
 
     def p_block(self, p):
-        '''block : '{' block_statements_opt '}' '''
-        p[0] = Block(p[2])
+        '''block : block_opener block_statements_opt '}' '''
+        p[0] = Block(p[2], lineno=p[1][1])
+
+    def p_block_opener(self, p):
+        '''block_opener : '{' '''
+        p[0] = (p[1], p.lexer.lineno)
 
     def p_block_statements_opt(self, p):
         '''block_statements_opt : block_statements'''
@@ -500,11 +504,11 @@ class StatementParser(object):
 
     def p_local_variable_declaration(self, p):
         '''local_variable_declaration : type variable_declarators'''
-        p[0] = VariableDeclaration(p[1], p[2])
+        p[0] = VariableDeclaration(p[1], p[2], lineno=p.lexer.lineno)
 
     def p_local_variable_declaration2(self, p):
         '''local_variable_declaration : modifiers type variable_declarators'''
-        p[0] = VariableDeclaration(p[2], p[3], modifiers=p[1])
+        p[0] = VariableDeclaration(p[2], p[3], modifiers=p[1], lineno=p.lexer.lineno)
 
     def p_variable_declarators(self, p):
         '''variable_declarators : variable_declarator
@@ -518,13 +522,13 @@ class StatementParser(object):
         '''variable_declarator : variable_declarator_id
                                | variable_declarator_id '=' variable_initializer'''
         if len(p) == 2:
-            p[0] = VariableDeclarator(p[1])
+            p[0] = VariableDeclarator(p[1], lineno=p.lexer.lineno)
         else:
-            p[0] = VariableDeclarator(p[1], initializer=p[3])
+            p[0] = VariableDeclarator(p[1], initializer=p[3], lineno=p.lexer.lineno)
 
     def p_variable_declarator_id(self, p):
         '''variable_declarator_id : NAME dims_opt'''
-        p[0] = Variable(p[1], dimensions=p[2])
+        p[0] = Variable(p[1], dimensions=p[2], lineno=p.lexer.lineno)
 
     def p_variable_initializer(self, p):
         '''variable_initializer : expression
@@ -563,7 +567,7 @@ class StatementParser(object):
         if len(p) == 2:
             p[0] = p[1]
         else:
-            p[0] = ExpressionStatement(p[1])
+            p[0] = ExpressionStatement(p[1], lineno=p[1].lineno)
 
     def p_statement_expression(self, p):
         '''statement_expression : assignment
@@ -582,12 +586,12 @@ class StatementParser(object):
 
     def p_array_initializer(self, p):
         '''array_initializer : '{' comma_opt '}' '''
-        p[0] = ArrayInitializer()
+        p[0] = ArrayInitializer(lineno=p.lexer.lineno)
 
     def p_array_initializer2(self, p):
         '''array_initializer : '{' variable_initializers '}'
                              | '{' variable_initializers ',' '}' '''
-        p[0] = ArrayInitializer(p[2])
+        p[0] = ArrayInitializer(p[2], lineno=p.lexer.lineno)
 
     def p_variable_initializers(self, p):
         '''variable_initializers : variable_initializer
@@ -599,19 +603,19 @@ class StatementParser(object):
 
     def p_method_invocation(self, p):
         '''method_invocation : NAME '(' argument_list_opt ')' '''
-        p[0] = MethodInvocation(p[1], arguments=p[3])
+        p[0] = MethodInvocation(p[1], arguments=p[3], lineno=p.lexer.lineno)
 
     def p_method_invocation2(self, p):
         '''method_invocation : name '.' type_arguments NAME '(' argument_list_opt ')'
                              | primary '.' type_arguments NAME '(' argument_list_opt ')'
                              | SUPER '.' type_arguments NAME '(' argument_list_opt ')' '''
-        p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
+        p[0] = MethodInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6], lineno=p.lexer.lineno)
 
     def p_method_invocation3(self, p):
         '''method_invocation : name '.' NAME '(' argument_list_opt ')'
                              | primary '.' NAME '(' argument_list_opt ')'
                              | SUPER '.' NAME '(' argument_list_opt ')' '''
-        p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5])
+        p[0] = MethodInvocation(p[3], target=p[1], arguments=p[5], lineno=p.lexer.lineno)
 
     def p_labeled_statement(self, p):
         '''labeled_statement : label ':' statement'''
@@ -629,31 +633,31 @@ class StatementParser(object):
 
     def p_if_then_statement(self, p):
         '''if_then_statement : IF '(' expression ')' statement'''
-        p[0] = IfThenElse(p[3], p[5])
+        p[0] = IfThenElse(p[3], p[5], lineno=p.lexer.lineno)
 
     def p_if_then_else_statement(self, p):
         '''if_then_else_statement : IF '(' expression ')' statement_no_short_if ELSE statement'''
-        p[0] = IfThenElse(p[3], p[5], p[7])
+        p[0] = IfThenElse(p[3], p[5], p[7], lineno=p.lexer.lineno)
 
     def p_if_then_else_statement_no_short_if(self, p):
         '''if_then_else_statement_no_short_if : IF '(' expression ')' statement_no_short_if ELSE statement_no_short_if'''
-        p[0] = IfThenElse(p[3], p[5], p[7])
+        p[0] = IfThenElse(p[3], p[5], p[7], lineno=p.lexer.lineno)
 
     def p_while_statement(self, p):
         '''while_statement : WHILE '(' expression ')' statement'''
-        p[0] = While(p[3], p[5])
+        p[0] = While(p[3], p[5], lineno=p.lexer.lineno)
 
     def p_while_statement_no_short_if(self, p):
         '''while_statement_no_short_if : WHILE '(' expression ')' statement_no_short_if'''
-        p[0] = While(p[3], p[5])
+        p[0] = While(p[3], p[5], lineno=p.lexer.lineno)
 
     def p_for_statement(self, p):
         '''for_statement : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement'''
-        p[0] = For(p[3], p[5], p[7], p[9])
+        p[0] = For(p[3], p[5], p[7], p[9], lineno=p.lexer.lineno)
 
     def p_for_statement_no_short_if(self, p):
         '''for_statement_no_short_if : FOR '(' for_init_opt ';' expression_opt ';' for_update_opt ')' statement_no_short_if'''
-        p[0] = For(p[3], p[5], p[7], p[9])
+        p[0] = For(p[3], p[5], p[7], p[9], lineno=p.lexer.lineno)
 
     def p_for_init_opt(self, p):
         '''for_init_opt : for_init
@@ -689,11 +693,11 @@ class StatementParser(object):
 
     def p_enhanced_for_statement(self, p):
         '''enhanced_for_statement : enhanced_for_statement_header statement'''
-        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'])
+        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'], lineno=p.lexer.lineno)
 
     def p_enhanced_for_statement_no_short_if(self, p):
         '''enhanced_for_statement_no_short_if : enhanced_for_statement_header statement_no_short_if'''
-        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'])
+        p[0] = ForEach(p[1]['type'], p[1]['variable'], p[1]['iterable'], p[2], modifiers=p[1]['modifiers'], lineno=p.lexer.lineno)
 
     def p_enhanced_for_statement_header(self, p):
         '''enhanced_for_statement_header : enhanced_for_statement_header_init ':' expression ')' '''
@@ -702,11 +706,11 @@ class StatementParser(object):
 
     def p_enhanced_for_statement_header_init(self, p):
         '''enhanced_for_statement_header_init : FOR '(' type NAME dims_opt'''
-        p[0] = {'modifiers': [], 'type': p[3], 'variable': Variable(p[4], dimensions=p[5])}
+        p[0] = {'modifiers': [], 'type': p[3], 'variable': Variable(p[4], dimensions=p[5], lineno=p.lexer.lineno)}
 
     def p_enhanced_for_statement_header_init2(self, p):
         '''enhanced_for_statement_header_init : FOR '(' modifiers type NAME dims_opt'''
-        p[0] = {'modifiers': p[3], 'type': p[4], 'variable': Variable(p[5], dimensions=p[6])}
+        p[0] = {'modifiers': p[3], 'type': p[4], 'variable': Variable(p[5], dimensions=p[6], lineno=p.lexer.lineno)}
 
     def p_statement_no_short_if(self, p):
         '''statement_no_short_if : statement_without_trailing_substatement
@@ -721,17 +725,17 @@ class StatementParser(object):
         '''assert_statement : ASSERT expression ';'
                             | ASSERT expression ':' expression ';' '''
         if len(p) == 4:
-            p[0] = Assert(p[2])
+            p[0] = Assert(p[2], lineno=p[2].lineno)
         else:
-            p[0] = Assert(p[2], message=p[4])
+            p[0] = Assert(p[2], message=p[4], lineno=p[2].lineno)
 
     def p_empty_statement(self, p):
         '''empty_statement : ';' '''
-        p[0] = Empty()
+        p[0] = Empty(lineno=p.lexer.lineno)
 
     def p_switch_statement(self, p):
         '''switch_statement : SWITCH '(' expression ')' switch_block'''
-        p[0] = Switch(p[3], p[5])
+        p[0] = Switch(p[3], p[5], lineno=p[3].lineno)
 
     def p_switch_block(self, p):
         '''switch_block : '{' '}' '''
@@ -743,11 +747,11 @@ class StatementParser(object):
 
     def p_switch_block3(self, p):
         '''switch_block : '{' switch_labels '}' '''
-        p[0] = [SwitchCase(p[2])]
+        p[0] = [SwitchCase(p[2], lineno=p.lexer.lineno)]
 
     def p_switch_block4(self, p):
         '''switch_block : '{' switch_block_statements switch_labels '}' '''
-        p[0] = p[2] + [SwitchCase(p[3])]
+        p[0] = p[2] + [SwitchCase(p[3], lineno=p.lexer.lineno)]
 
     def p_switch_block_statements(self, p):
         '''switch_block_statements : switch_block_statement
@@ -759,7 +763,7 @@ class StatementParser(object):
 
     def p_switch_block_statement(self, p):
         '''switch_block_statement : switch_labels block_statements'''
-        p[0] = SwitchCase(p[1], body=p[2])
+        p[0] = SwitchCase(p[1], body=p[2], lineno=p.lexer.lineno)
 
     def p_switch_labels(self, p):
         '''switch_labels : switch_label
@@ -783,43 +787,55 @@ class StatementParser(object):
 
     def p_do_statement(self, p):
         '''do_statement : DO statement WHILE '(' expression ')' ';' '''
-        p[0] = DoWhile(p[5], body=p[2])
+        p[0] = DoWhile(p[5], body=p[2], lineno=p[2].lineno)
 
     def p_break_statement(self, p):
-        '''break_statement : BREAK ';'
-                           | BREAK NAME ';' '''
+        '''break_statement : break_keyword ';'
+                           | break_keyword NAME ';' '''
         if len(p) == 3:
-            p[0] = Break()
+            p[0] = Break(lineno=p[1][1])
         else:
-            p[0] = Break(p[2])
+            p[0] = Break(p[2], lineno=p[1][1])
+
+    def p_break_keyword(self, p):
+        '''break_keyword : BREAK'''
+        p[0] = (p[1], p.lexer.lineno)
 
     def p_continue_statement(self, p):
-        '''continue_statement : CONTINUE ';'
-                              | CONTINUE NAME ';' '''
+        '''continue_statement : continue_keyword ';'
+                              | continue_keyword NAME ';' '''
         if len(p) == 3:
-            p[0] = Continue()
+            p[0] = Continue(lineno=p[1][1])
         else:
-            p[0] = Continue(p[2])
+            p[0] = Continue(p[2], lineno=p[1][1])
+
+    def p_continue_keyword(self, p):
+        '''continue_keyword : CONTINUE'''
+        p[0] = (p[1], p.lexer.lineno)
 
     def p_return_statement(self, p):
-        '''return_statement : RETURN expression_opt ';' '''
-        p[0] = Return(p[2])
+        '''return_statement : return_keyword expression_opt ';' '''
+        p[0] = Return(p[2], lineno=p[1][1])
+
+    def p_return_keyword(self, p):
+        '''return_keyword : RETURN'''
+        p[0] = (p[1], p.lexer.lineno)
 
     def p_synchronized_statement(self, p):
         '''synchronized_statement : SYNCHRONIZED '(' expression ')' block'''
-        p[0] = Synchronized(p[3], p[5])
+        p[0] = Synchronized(p[3], p[5], lineno=p[3].lineno)
 
     def p_throw_statement(self, p):
         '''throw_statement : THROW expression ';' '''
-        p[0] = Throw(p[2])
+        p[0] = Throw(p[2], lineno=p[2].lineno)
 
     def p_try_statement(self, p):
         '''try_statement : TRY try_block catches
                          | TRY try_block catches_opt finally'''
         if len(p) == 4:
-            p[0] = Try(p[2], catches=p[3])
+            p[0] = Try(p[2], catches=p[3], lineno=p[2].lineno)
         else:
-            p[0] = Try(p[2], catches=p[3], _finally=p[4])
+            p[0] = Try(p[2], catches=p[3], _finally=p[4], lineno=p[2].lineno)
 
     def p_try_block(self, p):
         '''try_block : block'''
@@ -842,8 +858,12 @@ class StatementParser(object):
         p[0] = []
 
     def p_catch_clause(self, p):
-        '''catch_clause : CATCH '(' catch_formal_parameter ')' block'''
-        p[0] = Catch(p[3]['variable'], types=p[3]['types'], modifiers=p[3]['modifiers'], block=p[5])
+        '''catch_clause : catch_keyword '(' catch_formal_parameter ')' block'''
+        p[0] = Catch(p[3]['variable'], types=p[3]['types'], modifiers=p[3]['modifiers'], block=p[5], lineno=p[1][1])
+
+    def p_catch_keyword(self, p):
+        '''catch_keyword : CATCH'''
+        p[0] = (p[1], p.lexer.lineno)
 
     def p_catch_formal_parameter(self, p):
         '''catch_formal_parameter : modifiers_opt catch_type variable_declarator_id'''
@@ -865,9 +885,9 @@ class StatementParser(object):
         '''try_statement_with_resources : TRY resource_specification try_block catches_opt
                                         | TRY resource_specification try_block catches_opt finally'''
         if len(p) == 5:
-            p[0] = Try(p[3], resources=p[2], catches=p[4])
+            p[0] = Try(p[3], resources=p[2], catches=p[4], lineno=p[3].lineno)
         else:
-            p[0] = Try(p[3], resources=p[2], catches=p[4], _finally=p[5])
+            p[0] = Try(p[3], resources=p[2], catches=p[4], _finally=p[5], lineno=p[3].lineno)
 
     def p_resource_specification(self, p):
         '''resource_specification : '(' resources semi_opt ')' '''
@@ -892,11 +912,11 @@ class StatementParser(object):
 
     def p_resource(self, p):
         '''resource : type variable_declarator_id '=' variable_initializer'''
-        p[0] = Resource(p[2], type=p[1], initializer=p[4])
+        p[0] = Resource(p[2], type=p[1], initializer=p[4], lineno=p.lexer.lineno)
 
     def p_resource2(self, p):
         '''resource : modifiers type variable_declarator_id '=' variable_initializer'''
-        p[0] = Resource(p[3], type=p[2], modifiers=p[1], initializer=p[5])
+        p[0] = Resource(p[3], type=p[2], modifiers=p[1], initializer=p[5], lineno=p.lexer.lineno)
 
     def p_finally(self, p):
         '''finally : FINALLY block'''
@@ -905,50 +925,50 @@ class StatementParser(object):
     def p_explicit_constructor_invocation(self, p):
         '''explicit_constructor_invocation : THIS '(' argument_list_opt ')' ';'
                                            | SUPER '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[1], arguments=p[3])
+        p[0] = ConstructorInvocation(p[1], arguments=p[3], lineno=p.lexer.lineno)
 
     def p_explicit_constructor_invocation2(self, p):
         '''explicit_constructor_invocation : type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | type_arguments THIS '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[2], type_arguments=p[1], arguments=p[4])
+        p[0] = ConstructorInvocation(p[2], type_arguments=p[1], arguments=p[4], lineno=p.lexer.lineno)
 
     def p_explicit_constructor_invocation3(self, p):
         '''explicit_constructor_invocation : primary '.' SUPER '(' argument_list_opt ')' ';'
                                            | name '.' SUPER '(' argument_list_opt ')' ';'
                                            | primary '.' THIS '(' argument_list_opt ')' ';'
                                            | name '.' THIS '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[3], target=p[1], arguments=p[5])
+        p[0] = ConstructorInvocation(p[3], target=p[1], arguments=p[5], lineno=p.lexer.lineno)
 
     def p_explicit_constructor_invocation4(self, p):
         '''explicit_constructor_invocation : primary '.' type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | name '.' type_arguments SUPER '(' argument_list_opt ')' ';'
                                            | primary '.' type_arguments THIS '(' argument_list_opt ')' ';'
                                            | name '.' type_arguments THIS '(' argument_list_opt ')' ';' '''
-        p[0] = ConstructorInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6])
+        p[0] = ConstructorInvocation(p[4], target=p[1], type_arguments=p[3], arguments=p[6], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression(self, p):
         '''class_instance_creation_expression : NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[3], type_arguments=p[3], arguments=p[5], body=p[7])
+        p[0] = InstanceCreation(p[3], type_arguments=p[3], arguments=p[5], body=p[7], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression2(self, p):
         '''class_instance_creation_expression : NEW class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[2], arguments=p[4], body=p[6])
+        p[0] = InstanceCreation(p[2], arguments=p[4], body=p[6], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression3(self, p):
         '''class_instance_creation_expression : primary '.' NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[5], enclosed_in=p[1], type_arguments=p[4], arguments=p[7], body=p[9])
+        p[0] = InstanceCreation(p[5], enclosed_in=p[1], type_arguments=p[4], arguments=p[7], body=p[9], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression4(self, p):
         '''class_instance_creation_expression : primary '.' NEW class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[4], enclosed_in=p[1], arguments=p[6], body=p[8])
+        p[0] = InstanceCreation(p[4], enclosed_in=p[1], arguments=p[6], body=p[8], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression5(self, p):
         '''class_instance_creation_expression : class_instance_creation_expression_name NEW class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[3], enclosed_in=p[1], arguments=p[5], body=p[7])
+        p[0] = InstanceCreation(p[3], enclosed_in=p[1], arguments=p[5], body=p[7], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression6(self, p):
         '''class_instance_creation_expression : class_instance_creation_expression_name NEW type_arguments class_type '(' argument_list_opt ')' class_body_opt'''
-        p[0] = InstanceCreation(p[4], enclosed_in=p[1], type_arguments=p[3], arguments=p[6], body=p[8])
+        p[0] = InstanceCreation(p[4], enclosed_in=p[1], type_arguments=p[3], arguments=p[6], body=p[8], lineno=p.lexer.lineno)
 
     def p_class_instance_creation_expression_name(self, p):
         '''class_instance_creation_expression_name : name '.' '''
@@ -962,18 +982,18 @@ class StatementParser(object):
     def p_field_access(self, p):
         '''field_access : primary '.' NAME
                         | SUPER '.' NAME'''
-        p[0] = FieldAccess(p[3], p[1])
+        p[0] = FieldAccess(p[3], p[1], lineno=p.lexer.lineno)
 
     def p_array_access(self, p):
         '''array_access : name '[' expression ']'
                         | primary_no_new_array '[' expression ']'
                         | array_creation_with_array_initializer '[' expression ']' '''
-        p[0] = ArrayAccess(p[3], p[1])
+        p[0] = ArrayAccess(p[3], p[1], lineno=p.lexer.lineno)
 
     def p_array_creation_with_array_initializer(self, p):
         '''array_creation_with_array_initializer : NEW primitive_type dim_with_or_without_exprs array_initializer
                                                  | NEW class_or_interface_type dim_with_or_without_exprs array_initializer'''
-        p[0] = ArrayCreation(p[2], dimensions=p[3], initializer=p[4])
+        p[0] = ArrayCreation(p[2], dimensions=p[3], initializer=p[4], lineno=p.lexer.lineno)
 
     def p_dim_with_or_without_exprs(self, p):
         '''dim_with_or_without_exprs : dim_with_or_without_expr
@@ -994,7 +1014,7 @@ class StatementParser(object):
     def p_array_creation_without_array_initializer(self, p):
         '''array_creation_without_array_initializer : NEW primitive_type dim_with_or_without_exprs
                                                     | NEW class_or_interface_type dim_with_or_without_exprs'''
-        p[0] = ArrayCreation(p[2], dimensions=p[3])
+        p[0] = ArrayCreation(p[2], dimensions=p[3], lineno=p.lexer.lineno)
 
 class NameParser(object):
 
@@ -1005,7 +1025,7 @@ class NameParser(object):
 
     def p_simple_name(self, p):
         '''simple_name : NAME'''
-        p[0] = Name(p[1])
+        p[0] = Name(p[1], lineno=p.lexer.lineno)
 
     def p_qualified_name(self, p):
         '''qualified_name : name '.' simple_name'''
@@ -1021,7 +1041,7 @@ class LiteralParser(object):
                    | TRUE
                    | FALSE
                    | NULL'''
-        p[0] = Literal(p[1])
+        p[0] = Literal(p[1], lineno=p.lexer.lineno)
 
 class TypeParser(object):
 
@@ -1091,9 +1111,9 @@ class TypeParser(object):
         '''class_or_interface : name
                               | generic_type '.' name'''
         if len(p) == 2:
-            p[0] = Type(p[1])
+            p[0] = Type(p[1], lineno=p.lexer.lineno)
         else:
-            p[0] = Type(p[3], enclosed_in=p[1])
+            p[0] = Type(p[3], enclosed_in=p[1], lineno=p.lexer.lineno)
 
     def p_generic_type(self, p):
         '''generic_type : class_or_interface type_arguments'''
@@ -1102,7 +1122,7 @@ class TypeParser(object):
 
     def p_generic_type2(self, p):
         '''generic_type : class_or_interface '<' '>' '''
-        p[0] = Type(p[1], type_arguments='diamond')
+        p[0] = Type(p[1], type_arguments='diamond', lineno=p.lexer.lineno)
 
 #    def p_array_type(self, p):
 #        '''array_type : primitive_type dims
@@ -1118,7 +1138,7 @@ class TypeParser(object):
     def p_array_type(self, p):
         '''array_type : primitive_type dims
                       | name dims'''
-        p[0] = Type(p[1], dimensions=p[2])
+        p[0] = Type(p[1], dimensions=p[2], lineno=p.lexer.lineno)
 
     def p_array_type2(self, p):
         '''array_type : generic_type dims'''
@@ -1127,7 +1147,7 @@ class TypeParser(object):
 
     def p_array_type3(self, p):
         '''array_type : generic_type '.' name dims'''
-        p[0] = Type(p[3], enclosed_in=p[1], dimensions=p[4])
+        p[0] = Type(p[3], enclosed_in=p[1], dimensions=p[4], lineno=p.lexer.lineno)
 
     def p_type_arguments(self, p):
         '''type_arguments : '<' type_argument_list1'''
@@ -1211,65 +1231,65 @@ class TypeParser(object):
         '''wildcard : '?'
                     | '?' wildcard_bounds'''
         if len(p) == 2:
-            p[0] = Wildcard()
+            p[0] = Wildcard(lineno=p.lexer.lineno)
         else:
-            p[0] = Wildcard(bounds=p[2])
+            p[0] = Wildcard(bounds=p[2], lineno=p.lexer.lineno)
 
     def p_wildcard_bounds(self, p):
         '''wildcard_bounds : EXTENDS reference_type
                            | SUPER reference_type'''
         if p[1] == 'extends':
-            p[0] = WildcardBound(p[2], extends=True)
+            p[0] = WildcardBound(p[2], extends=True, lineno=p.lexer.lineno)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], _super=True, lineno=p.lexer.lineno)
 
     def p_wildcard1(self, p):
         '''wildcard1 : '?' '>'
                      | '?' wildcard_bounds1'''
         if p[2] == '>':
-            p[0] = Wildcard()
+            p[0] = Wildcard(lineno=p.lexer.lineno)
         else:
-            p[0] = Wildcard(bounds=p[2])
+            p[0] = Wildcard(bounds=p[2], lineno=p.lexer.lineno)
 
     def p_wildcard_bounds1(self, p):
         '''wildcard_bounds1 : EXTENDS reference_type1
                             | SUPER reference_type1'''
         if p[1] == 'extends':
-            p[0] = WildcardBound(p[2], extends=True)
+            p[0] = WildcardBound(p[2], extends=True, lineno=p.lexer.lineno)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], _super=True, lineno=p.lexer.lineno)
 
     def p_wildcard2(self, p):
         '''wildcard2 : '?' RSHIFT
                      | '?' wildcard_bounds2'''
         if p[2] == '>>':
-            p[0] = Wildcard()
+            p[0] = Wildcard(lineno=p.lexer.lineno)
         else:
-            p[0] = Wildcard(bounds=p[2])
+            p[0] = Wildcard(bounds=p[2], lineno=p.lexer.lineno)
 
     def p_wildcard_bounds2(self, p):
         '''wildcard_bounds2 : EXTENDS reference_type2
                             | SUPER reference_type2'''
         if p[1] == 'extends':
-            p[0] = WildcardBound(p[2], extends=True)
+            p[0] = WildcardBound(p[2], extends=True, lineno=p.lexer.lineno)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], _super=True, lineno=p.lexer.lineno)
 
     def p_wildcard3(self, p):
         '''wildcard3 : '?' RRSHIFT
                      | '?' wildcard_bounds3'''
         if p[2] == '>>>':
-            p[0] = Wildcard()
+            p[0] = Wildcard(lineno=p.lexer.lineno)
         else:
-            p[0] = Wildcard(bounds=p[2])
+            p[0] = Wildcard(bounds=p[2], lineno=p.lexer.lineno)
 
     def p_wildcard_bounds3(self, p):
         '''wildcard_bounds3 : EXTENDS reference_type3
                             | SUPER reference_type3'''
         if p[1] == 'extends':
-            p[0] = WildcardBound(p[2], extends=True)
+            p[0] = WildcardBound(p[2], extends=True, lineno=p.lexer.lineno)
         else:
-            p[0] = WildcardBound(p[2], _super=True)
+            p[0] = WildcardBound(p[2], _super=True, lineno=p.lexer.lineno)
 
     def p_type_parameter_header(self, p):
         '''type_parameter_header : NAME'''
@@ -1292,11 +1312,11 @@ class TypeParser(object):
                           | type_parameter_header EXTENDS reference_type
                           | type_parameter_header EXTENDS reference_type additional_bound_list'''
         if len(p) == 2:
-            p[0] = TypeParameter(p[1])
+            p[0] = TypeParameter(p[1], lineno=p.lexer.lineno)
         elif len(p) == 4:
-            p[0] = TypeParameter(p[1], extends=[p[3]])
+            p[0] = TypeParameter(p[1], extends=[p[3]], lineno=p.lexer.lineno)
         else:
-            p[0] = TypeParameter(p[1], extends=[p[3]] + p[4])
+            p[0] = TypeParameter(p[1], extends=[p[3]] + p[4], lineno=p.lexer.lineno)
 
     def p_additional_bound_list(self, p):
         '''additional_bound_list : additional_bound
@@ -1323,11 +1343,11 @@ class TypeParser(object):
                            | type_parameter_header EXTENDS reference_type1
                            | type_parameter_header EXTENDS reference_type additional_bound_list1'''
         if len(p) == 3:
-            p[0] = TypeParameter(p[1])
+            p[0] = TypeParameter(p[1], lineno=p.lexer.lineno)
         elif len(p) == 4:
-            p[0] = TypeParameter(p[1], extends=[p[3]])
+            p[0] = TypeParameter(p[1], extends=[p[3]], lineno=p.lexer.lineno)
         else:
-            p[0] = TypeParameter(p[1], extends=[p[3]] + p[4])
+            p[0] = TypeParameter(p[1], extends=[p[3]] + p[4], lineno=p.lexer.lineno)
 
     def p_additional_bound_list1(self, p):
         '''additional_bound_list1 : additional_bound1
@@ -1352,13 +1372,14 @@ class ClassParser(object):
 
     def p_type_declaration2(self, p):
         '''type_declaration : ';' '''
-        p[0] = EmptyDeclaration()
+        p[0] = EmptyDeclaration(lineno=p.lexer.lineno)
 
     def p_class_declaration(self, p):
         '''class_declaration : class_header class_body'''
         p[0] = ClassDeclaration(p[1]['name'], p[2], modifiers=p[1]['modifiers'],
                                 extends=p[1]['extends'], implements=p[1]['implements'],
-                                type_parameters=p[1]['type_parameters'])
+                                type_parameters=p[1]['type_parameters'],
+                                lineno=p[1]['lineno'])
 
     def p_class_header(self, p):
         '''class_header : class_header_name class_header_extends_opt class_header_implements_opt'''
@@ -1377,7 +1398,7 @@ class ClassParser(object):
 
     def p_class_header_name1(self, p):
         '''class_header_name1 : modifiers_opt CLASS NAME'''
-        p[0] = {'modifiers': p[1], 'name': p[3]}
+        p[0] = {'modifiers': p[1], 'name': p[3], 'lineno': p.lexer.lineno}
 
     def p_class_header_extends_opt(self, p):
         '''class_header_extends_opt : class_header_extends
@@ -1437,7 +1458,7 @@ class ClassParser(object):
 
     def p_class_body_declaration2(self, p):
         '''class_body_declaration : block'''
-        p[0] = ClassInitializer(p[1])
+        p[0] = ClassInitializer(p[1], lineno=p[1].lineno)
 
     def p_class_member_declaration(self, p):
         '''class_member_declaration : field_declaration
@@ -1450,21 +1471,26 @@ class ClassParser(object):
 
     def p_class_member_declaration2(self, p):
         '''class_member_declaration : ';' '''
-        p[0] = EmptyDeclaration()
+        p[0] = EmptyDeclaration(lineno=p.lexer.lineno)
 
     def p_field_declaration(self, p):
-        '''field_declaration : modifiers_opt type variable_declarators ';' '''
-        p[0] = FieldDeclaration(p[2], p[3], modifiers=p[1])
+        '''field_declaration : field_declaration1 ';' '''
+        p[0] = p[1]
+
+    def p_field_declaration1(self, p):
+        '''field_declaration1 : modifiers_opt type variable_declarators '''
+        p[0] = FieldDeclaration(p[2], p[3], modifiers=p[1], lineno=p.lexer.lineno)
 
     def p_static_initializer(self, p):
         '''static_initializer : STATIC block'''
-        p[0] = ClassInitializer(p[2], static=True)
+        p[0] = ClassInitializer(p[2], static=True, lineno=p[2].lineno)
 
     def p_constructor_declaration(self, p):
         '''constructor_declaration : constructor_header method_body'''
         p[0] = ConstructorDeclaration(p[1]['name'], p[2], modifiers=p[1]['modifiers'],
                                       type_parameters=p[1]['type_parameters'],
-                                      parameters=p[1]['parameters'], throws=p[1]['throws'])
+                                      parameters=p[1]['parameters'], throws=p[1]['throws'],
+                                      lineno=p[1]['lineno'])
 
     def p_constructor_header(self, p):
         '''constructor_header : constructor_header_name formal_parameter_list_opt ')' method_header_throws_clause_opt'''
@@ -1479,6 +1505,7 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'name': p[2]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'name': p[3]}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_formal_parameter_list_opt(self, p):
         '''formal_parameter_list_opt : formal_parameter_list'''
@@ -1500,9 +1527,9 @@ class ClassParser(object):
         '''formal_parameter : modifiers_opt type variable_declarator_id
                             | modifiers_opt type ELLIPSIS variable_declarator_id'''
         if len(p) == 4:
-            p[0] = FormalParameter(p[3], p[2], modifiers=p[1])
+            p[0] = FormalParameter(p[3], p[2], modifiers=p[1], lineno=p.lexer.lineno)
         else:
-            p[0] = FormalParameter(p[4], p[2], modifiers=p[1], vararg=True)
+            p[0] = FormalParameter(p[4], p[2], modifiers=p[1], vararg=True, lineno=p.lexer.lineno)
 
     def p_method_header_throws_clause_opt(self, p):
         '''method_header_throws_clause_opt : method_header_throws_clause
@@ -1511,7 +1538,7 @@ class ClassParser(object):
 
     def p_method_header_throws_clause(self, p):
         '''method_header_throws_clause : THROWS class_type_list'''
-        p[0] = Throws(p[2])
+        p[0] = Throws(p[2], lineno=p.lexer.lineno)
 
     def p_class_type_list(self, p):
         '''class_type_list : class_type_elt
@@ -1538,14 +1565,14 @@ class ClassParser(object):
             p[0] = MethodDeclaration(p[1]['name'], parameters=p[1]['parameters'],
                                      extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
                                      return_type=p[1]['type'], modifiers=p[1]['modifiers'],
-                                     throws=p[1]['throws'], body=p[2])
+                                     throws=p[1]['throws'], body=p[2], lineno=p[1]['lineno'])
 
     def p_abstract_method_declaration(self, p):
         '''abstract_method_declaration : method_header ';' '''
         p[0] = MethodDeclaration(p[1]['name'], abstract=True, parameters=p[1]['parameters'],
                                  extended_dims=p[1]['extended_dims'], type_parameters=p[1]['type_parameters'],
                                  return_type=p[1]['type'], modifiers=p[1]['modifiers'],
-                                 throws=p[1]['throws'])
+                                 throws=p[1]['throws'], lineno=p[1]['lineno'])
 
     def p_method_header(self, p):
         '''method_header : method_header_name formal_parameter_list_opt ')' method_header_extended_dims method_header_throws_clause_opt'''
@@ -1561,6 +1588,7 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_method_header_extended_dims(self, p):
         '''method_header_extended_dims : dims_opt'''
@@ -1571,7 +1599,7 @@ class ClassParser(object):
         p[0] = InterfaceDeclaration(p[1]['name'], modifiers=p[1]['modifiers'],
                                     type_parameters=p[1]['type_parameters'],
                                     extends=p[1]['extends'],
-                                    body=p[2])
+                                    body=p[2], lineno=p[1]['lineno'])
 
     def p_interface_header(self, p):
         '''interface_header : interface_header_name interface_header_extends_opt'''
@@ -1589,7 +1617,7 @@ class ClassParser(object):
 
     def p_interface_header_name1(self, p):
         '''interface_header_name1 : modifiers_opt INTERFACE NAME'''
-        p[0] = {'modifiers': p[1], 'name': p[3]}
+        p[0] = {'modifiers': p[1], 'name': p[3], 'lineno': p.lexer.lineno}
 
     def p_interface_header_extends_opt(self, p):
         '''interface_header_extends_opt : interface_header_extends'''
@@ -1644,7 +1672,8 @@ class ClassParser(object):
         '''enum_declaration : enum_header enum_body'''
         p[0] = EnumDeclaration(p[1]['name'], implements=p[1]['implements'],
                                modifiers=p[1]['modifiers'],
-                               type_parameters=p[1]['type_parameters'], body=p[2])
+                               type_parameters=p[1]['type_parameters'], body=p[2],
+                               lineno=p[1]['lineno'])
 
     def p_enum_header(self, p):
         '''enum_header : enum_header_name class_header_implements_opt'''
@@ -1658,6 +1687,7 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': []}
         else:
             p[0] = {'modifiers': p[1], 'name': p[3], 'type_parameters': p[4]}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_enum_body(self, p):
         '''enum_body : '{' enum_body_declarations_opt '}' '''
@@ -1687,9 +1717,9 @@ class ClassParser(object):
         '''enum_constant : enum_constant_header class_body
                          | enum_constant_header'''
         if len(p) == 2:
-            p[0] = EnumConstant(p[1]['name'], arguments=p[1]['arguments'], modifiers=p[1]['modifiers'])
+            p[0] = EnumConstant(p[1]['name'], arguments=p[1]['arguments'], modifiers=p[1]['modifiers'], lineno=p[1]['lineno'])
         else:
-            p[0] = EnumConstant(p[1]['name'], arguments=p[1]['arguments'], modifiers=p[1]['modifiers'], body=p[2])
+            p[0] = EnumConstant(p[1]['name'], arguments=p[1]['arguments'], modifiers=p[1]['modifiers'], body=p[2], lineno=p[1]['lineno'])
 
     def p_enum_constant_header(self, p):
         '''enum_constant_header : enum_constant_header_name arguments_opt'''
@@ -1698,7 +1728,7 @@ class ClassParser(object):
 
     def p_enum_constant_header_name(self, p):
         '''enum_constant_header_name : modifiers_opt NAME'''
-        p[0] = {'modifiers': p[1], 'name': p[2]}
+        p[0] = {'modifiers': p[1], 'name': p[2], 'lineno': p.lexer.lineno}
 
     def p_arguments_opt(self, p):
         '''arguments_opt : arguments'''
@@ -1745,7 +1775,7 @@ class ClassParser(object):
         p[0] = AnnotationDeclaration(p[1]['name'], modifiers=p[1]['modifiers'],
                               type_parameters=p[1]['type_parameters'],
                               extends=p[1]['extends'], implements=p[1]['implements'],
-                              body=p[2])
+                              body=p[2], lineno=p[1]['lineno'])
 
     def p_annotation_type_declaration_header(self, p):
         '''annotation_type_declaration_header : annotation_type_declaration_header_name class_header_extends_opt class_header_implements_opt'''
@@ -1756,18 +1786,22 @@ class ClassParser(object):
     def p_annotation_type_declaration_header_name(self, p):
         '''annotation_type_declaration_header_name : modifiers '@' INTERFACE NAME'''
         p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': []}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_annotation_type_declaration_header_name2(self, p):
         '''annotation_type_declaration_header_name : modifiers '@' INTERFACE NAME type_parameters'''
         p[0] = {'modifiers': p[1], 'name': p[4], 'type_parameters': p[5]}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_annotation_type_declaration_header_name3(self, p):
         '''annotation_type_declaration_header_name : '@' INTERFACE NAME type_parameters'''
         p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': p[4]}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_annotation_type_declaration_header_name4(self, p):
         '''annotation_type_declaration_header_name : '@' INTERFACE NAME'''
         p[0] = {'modifiers': [], 'name': p[3], 'type_parameters': []}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_annotation_type_body(self, p):
         '''annotation_type_body : '{' annotation_type_member_declarations_opt '}' '''
@@ -1801,7 +1835,7 @@ class ClassParser(object):
         p[0] = AnnotationMethodDeclaration(p[1]['name'], p[1]['type'], parameters=p[2],
                                            default=p[5], extended_dims=p[4],
                                            type_parameters=p[1]['type_parameters'],
-                                           modifiers=p[1]['modifiers'])
+                                           modifiers=p[1]['modifiers'], lineno=p[1]['lineno'])
 
     def p_annotation_method_header_name(self, p):
         '''annotation_method_header_name : modifiers_opt type_parameters type NAME '('
@@ -1810,6 +1844,7 @@ class ClassParser(object):
             p[0] = {'modifiers': p[1], 'type_parameters': [], 'type': p[2], 'name': p[3]}
         else:
             p[0] = {'modifiers': p[1], 'type_parameters': p[2], 'type': p[3], 'name': p[4]}
+        p[0]['lineno'] = p.lexer.lineno
 
     def p_annotation_method_header_default_value_opt(self, p):
         '''annotation_method_header_default_value_opt : default_value
@@ -1830,7 +1865,7 @@ class ClassParser(object):
     def p_member_value_array_initializer(self, p):
         '''member_value_array_initializer : '{' member_values ',' '}'
                                           | '{' member_values '}' '''
-        p[0] = ArrayInitializer(p[2])
+        p[0] = ArrayInitializer(p[2], lineno=p.lexer.lineno)
 
     def p_member_value_array_initializer2(self, p):
         '''member_value_array_initializer : '{' ',' '}'
@@ -1853,11 +1888,11 @@ class ClassParser(object):
 
     def p_normal_annotation(self, p):
         '''normal_annotation : annotation_name '(' member_value_pairs_opt ')' '''
-        p[0] = Annotation(p[1], members=p[3])
+        p[0] = Annotation(p[1][0], members=p[3], lineno=p[1][1])
 
     def p_annotation_name(self, p):
         '''annotation_name : '@' name'''
-        p[0] = p[2]
+        p[0] = (p[2], p.lexer.lineno)
 
     def p_member_value_pairs_opt(self, p):
         '''member_value_pairs_opt : member_value_pairs'''
@@ -1877,15 +1912,15 @@ class ClassParser(object):
 
     def p_member_value_pair(self, p):
         '''member_value_pair : simple_name '=' member_value'''
-        p[0] = AnnotationMember(p[1], p[3])
+        p[0] = AnnotationMember(p[1], p[3], lineno=p.lexer.lineno)
 
     def p_marker_annotation(self, p):
         '''marker_annotation : annotation_name'''
-        p[0] = Annotation(p[1])
+        p[0] = Annotation(p[1][0], lineno=p[1][1])
 
     def p_single_member_annotation(self, p):
         '''single_member_annotation : annotation_name '(' single_member_annotation_member_value ')' '''
-        p[0] = Annotation(p[1], single_member=p[3])
+        p[0] = Annotation(p[1][0], single_member=p[3], lineno=p[1][1])
 
     def p_single_member_annotation_member_value(self, p):
         '''single_member_annotation_member_value : member_value'''
@@ -1928,17 +1963,17 @@ class CompilationUnitParser(object):
     def p_package_declaration(self, p):
         '''package_declaration : package_declaration_name ';' '''
         if p[1][0]:
-            p[0] = PackageDeclaration(p[1][1], modifiers=p[1][0])
+            p[0] = PackageDeclaration(p[1][1], modifiers=p[1][0], lineno=p[1][2])
         else:
-            p[0] = PackageDeclaration(p[1][1])
+            p[0] = PackageDeclaration(p[1][1], lineno=p[1][2])
 
     def p_package_declaration_name(self, p):
         '''package_declaration_name : modifiers PACKAGE name
                                     | PACKAGE name'''
         if len(p) == 3:
-            p[0] = (None, p[2])
+            p[0] = (None, p[2], p.lexer.lineno)
         else:
-            p[0] = (p[1], p[3])
+            p[0] = (p[1], p[3], p.lexer.lineno)
 
     def p_import_declarations(self, p):
         '''import_declarations : import_declaration
@@ -1956,20 +1991,24 @@ class CompilationUnitParser(object):
         p[0] = p[1]
 
     def p_single_type_import_declaration(self, p):
-        '''single_type_import_declaration : IMPORT name ';' '''
-        p[0] = ImportDeclaration(p[2])
+        '''single_type_import_declaration : import_keyword name ';' '''
+        p[0] = ImportDeclaration(p[2], lineno=p[1][1])
 
     def p_type_import_on_demand_declaration(self, p):
-        '''type_import_on_demand_declaration : IMPORT name '.' '*' ';' '''
-        p[0] = ImportDeclaration(p[2], on_demand=True)
+        '''type_import_on_demand_declaration : import_keyword name '.' '*' ';' '''
+        p[0] = ImportDeclaration(p[2], on_demand=True, lineno=p[1][1])
 
     def p_single_static_import_declaration(self, p):
-        '''single_static_import_declaration : IMPORT STATIC name ';' '''
-        p[0] = ImportDeclaration(p[3], static=True)
+        '''single_static_import_declaration : import_keyword STATIC name ';' '''
+        p[0] = ImportDeclaration(p[3], static=True, lineno=p[1][1])
 
     def p_static_import_on_demand_declaration(self, p):
-        '''static_import_on_demand_declaration : IMPORT STATIC name '.' '*' ';' '''
-        p[0] = ImportDeclaration(p[3], static=True, on_demand=True)
+        '''static_import_on_demand_declaration : import_keyword STATIC name '.' '*' ';' '''
+        p[0] = ImportDeclaration(p[3], static=True, on_demand=True, lineno=p[1][1])
+
+    def p_import_keyword(self, p):
+        '''import_keyword : IMPORT '''
+        p[0] = (p[1], p.lexer.lineno)
 
     def p_type_declarations(self, p):
         '''type_declarations : type_declaration
@@ -1980,6 +2019,9 @@ class CompilationUnitParser(object):
             p[0] = p[1] + [p[2]]
 
 class MyParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassParser, StatementParser, CompilationUnitParser):
+
+    def __init__(self, lexer):
+        self.lexer = lexer
 
     tokens = MyLexer.tokens
 
@@ -2005,7 +2047,7 @@ class Parser(object):
 
     def __init__(self):
         self.lexer = lex.lex(module=MyLexer(), optimize=1)
-        self.parser = yacc.yacc(module=MyParser(), start='goal', optimize=1)
+        self.parser = yacc.yacc(module=MyParser(self.lexer), start='goal', optimize=1)
 
     def tokenize_string(self, code):
         self.lexer.input(code)
@@ -2039,7 +2081,7 @@ class Parser(object):
 if __name__ == '__main__':
     # for testing
     lexer = lex.lex(module=MyLexer())
-    parser = yacc.yacc(module=MyParser(), write_tables=0, start='type_parameters')
+    parser = yacc.yacc(module=MyParser(lexer), write_tables=0, start='type_parameters')
 
     expressions = [
         '<T extends Foo & Bar>'
