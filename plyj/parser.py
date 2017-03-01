@@ -2045,9 +2045,20 @@ class MyParser(ExpressionParser, NameParser, LiteralParser, TypeParser, ClassPar
 
 class Parser(object):
 
-    def __init__(self):
-        self.lexer = lex.lex(module=MyLexer(), optimize=1)
-        self.parser = yacc.yacc(module=MyParser(self.lexer), start='goal', optimize=1)
+    def __init__(self, tabmodule='parsetab', lextab='lextab', debug=False):
+        self.lexer = lex.lex(
+          module=MyLexer(),
+          optimize=1,
+          lextab=lextab,
+          debug=debug,
+        )
+        self.parser = yacc.yacc(
+          module=MyParser(self.lexer),
+          start='goal',
+          optimize=1,
+          tabmodule=tabmodule,
+          debug=debug,
+        )
 
     def tokenize_string(self, code):
         self.lexer.input(code)
